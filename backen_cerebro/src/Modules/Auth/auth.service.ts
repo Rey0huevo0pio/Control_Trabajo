@@ -14,10 +14,10 @@ export class AuthService {
   ) {}
 
   async register(createUsuarioDto: CreateUsuarioDto) {
-    // Verificar si el email ya existe
-    const existingUser = await this.usuarioModel.findOne({ email: createUsuarioDto.email });
+    // Verificar si el Control_Usuario ya existe
+    const existingUser = await this.usuarioModel.findOne({ Control_Usuario: createUsuarioDto.Control_Usuario });
     if (existingUser) {
-      throw new ConflictException('El email ya está registrado');
+      throw new ConflictException('El Control_Usuario ya está registrado');
     }
 
     // Hash de la contraseña
@@ -52,8 +52,8 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const usuario = await this.usuarioModel.findOne({ email: loginDto.email });
-    
+    const usuario = await this.usuarioModel.findOne({ Control_Usuario: loginDto.Control_Usuario });
+
     if (!usuario) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -91,7 +91,7 @@ export class AuthService {
   private generateToken(usuario: any): string {
     const payload = {
       sub: usuario._id,
-      email: usuario.email,
+      Control_Usuario: usuario.Control_Usuario,
       rol: usuario.rol,
     };
 
@@ -101,7 +101,7 @@ export class AuthService {
   private sanitizeUser(usuario: any): object {
     return {
       id: usuario._id,
-      email: usuario.email,
+      Control_Usuario: usuario.Control_Usuario,
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       rol: usuario.rol,

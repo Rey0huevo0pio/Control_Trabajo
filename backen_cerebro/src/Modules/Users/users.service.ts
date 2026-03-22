@@ -24,8 +24,8 @@ export class UsersService {
     return this.sanitizeUser(usuario);
   }
 
-  async findByEmail(email: string): Promise<UsuarioDocument | null> {
-    return this.usuarioModel.findOne({ email }).exec();
+  async findByControl_Usuario(Control_Usuario: string): Promise<UsuarioDocument | null> {
+    return this.usuarioModel.findOne({ Control_Usuario }).exec();
   }
 
   async update(id: string, updateUsuarioDto: UpdateUsuarioDto): Promise<any> {
@@ -62,7 +62,7 @@ export class UsersService {
   private sanitizeUser(usuario: any): object {
     return {
       id: usuario._id,
-      email: usuario.email,
+      Control_Usuario: usuario.Control_Usuario,
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       rol: usuario.rol,

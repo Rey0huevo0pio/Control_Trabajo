@@ -1,9 +1,9 @@
-import { IsEmail, IsString, IsEnum, IsOptional, IsBoolean, MinLength } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsBoolean, MinLength } from 'class-validator';
 import { RolUsuario } from '../Models/Usuarios/usuario.schema';
 
 export class CreateUsuarioDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  Control_Usuario: string;
 
   @IsString()
   @MinLength(6)
@@ -28,9 +28,9 @@ export class CreateUsuarioDto {
 }
 
 export class UpdateUsuarioDto {
-  @IsEmail()
+  @IsString()
   @IsOptional()
-  email?: string;
+  Control_Usuario?: string;
 
   @IsString()
   @MinLength(6)
@@ -62,8 +62,8 @@ export class UpdateUsuarioDto {
 }
 
 export class LoginDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  Control_Usuario: string;
 
   @IsString()
   password: string;

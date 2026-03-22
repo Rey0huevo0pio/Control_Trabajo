@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { IsString } from 'class-validator';
 
 export type UsuarioDocument = Usuario & Document;
 
@@ -90,7 +91,7 @@ export const PERMISOS_POR_ROL: Record<RolUsuario, Permiso[]> = {
 @Schema({ timestamps: true })
 export class Usuario {
   @Prop({ required: true, unique: true })
-  email: string;
+  Control_Usuario: string;
 
   @Prop({ required: true })
   password: string;

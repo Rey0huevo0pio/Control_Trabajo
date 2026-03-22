@@ -8,7 +8,7 @@ import { Usuario, UsuarioDocument } from '../../Models/Usuarios/usuario.schema';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
+  Control_Usuario: string;
   rol: string;
 }
 
@@ -38,7 +38,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     return {
       userId: payload.sub,
-      email: payload.email,
+      Control_Usuario: payload.Control_Usuario,
       rol: payload.rol,
       nombre: usuario.nombre,
       apellido: usuario.apellido,

@@ -1,0 +1,42 @@
+{
+  "name": "c_ticket_apk_stv",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-navigation/native-stack": "^7.14.6",
+    "@tamagui/core": "^2.0.0-rc.30",
+    "@tamagui/shorthands": "^2.0.0-rc.30",
+    "@tamagui/theme-base": "^2.0.0-rc.30",
+    "@tamagui/web": "^2.0.0-rc.30",
+    "axios": "^1.13.6",
+    "babel-preset-expo": "~55.0.8",
+    "expo": "~55.0.8",
+    "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "~14.0.0",
+    "react": "19.2.0",
+    "react-dom": "~19.2.0",
+    "react-native": "0.83.2",
+    "react-native-gesture-handler": "^2.30.0",
+    "react-native-reanimated": "4.2.1",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.10.0",
+    "react-native-svg": "15.15.3",
+    "react-native-web": "^0.19.13",
+    "react-native-worklets": "^0.8.1",
+    "tamagui": "^2.0.0-rc.30",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@react-navigation/native": "^7.1.34",
+    "@types/react": "~19.2.2",
+    "@types/react-native": "^0.72.8",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
