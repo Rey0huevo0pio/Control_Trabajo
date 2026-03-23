@@ -6,6 +6,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Prefijo global para la API
+  app.setGlobalPrefix('api');
+  
   // Obtener configuración
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 3000;

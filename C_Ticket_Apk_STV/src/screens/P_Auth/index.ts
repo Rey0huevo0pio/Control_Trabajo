@@ -1,1 +1,2 @@
-export { default as LoginScreen } from './LoginScreen'
+import LoginScreen from './LoginScreen'
+export { LoginScreen }

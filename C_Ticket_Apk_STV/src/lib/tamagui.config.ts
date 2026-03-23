@@ -1,4 +1,4 @@
-import { createTamagui, createFont } from '@tamagui/core'
+import { createTamagui, createFont, createTokens } from '@tamagui/core'
 
 const font = createFont({
   family: 'System',
@@ -22,10 +22,26 @@ const font = createFont({
     4: '600',
     5: '700',
   },
+  letterSpacing: {
+    true: 0,
+    1: -0.5,
+    2: -0.25,
+    3: 0,
+    4: 0.25,
+    5: 0.5,
+  },
+  lineHeight: {
+    true: 1.5,
+    1: 1.25,
+    2: 1.375,
+    3: 1.5,
+    4: 1.625,
+    5: 1.75,
+  },
 })
 
-const themes = {
-  light: {
+const tokens = createTokens({
+  color: {
     color: '#000000',
     color2: '#424242',
     color3: '#757575',
@@ -40,6 +56,71 @@ const themes = {
     success: '#4CAF50',
     warning: '#FF9800',
     error: '#F44336',
+  },
+  space: {
+    true: 0,
+    1: 4,
+    2: 8,
+    3: 12,
+    4: 16,
+    5: 20,
+    6: 24,
+    7: 28,
+    8: 32,
+    9: 36,
+    10: 40,
+  },
+  size: {
+    true: 0,
+    1: 4,
+    2: 8,
+    3: 12,
+    4: 16,
+    5: 20,
+    6: 24,
+    7: 28,
+    8: 32,
+    9: 36,
+    10: 40,
+  },
+  radius: {
+    true: 0,
+    1: 4,
+    2: 6,
+    3: 8,
+    4: 10,
+    5: 12,
+    6: 14,
+    7: 16,
+    8: 20,
+    9: 24,
+  },
+  zIndex: {
+    true: 0,
+    1: 100,
+    2: 200,
+    3: 300,
+    4: 400,
+    5: 500,
+  },
+})
+
+const themes = {
+  light: {
+    color: tokens.color.color,
+    color2: tokens.color.color2,
+    color3: tokens.color.color3,
+    color4: tokens.color.color4,
+    color5: tokens.color.color5,
+    background: tokens.color.background,
+    background2: tokens.color.background2,
+    background3: tokens.color.background3,
+    borderColor: tokens.color.borderColor,
+    primary: tokens.color.primary,
+    secondary: tokens.color.secondary,
+    success: tokens.color.success,
+    warning: tokens.color.warning,
+    error: tokens.color.error,
   },
   dark: {
     color: '#ffffff',
@@ -60,10 +141,12 @@ const themes = {
 }
 
 export const tamaguiConfig = createTamagui({
+  defaultTheme: 'light',
   fonts: {
     body: font,
     heading: font,
   },
+  tokens,
   themes,
   shorthands: {
     f: 'flex',

@@ -1,16 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TamaguiProvider } from 'tamagui';
 import { AppNavigator } from './src/navigation';
-import './src/lib/tamagui.config';
+import { tamaguiConfig } from './src/lib/tamagui.config';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <TamaguiProvider config={tamaguiConfig}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </TamaguiProvider>
   );
 }
