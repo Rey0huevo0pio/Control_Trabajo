@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { API_URL, API_TIMEOUT } from '../constants'
+import { useAuthStore } from '../store'
 
 // Crear instancia de axios
 const api: AxiosInstance = axios.create({
@@ -13,8 +14,10 @@ const api: AxiosInstance = axios.create({
 // Interceptor para agregar token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Aquí se podría obtener el token del store si es necesario
-    // const token = useAuthStore.getState().token
+    const token = useAuthStore.getState().token
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error: AxiosError) => {
@@ -28,7 +31,7 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expirado o no autorizado
-      // Aquí se podría llamar a logout
+      useAuthStore.getState().logout()
       console.error('No autorizado - token expirado')
     }
     return Promise.reject(error)

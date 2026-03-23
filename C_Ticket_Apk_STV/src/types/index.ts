@@ -1,13 +1,17 @@
 // Tipos para autenticación y usuarios
 export interface User {
   id: string
-  email: string
-  name: string
-  role: UserRole
-  avatar?: string
+  Control_Usuario: string
+  nombre: string
+  apellido: string
+  rol: UserRole
+  activo: boolean
+  telefono?: string
+  fechaIngreso?: string
+  permisos: string[]
 }
 
-export type UserRole = 'admin' | 'agente' | 'supervisor' | 'cliente'
+export type UserRole = 'vigilante' | 'supervisor' | 'rh' | 'it'
 export type Role = UserRole
 
 // Tipos para navegación
@@ -25,7 +29,7 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginRequest {
-  email: string
+  Control_Usuario: string
   password: string
 }
 

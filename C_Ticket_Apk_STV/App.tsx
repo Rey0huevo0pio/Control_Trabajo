@@ -7,7 +7,7 @@ import { tamaguiConfig } from './src/lib/tamagui.config';
 
 export default function App() {
   return (
-    <TamaguiProvider config={tamaguiConfig}>
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
       <SafeAreaProvider>
         <NavigationContainer>
           <AppNavigator />

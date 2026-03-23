@@ -1,19 +1,19 @@
 // Roles disponibles en el sistema (RBAC)
 export const ROLES = {
-  ADMIN: 'admin',
-  AGENTE: 'agente',
+  VIGILANTE: 'vigilante',
   SUPERVISOR: 'supervisor',
-  CLIENTE: 'cliente',
+  RH: 'rh',
+  IT: 'it',
 } as const
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
 
-// Permisos CRUD por rol
+// Permisos por rol según el backend
 export const ROLE_PERMISSIONS: Record<Role, CRUDPermissions> = {
-  admin: { create: true, read: true, update: true, delete: true },
-  agente: { create: true, read: true, update: true, delete: false },
-  supervisor: { create: true, read: true, update: true, delete: true },
-  cliente: { create: true, read: true, update: false, delete: false },
+  vigilante: { create: false, read: true, update: false, delete: false },
+  supervisor: { create: false, read: true, update: false, delete: false },
+  rh: { create: true, read: true, update: true, delete: false },
+  it: { create: true, read: true, update: true, delete: true },
 }
 
 export interface CRUDPermissions {

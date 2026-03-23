@@ -12,7 +12,7 @@ interface AuthState {
   login: (user: User, token: string) => void
   logout: () => void
   getToken: () => string | null
-  hasPermission: (action: keyof CRUDPermissions) => boolean
+  hasPermission: (permission: string) => boolean
   hasRole: (roles: Role | Role[]) => boolean
   setLoading: (loading: boolean) => void
 }
@@ -33,20 +33,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   getToken: () => get().token,
 
-  hasPermission: (action: keyof CRUDPermissions): boolean => {
+  hasPermission: (permission: string): boolean => {
     const { user } = get()
     if (!user) return false
-    const permissions = ROLE_PERMISSIONS[user.role]
-    return permissions[action]
+    return user.permisos.includes(permission)
   },
 
   hasRole: (roles: Role | Role[]): boolean => {
     const { user } = get()
     if (!user) return false
     if (Array.isArray(roles)) {
-      return roles.includes(user.role)
+      return roles.includes(user.rol)
     }
-    return user.role === roles
+    return user.rol === roles
   },
 
   setLoading: (loading) => {

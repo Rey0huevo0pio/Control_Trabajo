@@ -13,24 +13,24 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [email, setEmail] = useState('')
+  const [controlUsuario, setControlUsuario] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  
+
   const { login, setLoading, isLoading } = useAuthStore()
 
   const handleLogin = async () => {
     setError('')
-    
-    if (!email || !password) {
+
+    if (!controlUsuario || !password) {
       setError('Por favor completa todos los campos')
       return
     }
 
     try {
-      const data: LoginRequest = { email, password }
+      const data: LoginRequest = { Control_Usuario: controlUsuario, password }
       const response = await authApi.login(data)
-      
+
       if (response.success && response.data) {
         login(response.data.user, response.data.token)
         navigation.replace('Home')
@@ -67,7 +67,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         >
           C Ticket STV
         </Text>
-        
+
         <Text
           fontSize="$4"
           color="$color2"
@@ -79,15 +79,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         <YStack gap="$2">
           <Text fontSize="$3" color="$color" fontWeight="500">
-            Email
+            Control de Usuario
           </Text>
           <Input
-            value={email}
-            onChangeText={setEmail}
-            placeholder="tu@email.com"
+            value={controlUsuario}
+            onChangeText={setControlUsuario}
+            placeholder="Tu control de usuario"
             autoCapitalize="none"
             autoCorrect={false}
-            keyboardType="email-address"
             backgroundColor="$background"
             borderColor="$borderColor"
             color="$color"
