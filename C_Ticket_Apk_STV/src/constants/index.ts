@@ -24,7 +24,7 @@ export interface CRUDPermissions {
 }
 
 // URLs del backend
-export const API_URL = 'http://192.168.1.100:3000' // Cambiar según tu backend
+export const API_URL = 'http://192.168.100.29:3000' // IP de tu máquina
 export const API_TIMEOUT = 10000
 
 // Colores de la marca

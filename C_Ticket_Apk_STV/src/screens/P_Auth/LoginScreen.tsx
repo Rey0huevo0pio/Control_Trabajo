@@ -87,9 +87,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             placeholder="Tu control de usuario"
             autoCapitalize="none"
             autoCorrect={false}
+            height={45}
+            paddingHorizontal="$3"
             backgroundColor="$background"
             borderColor="$borderColor"
             color="$color"
+            placeholderTextColor="$color2"
+            fontSize={16}
           />
         </YStack>
 
@@ -102,9 +106,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             onChangeText={setPassword}
             placeholder="••••••••"
             secureTextEntry
+            height={45}
+            paddingHorizontal="$3"
             backgroundColor="$background"
             borderColor="$borderColor"
             color="$color"
+            placeholderTextColor="$color2"
+            fontSize={16}
           />
         </YStack>
 
