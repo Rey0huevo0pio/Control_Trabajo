@@ -1,0 +1,5 @@
+# Ignorar todos los archivos subidos
+*
+
+# Mantener la carpeta en el repositorio
+!.gitignore

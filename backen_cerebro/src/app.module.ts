@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './Modules/Auth/auth.module';
 import { UsersModule } from './Modules/Users/users.module';
+import { InstalacionesModule } from './Modules/Instalaciones/instalaciones.module';
+import { UsuariosModule } from './Modules/Usuarios/usuarios.module';
+import { TicketITModule } from './Modules/TicketIT/ticket-it.module';
+import { ChatModule } from './Modules/Chat/chat.module';
+import { UploadsModule } from './Modules/Uploads/uploads.module';
 
 @Module({
   imports: [
@@ -23,9 +30,19 @@ import { UsersModule } from './Modules/Users/users.module';
       }),
       inject: [ConfigService],
     }),
+    // Servir archivos estáticos (uploads)
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     // Módulos de la aplicación
     AuthModule,
     UsersModule,
+    InstalacionesModule,
+    UsuariosModule,
+    TicketITModule,
+    ChatModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
