@@ -1,11 +1,18 @@
+import React from 'react'
 import { YStack, XStack, Text, Button, Card } from 'tamagui'
+import { useNavigation } from '@react-navigation/native'
 import { useAuthStore } from '../../store'
 import { ROLE_PERMISSIONS } from '../../constants'
 
 export default function HomeScreen() {
+  const navigation = useNavigation<any>()
   const { user, logout, hasPermission, hasRole } = useAuthStore()
 
   const permissions = user ? ROLE_PERMISSIONS[user.rol] : null
+
+  const handleNavigateToInstalaciones = () => {
+    navigation.navigate('InstalacionesHome')
+  }
 
   return (
     <YStack
@@ -72,6 +79,52 @@ export default function HomeScreen() {
           </Text>
         </XStack>
       </Card>
+
+      {/* Módulo de Instalaciones */}
+      <Text fontSize="$6" fontWeight="600" color="$color" marginBottom="$3">
+        Módulos Disponibles
+      </Text>
+
+      <YStack gap="$3" marginBottom="$4">
+        {/* Tarjeta de Instalaciones */}
+        <Card
+          backgroundColor="$background2"
+          borderRadius={16}
+          padding="$4"
+          borderColor="$primary"
+          borderWidth={2}
+          onPress={handleNavigateToInstalaciones}
+        >
+          <XStack alignItems="center" gap="$4">
+            <YStack
+              backgroundColor="$primary"
+              opacity={0.1}
+              width={50}
+              height={50}
+              borderRadius={12}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="$8">🏢</Text>
+            </YStack>
+            <YStack flex={1}>
+              <Text fontSize="$5" fontWeight="700" color="$color">
+                Instalaciones
+              </Text>
+              <Text fontSize="$3" color="$color2">
+                Gestiona instalaciones y áreas
+              </Text>
+            </YStack>
+            <Button
+              backgroundColor="$primary"
+              iconAfter={() => <Text color="white">→</Text>}
+              onPress={handleNavigateToInstalaciones}
+            >
+              <Text color="white">Ir</Text>
+            </Button>
+          </XStack>
+        </Card>
+      </YStack>
 
       {/* Permisos RBAC */}
       <Text fontSize="$6" fontWeight="600" color="$color" marginBottom="$3">
