@@ -61,7 +61,7 @@ export class UsuariosService {
       });
 
       return await usuario.save();
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ConflictException) {
         throw error;
       }
@@ -143,7 +143,7 @@ export class UsuariosService {
         throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
       }
       return usuario;
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -189,7 +189,7 @@ export class UsuariosService {
       (await bcrypt.compare(loginDto.password, usuario.password))
     ) {
       const usuarioObj = usuario as any;
-      const { password, ...result } = usuarioObj;
+      const { password: _password, ...result } = usuarioObj;
       return result as Usuario;
     }
 

@@ -119,7 +119,7 @@ export class UploadsService {
         ruta: rutaFinal,
         filename: file.filename,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Error al subir archivo: ${error.message}`);
     }
   }
@@ -185,7 +185,7 @@ export class UploadsService {
 
       // Eliminar el archivo (fs.unlink se usa en el controller)
       // Aquí solo validamos que exista
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
