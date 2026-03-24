@@ -19,26 +19,26 @@ export enum Permiso {
   USUARIOS_CREAR = 'usuarios_crear',
   USUARIOS_EDITAR = 'usuarios_editar',
   USUARIOS_ELIMINAR = 'usuarios_eliminar',
-  
+
   // Dashboard
   DASHBOARD_VER = 'dashboard_ver',
-  
+
   // Reportes
   REPORTES_VER = 'reportes_ver',
   REPORTES_CREAR = 'reportes_crear',
-  
+
   // Inventario
   INVENTARIO_VER = 'inventario_ver',
   INVENTARIO_CREAR = 'inventario_crear',
   INVENTARIO_EDITAR = 'inventario_editar',
   INVENTARIO_ELIMINAR = 'inventario_eliminar',
-  
+
   // Rondines
   RONDINES_VER = 'rondines_ver',
   RONDINES_CREAR = 'rondines_crear',
   RONDINES_EDITAR = 'rondines_editar',
   RONDINES_ELIMINAR = 'rondines_eliminar',
-  
+
   // Chat
   CHAT_VER = 'chat_ver',
   CHAT_ENVIAR = 'chat_enviar',
@@ -102,10 +102,10 @@ export class Usuario {
   @Prop({ required: true })
   apellido: string;
 
-  @Prop({ 
-    type: String, 
-    enum: RolUsuario, 
-    default: RolUsuario.VIGILANTE 
+  @Prop({
+    type: String,
+    enum: RolUsuario,
+    default: RolUsuario.VIGILANTE,
   })
   rol: RolUsuario;
 

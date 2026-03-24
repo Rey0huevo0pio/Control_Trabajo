@@ -5,7 +5,7 @@ import { ROLE_PERMISSIONS } from '../../constants'
 export default function HomeScreen() {
   const { user, logout, hasPermission, hasRole } = useAuthStore()
 
-  const permissions = user ? ROLE_PERMISSIONS[user.role] : null
+  const permissions = user ? ROLE_PERMISSIONS[user.rol] : null
 
   return (
     <YStack
@@ -28,7 +28,7 @@ export default function HomeScreen() {
             Panel Principal
           </Text>
         </YStack>
-        
+
         <Button
           onPress={logout}
           backgroundColor="$error"
@@ -48,14 +48,14 @@ export default function HomeScreen() {
         borderWidth={1}
       >
         <Text fontSize="$6" fontWeight="600" color="$color" marginBottom="$2">
-          Bienvenido, {user?.name || 'Usuario'}
+          Bienvenido, {user ? `${user.nombre} ${user.apellido}` : 'Usuario'}
         </Text>
         <XStack gap="$2" alignItems="center">
           <Text fontSize="$4" color="$color2">
-            Email:
+            Usuario:
           </Text>
           <Text fontSize="$4" color="$color">
-            {user?.email}
+            {user?.Control_Usuario}
           </Text>
         </XStack>
         <XStack gap="$2" alignItems="center" marginTop="$1">
@@ -68,7 +68,7 @@ export default function HomeScreen() {
             fontWeight="600"
             textTransform="uppercase"
           >
-            {user?.role}
+            {user?.rol}
           </Text>
         </XStack>
       </Card>
@@ -77,7 +77,7 @@ export default function HomeScreen() {
       <Text fontSize="$6" fontWeight="600" color="$color" marginBottom="$3">
         Tus Permisos (RBAC)
       </Text>
-      
+
       <XStack gap="$3" flexWrap="wrap" marginBottom="$4">
         {permissions && (
           <>
@@ -95,22 +95,22 @@ export default function HomeScreen() {
       </Text>
 
       <YStack gap="$3">
-        {hasRole('admin') && (
+        {hasRole('it') && (
           <ActionButton
             title="Gestionar Usuarios"
             description="Administra usuarios y roles del sistema"
             icon="👥"
           />
         )}
-        
-        {(hasRole('admin') || hasRole('supervisor') || hasRole('agente')) && (
+
+        {(hasRole('it') || hasRole('rh') || hasRole('supervisor')) && (
           <ActionButton
             title="Gestionar Tickets"
             description="Crea, asigna y da seguimiento a tickets"
             icon="🎫"
           />
         )}
-        
+
         {hasRole('supervisor') && (
           <ActionButton
             title="Reportes y Métricas"
@@ -118,8 +118,8 @@ export default function HomeScreen() {
             icon="📊"
           />
         )}
-        
-        {hasRole('cliente') && (
+
+        {hasRole('vigilante') && (
           <ActionButton
             title="Mis Tickets"
             description="Consulta y da seguimiento a tus tickets"

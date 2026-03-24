@@ -5,14 +5,14 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Prefijo global para la API
   app.setGlobalPrefix('api');
-  
+
   // Obtener configuración
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 3000;
-  
+
   // Habilitar validación de clases
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,10 +21,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  
+
   // Habilitar CORS
   app.enableCors();
-  
+
   await app.listen(port);
   console.log(`🚀 Servidor corriendo en puerto: ${port}`);
   console.log(`📚 Endpoints de autenticación:`);

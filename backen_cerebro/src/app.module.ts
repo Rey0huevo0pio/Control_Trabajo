@@ -17,7 +17,9 @@ import { UsersModule } from './Modules/Users/users.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get('MONGODB_URI') || 'mongodb://127.0.0.1:27017/Sotaventos_Controller',
+        uri:
+          configService.get('MONGODB_URI') ||
+          'mongodb://127.0.0.1:27017/STV_Global',
       }),
       inject: [ConfigService],
     }),

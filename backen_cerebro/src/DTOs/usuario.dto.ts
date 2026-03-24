@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsOptional, IsBoolean, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  MinLength,
+} from 'class-validator';
 import { RolUsuario } from '../Models/Usuarios/usuario.schema';
 
 export class CreateUsuarioDto {

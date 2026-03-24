@@ -1,8 +1,17 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { Usuario, UsuarioDocument, RolUsuario, PERMISOS_POR_ROL } from '../../Models/Usuarios/usuario.schema';
+import {
+  Usuario,
+  UsuarioDocument,
+  RolUsuario,
+  PERMISOS_POR_ROL,
+} from '../../Models/Usuarios/usuario.schema';
 import { CreateUsuarioDto, UpdateUsuarioDto } from '../../DTOs/usuario.dto';
 
 @Injectable()
@@ -13,18 +22,23 @@ export class UsersService {
 
   async findAll(): Promise<any[]> {
     const usuarios = await this.usuarioModel.find().select('-password').exec();
-    return usuarios.map(usuario => this.sanitizeUser(usuario));
+    return usuarios.map((usuario) => this.sanitizeUser(usuario));
   }
 
   async findOne(id: string): Promise<any> {
-    const usuario = await this.usuarioModel.findById(id).select('-password').exec();
+    const usuario = await this.usuarioModel
+      .findById(id)
+      .select('-password')
+      .exec();
     if (!usuario) {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
     return this.sanitizeUser(usuario);
   }
 
-  async findByControl_Usuario(Control_Usuario: string): Promise<UsuarioDocument | null> {
+  async findByControl_Usuario(
+    Control_Usuario: string,
+  ): Promise<UsuarioDocument | null> {
     return this.usuarioModel.findOne({ Control_Usuario }).exec();
   }
 
@@ -32,12 +46,16 @@ export class UsersService {
     // Si se va a cambiar el password, hashearlo
     if (updateUsuarioDto.password) {
       const salt = await bcrypt.genSalt(10);
-      updateUsuarioDto.password = await bcrypt.hash(updateUsuarioDto.password, salt);
+      updateUsuarioDto.password = await bcrypt.hash(
+        updateUsuarioDto.password,
+        salt,
+      );
     }
 
     // Si se va a cambiar el rol, actualizar los permisos
     if (updateUsuarioDto.rol) {
-      (updateUsuarioDto as any).permisos = PERMISOS_POR_ROL[updateUsuarioDto.rol] || [];
+      (updateUsuarioDto as any).permisos =
+        PERMISOS_POR_ROL[updateUsuarioDto.rol] || [];
     }
 
     const usuario = await this.usuarioModel

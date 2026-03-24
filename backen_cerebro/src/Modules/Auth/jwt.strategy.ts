@@ -21,13 +21,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get('JWT_SECRET') || 'sotavento_secret_key_2024',
+      secretOrKey:
+        configService.get('JWT_SECRET') || 'sotavento_secret_key_2024',
     });
   }
 
   async validate(payload: JwtPayload) {
-    const usuario = await this.usuarioModel.findById(payload.sub).select('-password');
-    
+    const usuario = await this.usuarioModel
+      .findById(payload.sub)
+      .select('-password');
+
     if (!usuario) {
       throw new UnauthorizedException('Usuario no encontrado');
     }

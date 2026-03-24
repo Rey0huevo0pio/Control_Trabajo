@@ -1,9 +1,18 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { Usuario, UsuarioDocument, RolUsuario, PERMISOS_POR_ROL } from '../../Models/Usuarios/usuario.schema';
+import {
+  Usuario,
+  UsuarioDocument,
+  RolUsuario,
+  PERMISOS_POR_ROL,
+} from '../../Models/Usuarios/usuario.schema';
 import { CreateUsuarioDto, LoginDto } from '../../DTOs/usuario.dto';
 
 @Injectable()
@@ -15,7 +24,9 @@ export class AuthService {
 
   async register(createUsuarioDto: CreateUsuarioDto) {
     // Verificar si el Control_Usuario ya existe
-    const existingUser = await this.usuarioModel.findOne({ Control_Usuario: createUsuarioDto.Control_Usuario });
+    const existingUser = await this.usuarioModel.findOne({
+      Control_Usuario: createUsuarioDto.Control_Usuario,
+    });
     if (existingUser) {
       throw new ConflictException('El Control_Usuario ya está registrado');
     }
@@ -52,7 +63,9 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const usuario = await this.usuarioModel.findOne({ Control_Usuario: loginDto.Control_Usuario });
+    const usuario = await this.usuarioModel.findOne({
+      Control_Usuario: loginDto.Control_Usuario,
+    });
 
     if (!usuario) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -62,8 +75,11 @@ export class AuthService {
       throw new UnauthorizedException('Usuario inactivo');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, usuario.password);
-    
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      usuario.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -81,7 +97,9 @@ export class AuthService {
   }
 
   async validateUser(userId: string): Promise<any> {
-    const usuario = await this.usuarioModel.findById(userId).select('-password');
+    const usuario = await this.usuarioModel
+      .findById(userId)
+      .select('-password');
     if (usuario && usuario.activo) {
       return usuario;
     }
