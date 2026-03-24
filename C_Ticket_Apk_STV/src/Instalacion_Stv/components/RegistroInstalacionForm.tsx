@@ -60,9 +60,15 @@ export function RegistroInstalacionForm({ onSuccess, onCancel }: Props) {
       Alert.alert('Error', 'El responsable es requerido')
       return
     }
+    if (!formData.creado_por) {
+      Alert.alert('Error', 'Debes iniciar sesión para registrar una instalación')
+      return
+    }
 
     setLoading(true)
     try {
+      console.log('Datos a enviar:', JSON.stringify(formData, null, 2))
+      console.log('Usuario actual:', user)
       await instalacionApi.create(formData)
       Alert.alert('Éxito', 'Instalación registrada correctamente')
       setFormData({
@@ -76,9 +82,11 @@ export function RegistroInstalacionForm({ onSuccess, onCancel }: Props) {
       })
       onSuccess?.()
     } catch (error: any) {
+      console.error('Error completo:', error)
+      console.error('Response data:', error.response?.data)
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'No se pudo registrar la instalación'
+        error.response?.data?.message || error.message || 'No se pudo registrar la instalación'
       )
     } finally {
       setLoading(false)

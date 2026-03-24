@@ -22,8 +22,13 @@ async function bootstrap() {
     }),
   );
 
-  // Habilitar CORS
-  app.enableCors();
+  // Habilitar CORS para todas las conexiones
+  app.enableCors({
+    origin: true, // Permitir todas las origins (para desarrollo)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
 
   await app.listen(port);
   console.log(`🚀 Servidor corriendo en puerto: ${port}`);

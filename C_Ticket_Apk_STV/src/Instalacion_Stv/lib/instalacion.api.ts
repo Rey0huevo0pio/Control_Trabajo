@@ -38,7 +38,21 @@ export const instalacionApi = {
    * Crear una nueva instalación
    */
   async create(data: CreateInstalacionDto): Promise<Instalacion> {
-    const response = await api.post<Instalacion>('/instalaciones', data)
+    // Transformar los datos para asegurar que coincidan con el backend
+    const payload = {
+      nombre_instalacion: data.nombre_instalacion,
+      nombre_registrador: data.nombre_registrador,
+      ubicacion: data.ubicacion,
+      descripcion: data.descripcion || undefined,
+      foto: data.foto || undefined,
+      responsable: data.responsable,
+      personal_asignado: data.personal_asignado || undefined,
+      activa: data.activa !== undefined ? data.activa : true,
+      creado_por: data.creado_por,
+    }
+    
+    console.log('Enviando instalación:', JSON.stringify(payload, null, 2))
+    const response = await api.post<Instalacion>('/instalaciones', payload)
     return response.data
   },
 

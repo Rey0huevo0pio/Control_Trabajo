@@ -1,33 +1,29 @@
 {
   "expo": {
     "name": "C_Ticket_Apk_STV",
-    "slug": "C_Ticket_Apk_STV",
+    "slug": "c-ticket-apk-stv",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
-    },
+    "scheme": "cticketstv",
     "web": {
+      "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-web-browser"
-    ]
+    "plugins": [],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "android": {
+      "package": "com.cticketstv.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2196F3"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.cticketstv.app",
+      "supportsTablet": true
+    }
   }
 }

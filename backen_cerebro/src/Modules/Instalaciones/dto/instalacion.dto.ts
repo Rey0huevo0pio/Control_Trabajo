@@ -9,6 +9,7 @@ import {
   Max,
   IsArray,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Types } from 'mongoose';
 
 export class CoordenadasDto {
@@ -30,6 +31,7 @@ export class UbicacionDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
+  @Type(() => CoordenadasDto)
   coordenadas?: CoordenadasDto;
 }
 
@@ -42,6 +44,7 @@ export class CreateInstalacionDto {
 
   @IsObject()
   @ValidateNested()
+  @Type(() => UbicacionDto)
   ubicacion: UbicacionDto;
 
   @IsOptional()
@@ -79,6 +82,7 @@ export class UpdateInstalacionDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
+  @Type(() => UbicacionDto)
   ubicacion?: UbicacionDto;
 
   @IsOptional()

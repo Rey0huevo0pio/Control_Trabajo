@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { InstalacionesService } from './instalaciones.service';
@@ -39,20 +38,20 @@ export class InstalacionesController {
   }
 
   @Get(':id')
-  async findOneInstalacion(@Param('id', ParseUUIDPipe) id: string) {
+  async findOneInstalacion(@Param('id') id: string) {
     return this.instalacionesService.findOneInstalacion(id);
   }
 
   @Put(':id')
   async updateInstalacion(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateDto: UpdateInstalacionDto,
   ) {
     return this.instalacionesService.updateInstalacion(id, updateDto);
   }
 
   @Delete(':id')
-  async deleteInstalacion(@Param('id', ParseUUIDPipe) id: string) {
+  async deleteInstalacion(@Param('id') id: string) {
     await this.instalacionesService.deleteInstalacion(id);
     return { message: 'Instalación eliminada correctamente' };
   }
@@ -70,27 +69,27 @@ export class InstalacionesController {
   }
 
   @Get('areas/:id')
-  async findOneArea(@Param('id', ParseUUIDPipe) id: string) {
+  async findOneArea(@Param('id') id: string) {
     return this.instalacionesService.findOneArea(id);
   }
 
   @Put('areas/:id')
   async updateArea(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateDto: UpdateAreaInstalacionDto,
   ) {
     return this.instalacionesService.updateArea(id, updateDto);
   }
 
   @Delete('areas/:id')
-  async deleteArea(@Param('id', ParseUUIDPipe) id: string) {
+  async deleteArea(@Param('id') id: string) {
     await this.instalacionesService.deleteArea(id);
     return { message: 'Área eliminada correctamente' };
   }
 
   @Get('instalacion/:instalacionId/areas')
   async findAreasByInstalacion(
-    @Param('instalacionId', ParseUUIDPipe) instalacionId: string,
+    @Param('instalacionId') instalacionId: string,
   ) {
     return this.instalacionesService.findAreasByInstalacion(instalacionId);
   }
