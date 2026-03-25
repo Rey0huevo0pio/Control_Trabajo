@@ -12,8 +12,8 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { instalacionApi } from '../lib'
-import type { CreateInstalacionDto } from '../../types'
-import { useAuthStore } from '../../store'
+import type { CreateInstalacionDto } from '@/types'
+import { useAuthStore } from '@/store'
 
 interface Props {
   onSuccess?: () => void

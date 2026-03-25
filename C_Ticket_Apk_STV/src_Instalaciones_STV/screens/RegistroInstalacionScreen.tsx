@@ -2,7 +2,7 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { RegistroInstalacionForm } from '../components'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { InstalacionStackParamList } from '../../types'
+import type { InstalacionStackParamList } from '@/types'
 
 type NavigationProp = NativeStackNavigationProp<InstalacionStackParamList>
 

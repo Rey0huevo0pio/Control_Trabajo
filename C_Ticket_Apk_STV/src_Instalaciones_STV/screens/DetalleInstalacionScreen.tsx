@@ -12,9 +12,9 @@ import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { InstalacionCard } from '../components'
 import { instalacionApi } from '../lib'
-import type { Instalacion, AreaInstalacion } from '../../types'
+import type { Instalacion, AreaInstalacion } from '@/types'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { InstalacionStackParamList } from '../../types'
+import type { InstalacionStackParamList } from '@/types'
 
 type NavigationProp = NativeStackNavigationProp<InstalacionStackParamList>
 

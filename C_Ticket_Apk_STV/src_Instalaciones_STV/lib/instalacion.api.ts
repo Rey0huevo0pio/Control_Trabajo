@@ -1,10 +1,10 @@
-import api from '../../services/api'
+import api from '@/services/api'
 import type {
   Instalacion,
   AreaInstalacion,
   CreateInstalacionDto,
   CreateAreaInstalacionDto,
-} from '../../types'
+} from '@/types'
 
 /**
  * Servicio para manejar las operaciones de instalaciones

@@ -7,7 +7,7 @@ import {
   Image,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import type { Instalacion } from '../../types'
+import type { Instalacion } from '@/types'
 
 interface Props {
   instalacion: Instalacion

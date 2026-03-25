@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types'
 import { LoginScreen } from '../screens/P_Auth'
 import { HomeScreen } from '../screens/P_Principal'
-import { InstalacionNavigator } from '../Instalacion_Stv/navigation'
+import { InstalacionNavigator } from '../../src_Instalaciones_STV/navigation'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
