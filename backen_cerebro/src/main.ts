@@ -30,8 +30,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 Servidor corriendo en puerto: ${port}`);
+  console.log(
+    `🌐 Escuchando en: http://localhost:${port} y http://<tu-ip>:${port}`,
+  );
   console.log(`📚 Endpoints de autenticación:`);
   console.log(`   POST /auth/register - Registrar usuario`);
   console.log(`   POST /auth/login - Iniciar sesión`);
@@ -41,4 +44,5 @@ async function bootstrap() {
   console.log(`   PATCH /users/:id - Actualizar usuario`);
   console.log(`   DELETE /users/:id - Eliminar usuario`);
 }
-bootstrap();
+
+void bootstrap();
