@@ -3,6 +3,7 @@ import { YStack, XStack, Input, Text, Button, Spinner } from 'tamagui'
 import { useAuthStore } from '../../store'
 import { authApi } from '../../services'
 import { LoginRequest } from '../../types'
+import { useWindowDimensions } from 'react-native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types'
 
@@ -16,8 +17,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [controlUsuario, setControlUsuario] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const { width } = useWindowDimensions()
 
   const { login, setLoading, isLoading } = useAuthStore()
+  const isMobile = width < 480
 
   const handleLogin = async () => {
     setError('')
@@ -46,91 +49,179 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     <YStack
       flex={1}
       backgroundColor="$background"
-      padding="$4"
+      padding={isMobile ? '$3' : '$4'}
       justifyContent="center"
       alignItems="center"
     >
       <YStack
         width="100%"
         maxWidth={400}
-        padding="$6"
+        padding={isMobile ? '$5' : '$6'}
         backgroundColor="$background2"
-        borderRadius={16}
-        gap="$4"
+        borderRadius={20}
+        gap="$5"
+        shadowColor="$shadowColor"
+        shadowOpacity={0.1}
+        shadowRadius={12}
       >
-        <Text
-          fontSize="$9"
-          fontWeight="700"
-          color="$color"
-          textAlign="center"
-          marginBottom="$2"
-        >
-          C Ticket STV
-        </Text>
+        {/* Logo/Título */}
+        <YStack alignItems="center" gap="$2">
+          <Text
+            fontSize={isMobile ? '$8' : '$9'}
+            fontWeight="800"
+            color="$primary"
+            textAlign="center"
+          >
+            🎫
+          </Text>
+          <Text
+            fontSize={isMobile ? '$7' : '$9'}
+            fontWeight="700"
+            color="$color"
+            textAlign="center"
+          >
+            C Ticket STV
+          </Text>
+          <Text
+            fontSize={isMobile ? '$3' : '$4'}
+            color="$color2"
+            textAlign="center"
+            lineHeight="$1"
+          >
+            Sistema de Tickets de Soporte
+          </Text>
+        </YStack>
 
-        <Text
-          fontSize="$4"
-          color="$color2"
-          textAlign="center"
-          marginBottom="$4"
-        >
-          Inicia sesión para continuar
-        </Text>
-
-        <YStack gap="$2">
-          <Text fontSize="$3" color="$color" fontWeight="500">
-            Control de Usuario
+        {/* Campo Control de Usuario */}
+        <YStack gap="$2.5">
+          <Text fontSize={isMobile ? '$4' : '$4'} color="$color" fontWeight="600">
+            👤 Control de Usuario
           </Text>
           <Input
             value={controlUsuario}
             onChangeText={setControlUsuario}
-            placeholder="Tu control de usuario"
+            placeholder="Ej: USUARIO123"
             autoCapitalize="none"
             autoCorrect={false}
-            height={45}
-            paddingHorizontal="$3"
+            height={isMobile ? 56 : 50}
+            paddingHorizontal="$4"
+            paddingVertical="$3"
             backgroundColor="$background"
             borderColor="$borderColor"
+            borderWidth={2}
             color="$color"
             placeholderTextColor="$color2"
-            fontSize={16}
+            fontSize={isMobile ? 18 : 16}
+            fontWeight="500"
+            borderRadius={12}
           />
         </YStack>
 
-        <YStack gap="$2">
-          <Text fontSize="$3" color="$color" fontWeight="500">
-            Contraseña
+        {/* Campo Contraseña */}
+        <YStack gap="$2.5">
+          <Text fontSize={isMobile ? '$4' : '$4'} color="$color" fontWeight="600">
+            🔐 Contraseña
           </Text>
           <Input
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
             secureTextEntry
-            height={45}
-            paddingHorizontal="$3"
+            height={isMobile ? 56 : 50}
+            paddingHorizontal="$4"
+            paddingVertical="$3"
             backgroundColor="$background"
             borderColor="$borderColor"
+            borderWidth={2}
             color="$color"
             placeholderTextColor="$color2"
-            fontSize={16}
+            fontSize={isMobile ? 18 : 16}
+            fontWeight="500"
+            borderRadius={12}
           />
         </YStack>
 
+        {/* Mensaje de Error */}
         {error ? (
-          <Text color="$error" fontSize="$3" textAlign="center">
-            {error}
-          </Text>
+          <XStack
+            backgroundColor="$error"
+            opacity={0.15}
+            padding="$3"
+            borderRadius={12}
+            borderLeftWidth={4}
+            borderLeftColor="$error"
+            alignItems="center"
+          >
+            <Text color="$error" fontSize={isMobile ? '$4' : '$3'} fontWeight="600" flex={1}>
+              ⚠️ {error}
+            </Text>
+          </XStack>
         ) : null}
 
+        {/* Botón Login */}
         <Button
           onPress={handleLogin}
           backgroundColor="$primary"
-          paddingVertical="$3"
+          paddingVertical={isMobile ? '$3.5' : '$3'}
+          paddingHorizontal="$4"
           disabled={isLoading}
+          borderRadius={12}
           marginTop="$2"
+          shadowColor="$primary"
+          shadowOpacity={0.3}
+          shadowRadius={8}
+          justifyContent="center"
+          alignItems="center"
+          minHeight={isMobile ? 58 : 50}
+          width="100%"
         >
-          {isLoading ? <Spinner color="white" /> : <Text color="white" fontWeight="600">Ingresar</Text>}
+          {isLoading ? (
+            <XStack gap="$2" alignItems="center" justifyContent="center">
+              <Spinner color="white" size="small" />
+              <Text 
+                color="white" 
+                fontWeight="700" 
+                fontSize={isMobile ? '$4' : '$4'}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                Ingresando...
+              </Text>
+            </XStack>
+          ) : (
+            <Text 
+              color="white" 
+              fontWeight="700" 
+              fontSize={isMobile ? '$4' : '$4'}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              Ingresar
+            </Text>
+          )}
         </Button>
+
+        {/* Info adicional */}
+        <YStack alignItems="center" gap="$1.5" marginTop="$3">
+          <Text 
+            fontSize={isMobile ? '$3' : '$2'} 
+            color="$color2" 
+            textAlign="center"
+            fontWeight="500"
+          >
+            Versión 1.0.0
+          </Text>
+          <Text 
+            fontSize={isMobile ? '$3' : '$2'} 
+            color="$color2" 
+            textAlign="center" 
+            lineHeight="$2"
+            fontWeight="400"
+            numberOfLines={2}
+          >
+            © 2026 C Ticket STV
+          </Text>
+        </YStack>
       </YStack>
     </YStack>
   )
