@@ -1,11 +1,6 @@
 import React from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from 'react-native'
+import { View, Image } from 'react-native'
+import { YStack, XStack, Text, Card, Button } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import type { Instalacion } from '@/types'
 
@@ -23,184 +18,109 @@ export function InstalacionCard({
   showCreateArea = false,
 }: Props) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      {/* Foto de la instalación */}
-      <View style={styles.imageContainer}>
-        {instalacion.foto ? (
-          <Image source={{ uri: instalacion.foto }} style={styles.image} />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="business-outline" size={40} color="#999" />
-          </View>
-        )}
-        {/* Badge de activo/inactivo */}
-        <View style={[
-          styles.statusBadge,
-          { backgroundColor: instalacion.activa ? '#4CAF50' : '#9E9E9E' }
-        ]}>
-          <Text style={styles.statusText}>
-            {instalacion.activa ? 'Activa' : 'Inactiva'}
-          </Text>
-        </View>
-      </View>
-
-      {/* Contenido de la tarjeta */}
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
-          {instalacion.nombre_instalacion}
-        </Text>
-
-        {/* Ubicación */}
-        <View style={styles.infoRow}>
-          <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {instalacion.ubicacion?.direccion || 'Sin ubicación'}
-          </Text>
-        </View>
-
-        {/* Responsable */}
-        <View style={styles.infoRow}>
-          <Ionicons name="shield-outline" size={16} color="#666" />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {instalacion.responsable || 'Sin responsable'}
-          </Text>
-        </View>
-
-        {/* Descripción (corta) */}
-        {instalacion.descripcion && (
-          <Text style={styles.description} numberOfLines={2}>
-            {instalacion.descripcion}
-          </Text>
-        )}
-
-        {/* Registrador */}
-        <View style={styles.registradorContainer}>
-          <Ionicons name="person-circle-outline" size={16} color="#999" />
-          <Text style={styles.registradorText}>
-            Registrado por: {instalacion.nombre_registrador}
-          </Text>
-        </View>
-      </View>
-
-      {/* Botón de crear área */}
-      {showCreateArea && (
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.createAreaButton}
-            onPress={onCreateArea}
-            activeOpacity={0.7}
+    <Card
+      backgroundColor="$background"
+      borderRadius={16}
+      padding={0}
+      overflow="hidden"
+      borderColor="$borderColor"
+      borderWidth={1}
+      shadowColor="$shadowColor"
+      shadowOpacity={0.08}
+      shadowRadius={6}
+      onPress={onPress}
+      pressStyle={{ opacity: 0.9 }}
+    >
+      <YStack>
+        {/* Foto de la instalación */}
+        <YStack position="relative" height={140} backgroundColor="$background3">
+          {instalacion.foto ? (
+            <Image
+              source={{ uri: instalacion.foto }}
+              style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+            />
+          ) : (
+            <YStack
+              flex={1}
+              justifyContent="center"
+              alignItems="center"
+              backgroundColor="$background2"
+            >
+              <Ionicons name="business-outline" size={48} color="$color4" />
+            </YStack>
+          )}
+          {/* Badge de activo/inactivo */}
+          <XStack
+            position="absolute"
+            top="$2"
+            right="$2"
+            backgroundColor={instalacion.activa ? '$success' : '$color4'}
+            paddingHorizontal="$3"
+            paddingVertical="$1"
+            borderRadius={10}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
-            <Text style={styles.createAreaButtonText}>Crear Área</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </TouchableOpacity>
+            <Text color="white" fontSize="$2" fontWeight="600">
+              {instalacion.activa ? 'Activa' : 'Inactiva'}
+            </Text>
+          </XStack>
+        </YStack>
+
+        {/* Contenido de la tarjeta */}
+        <YStack padding="$4" gap="$2">
+          <Text fontSize="$5" fontWeight="700" color="$color" numberOfLines={2}>
+            {instalacion.nombre_instalacion}
+          </Text>
+
+          <XStack gap="$2" alignItems="center">
+            <Ionicons name="location-outline" size={16} color="$color2" />
+            <Text fontSize="$3" color="$color2" flex={1} numberOfLines={1}>
+              {instalacion.ubicacion?.direccion || 'Sin ubicación'}
+            </Text>
+          </XStack>
+
+          <XStack gap="$2" alignItems="center">
+            <Ionicons name="shield-outline" size={16} color="$color2" />
+            <Text fontSize="$3" color="$color2" flex={1} numberOfLines={1}>
+              {instalacion.responsable || 'Sin responsable'}
+            </Text>
+          </XStack>
+
+          {instalacion.descripcion && (
+            <Text fontSize="$3" color="$color3" numberOfLines={2} marginTop="$1">
+              {instalacion.descripcion}
+            </Text>
+          )}
+
+          <XStack gap="$1" alignItems="center" paddingTop="$3" borderTopWidth={1} borderTopColor="$background3">
+            <Ionicons name="person-circle-outline" size={14} color="$color4" />
+            <Text fontSize="$1" color="$color4">
+              {instalacion.nombre_registrador}
+            </Text>
+          </XStack>
+        </YStack>
+
+        {/* Botón de crear área */}
+        {showCreateArea && (
+          <YStack padding="$4" paddingTop={0}>
+            <Button
+              onPress={onCreateArea}
+              backgroundColor="$background2"
+              borderRadius={10}
+              borderWidth={1}
+              borderColor="$primary"
+              borderStyle="dashed"
+              pressStyle={{ opacity: 0.8 }}
+            >
+              <XStack alignItems="center" gap="$2">
+                <Ionicons name="add-circle-outline" size={18} color="$primary" />
+                <Text color="$primary" fontSize="$3" fontWeight="600">
+                  Crear Área
+                </Text>
+              </XStack>
+            </Button>
+          </YStack>
+        )}
+      </YStack>
+    </Card>
   )
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    position: 'relative',
-    height: 150,
-    backgroundColor: '#f0f0f0',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#e8e8e8',
-  },
-  statusBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  description: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 8,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  registradorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  registradorText: {
-    fontSize: 12,
-    color: '#999',
-  },
-  footer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  createAreaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 10,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderStyle: 'dashed',
-  },
-  createAreaButtonText: {
-    color: '#007AFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-})

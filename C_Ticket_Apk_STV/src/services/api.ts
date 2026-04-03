@@ -38,7 +38,13 @@ api.interceptors.response.use(
     return response
   },
   (error: AxiosError) => {
-    console.error('❌ Error en response:', error.response?.status, error.response?.data, error.config?.url)
+    // Logs mejorados para diagnosticar el problema
+    console.error('❌ Error en response:')
+    console.error('  Status:', error.response?.status)
+    console.error('  Data:', error.response?.data)
+    console.error('  URL:', error.config?.url)
+    console.error('  Error Code:', error.code)
+    console.error('  Message:', error.message)
     
     if (error.response?.status === 401) {
       // Token expirado o no autorizado
@@ -47,9 +53,11 @@ api.interceptors.response.use(
     }
     
     // Manejar errores de conexión
-    if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
+    if (!error.response && error.code !== 'ERR_CANCELED') {
       console.error('🔌 Error de conexión: No se puede conectar al backend')
-      console.error('📍 URL:', error.config?.baseURL, error.config?.url)
+      console.error('📍 Intentando conectar a:', error.config?.baseURL)
+      console.error('   Con URL:', error.config?.url)
+      console.error('   Verifica que el backend está corriendo en:', API_URL)
     }
     
     return Promise.reject(error)

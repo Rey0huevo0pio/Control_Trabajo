@@ -1,15 +1,16 @@
 import React, { useState, useCallback } from 'react'
 import {
-  View,
+  YStack,
+  XStack,
   Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native'
+  Card,
+  ScrollView,
+  Button,
+  Spinner,
+} from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
+import { useWindowDimensions } from 'react-native'
 import { InstalacionCard } from '../components'
 import { instalacionApi } from '../lib'
 import type { Instalacion } from '@/types'
@@ -26,6 +27,8 @@ export function InstalacionesHomeScreen({ navigation }: Props) {
   const [instalaciones, setInstalaciones] = useState<Instalacion[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const { width } = useWindowDimensions()
+  const isMobile = width < 480
 
   const loadInstalaciones = async () => {
     try {
@@ -67,152 +70,152 @@ export function InstalacionesHomeScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Cargando instalaciones...</Text>
-      </View>
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+        <Spinner size="large" color="$primary" />
+        <Text marginTop="$3" color="$color2" fontSize={isMobile ? '$3' : '$4'}>
+          Cargando instalaciones...
+        </Text>
+      </YStack>
     )
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Instalaciones</Text>
-          <Text style={styles.subtitle}>
-            {instalaciones.length} instalación(es) registrada(s)
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleCreateInstalacion}
+    <ScrollView
+      flex={1}
+      backgroundColor="$background"
+      showsVerticalScrollIndicator={false}
+    >
+      <YStack flex={1} backgroundColor="$background" padding={isMobile ? '$3' : '$4'}>
+        {/* Header */}
+        <XStack
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom="$4"
+          paddingTop="$2"
+          gap="$3"
+          flexWrap="wrap"
         >
-          <Ionicons name="add-circle" size={32} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
+          <YStack flex={1}>
+            <Text
+              fontSize={isMobile ? '$6' : '$7'}
+              fontWeight="800"
+              color="$primary"
+            >
+              🏢 Instalaciones
+            </Text>
+            <Text
+              fontSize={isMobile ? '$2' : '$3'}
+              color="$color2"
+              marginTop="$1"
+            >
+              {instalaciones.length} instalación(es) registrada(s)
+            </Text>
+          </YStack>
 
-      {/* Lista de instalaciones */}
-      {instalaciones.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="business-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyTitle}>Sin instalaciones</Text>
-          <Text style={styles.emptyText}>
-            No hay instalaciones registradas aún.{'\n'}¡Comienza registrando una!
-          </Text>
-          <TouchableOpacity
-            style={styles.emptyButton}
+          <Button
             onPress={handleCreateInstalacion}
+            backgroundColor="$primary"
+            borderRadius={12}
+            size={isMobile ? '$4' : '$3'}
+            pressStyle={{ opacity: 0.8 }}
           >
-            <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-            <Text style={styles.emptyButtonText}>Registrar Instalación</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={instalaciones}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <InstalacionCard
-              instalacion={item}
-              showCreateArea
-              onPress={() => handleVerDetalle(item._id)}
-              onCreateArea={() =>
-                handleCrearArea(item._id, item.nombre_instalacion)
-              }
-            />
-          )}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#007AFF']}
-            />
-          }
-        />
-      )}
-    </View>
+            <XStack alignItems="center" gap="$2">
+              <Ionicons name="add-circle" size={isMobile ? 20 : 24} color="white" />
+              <Text color="white" fontSize={isMobile ? '$2' : '$3'} fontWeight="600">
+                Nuevo
+              </Text>
+            </XStack>
+          </Button>
+        </XStack>
+
+        {/* Lista de instalaciones */}
+        {instalaciones.length === 0 ? (
+          <Card
+            flex={1}
+            backgroundColor="$background2"
+            borderRadius={20}
+            padding={isMobile ? '$5' : '$6'}
+            marginTop="$4"
+            borderColor="$primary"
+            borderWidth={2}
+            borderStyle="dashed"
+          >
+            <YStack alignItems="center" justifyContent="center" gap="$3">
+              <YStack
+                backgroundColor="$background3"
+                width={isMobile ? 100 : 120}
+                height={isMobile ? 100 : 120}
+                borderRadius={60}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons
+                  name="business-outline"
+                  size={isMobile ? 48 : 56}
+                  color="$color4"
+                />
+              </YStack>
+
+              <Text
+                fontSize={isMobile ? '$5' : '$6'}
+                fontWeight="700"
+                color="$color3"
+                marginTop="$2"
+              >
+                Sin instalaciones
+              </Text>
+
+              <Text
+                fontSize={isMobile ? '$3' : '$4'}
+                color="$color4"
+                textAlign="center"
+                lineHeight={isMobile ? 22 : 26}
+              >
+                No hay instalaciones registradas aún.{'\n'}¡Comienza registrando una!
+              </Text>
+
+              <Button
+                onPress={handleCreateInstalacion}
+                backgroundColor="$primary"
+                borderRadius={12}
+                paddingHorizontal={isMobile ? '$4' : '$5'}
+                paddingVertical={isMobile ? '$3' : '$4'}
+                marginTop="$3"
+                pressStyle={{ opacity: 0.8 }}
+              >
+                <XStack alignItems="center" gap="$2">
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={isMobile ? 20 : 24}
+                    color="white"
+                  />
+                  <Text
+                    color="white"
+                    fontSize={isMobile ? '$3' : '$4'}
+                    fontWeight="600"
+                  >
+                    Registrar Instalación
+                  </Text>
+                </XStack>
+              </Button>
+            </YStack>
+          </Card>
+        ) : (
+          <YStack gap="$4" marginBottom="$5">
+            {instalaciones.map((item) => (
+              <InstalacionCard
+                key={item._id}
+                instalacion={item}
+                showCreateArea
+                onPress={() => handleVerDetalle(item._id)}
+                onCreateArea={() =>
+                  handleCrearArea(item._id, item.nombre_instalacion)
+                }
+              />
+            ))}
+          </YStack>
+        )}
+      </YStack>
+    </ScrollView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#666',
-    fontSize: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  addButton: {
-    padding: 8,
-  },
-  listContainer: {
-    paddingVertical: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#bbb',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 24,
-  },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderStyle: 'dashed',
-  },
-  emptyButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-})
