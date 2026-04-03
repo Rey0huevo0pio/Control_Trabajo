@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ss *)",
+      "Bash(cp *)",
+      "Bash(ip *)",
+      "Bash(sudo *)",
+      "Bash(curl *)",
+      "Bash(find *)",
+      "Bash(rm *)",
+      "Bash(npx *)"
+    ]
+  },
+  "$version": 3
+}

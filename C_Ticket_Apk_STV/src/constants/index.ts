@@ -25,8 +25,8 @@ export interface CRUDPermissions {
 
 // URLs del backend
 // Para Android Emulator: usa 10.0.2.2 para localhost
-// Para dispositivo físico: usa la IP de tu máquina (192.168.100.29)
-export const API_URL = 'http://192.168.100.29:3000/api'
+// Para dispositivo físico: usa la IP de tu máquina (192.168.100.16)
+export const API_URL = 'http://192.168.100.16:3000/api'
 export const API_TIMEOUT = 30000 // Aumentado a 30 segundos
 
 // Colores de la marca
