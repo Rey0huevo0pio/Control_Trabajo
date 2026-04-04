@@ -188,7 +188,7 @@ function EmailDetail({ email, onBack }: { email: Email; onBack: () => void }) {
   return (
     <Card variant="outlined" padding="$4">
       <HStack gap="$3" align="center" marginBottom="$4">
-        <IconButton icon="arrow-back" onPress={onBack} variant="ghost" size={24} />
+        <IconButton icon="arrow-back-outline" onPress={onBack} variant="ghost" size={24} />
         <Text variant="h5" fontWeight="700" color="$color" flex={1}>
           {email.subject}
         </Text>
@@ -236,9 +236,9 @@ function EmailDetail({ email, onBack }: { email: Email; onBack: () => void }) {
       </YStack>
 
       <HStack gap="$2" marginTop="$4" paddingTop="$4" borderTopWidth={1} borderTopColor="$border">
-        <IconButton icon="reply" onPress={() => {}} variant="outline" size={20} />
-        <IconButton icon="reply-all" onPress={() => {}} variant="outline" size={20} />
-        <IconButton icon="forward" onPress={() => {}} variant="outline" size={20} />
+        <IconButton icon="mail" onPress={() => {}} variant="outline" size={20} />
+        <IconButton icon="mail-unread" onPress={() => {}} variant="outline" size={20} />
+        <IconButton icon="share" onPress={() => {}} variant="outline" size={20} />
         <IconButton icon="trash" onPress={() => {}} variant="outline" size={20} />
       </HStack>
     </Card>

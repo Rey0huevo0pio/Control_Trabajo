@@ -60,7 +60,7 @@ export function DeletedView() {
           Elementos eliminados
         </Text>
         <HStack gap="$2">
-          <IconButton icon="trash-bin" onPress={() => {}} variant="ghost" size={20} />
+          <IconButton icon="trash-bin-outline" onPress={() => {}} variant="ghost" size={20} />
         </HStack>
       </HStack>
 
@@ -140,7 +140,7 @@ export function DeletedView() {
 
                     <HStack gap="$2" marginTop="$2">
                       <IconButton 
-                        icon="arrow-undo" 
+                        icon="arrow-undo-outline" 
                         onPress={() => handleRestore(email.id)} 
                         variant="outline" 
                         size={18}

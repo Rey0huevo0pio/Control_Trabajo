@@ -105,7 +105,7 @@ export function DraftsView() {
                     <HStack gap="$2" marginTop="$2">
                       <IconButton icon="create" onPress={() => {}} variant="outline" size={18} />
                       <IconButton icon="trash" onPress={() => {}} variant="outline" size={18} />
-                      <IconButton icon="send" onPress={() => {}} variant="outline" size={18} />
+                      <IconButton icon="paper-plane" onPress={() => {}} variant="outline" size={18} />
                     </HStack>
                   </Stack>
                 </HStack>

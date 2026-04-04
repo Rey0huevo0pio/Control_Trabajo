@@ -6,6 +6,7 @@ import {
   Card,
   Stack,
   HStack,
+  IconButton,
 } from '../../../../src/components/design-system'
 
 type EmailFolder = 'inbox' | 'drafts' | 'deleted' | 'archives' | 'groups'
