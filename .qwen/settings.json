@@ -9,7 +9,8 @@
       "Bash(find *)",
       "Bash(rm *)",
       "Bash(npx *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(netsh *)"
     ]
   },
   "$version": 3

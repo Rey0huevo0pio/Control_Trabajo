@@ -27,6 +27,13 @@
     "ios": {
       "bundleIdentifier": "com.cticketstv.app",
       "supportsTablet": true
+    },
+    "devClient": {
+      "network": {
+        "native": {
+          "host": "0.0.0.0"
+        }
+      }
     }
   }
 }
