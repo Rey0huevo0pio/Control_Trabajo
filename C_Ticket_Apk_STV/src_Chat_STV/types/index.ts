@@ -117,6 +117,7 @@ export type ChatStackParamList = {
   ChatTabs: undefined
   PrivateChats: undefined
   GroupChats: undefined
+  EmailMain: undefined
   ChatConversation: { chatId: string; tipo: ChatType; nombre?: string; avatar?: string }
   ChatSearch: undefined
   EmployeeDirectory: undefined

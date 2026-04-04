@@ -38,10 +38,19 @@ export default function ChatHomeScreen() {
       screen: 'GroupChats'
     },
     {
+      id: 'email',
+      title: 'Correo Electrónico',
+      description: 'Outlook Web',
+      icon: 'mail' as const,
+      color: '$info',
+      badge: 3,
+      screen: 'EmailMain'
+    },
+    {
       id: 'employees',
       title: 'Directorio de Empleados',
       description: 'Todos los empleados',
-      icon: 'contacts' as const,
+      icon: 'people' as const,
       color: '$success',
       screen: 'EmployeeDirectory'
     },

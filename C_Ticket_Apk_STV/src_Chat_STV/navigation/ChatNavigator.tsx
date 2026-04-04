@@ -8,6 +8,7 @@ import {
   EmployeeDirectoryScreen,
   NewsBoardScreen,
   ChatSearchScreen,
+  EmailMainScreen,
 } from '../screens'
 
 const Stack = createNativeStackNavigator<ChatStackParamList>()
@@ -26,6 +27,7 @@ export default function ChatNavigator() {
       <Stack.Screen name="EmployeeDirectory" component={EmployeeDirectoryScreen} />
       <Stack.Screen name="NewsBoard" component={NewsBoardScreen} />
       <Stack.Screen name="ChatSearch" component={ChatSearchScreen} />
+      <Stack.Screen name="EmailMain" component={EmailMainScreen} />
       
       {/* TODO: Agregar screens cuando se implementen */}
       {/*
