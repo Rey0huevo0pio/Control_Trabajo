@@ -86,7 +86,7 @@ export function Header({
             <YStack
               width={avatar.size || 40}
               height={avatar.size || 40}
-              borderRadius="full"
+              borderRadius="$full"
               backgroundColor={isPrimary ? 'rgba(255,255,255,0.2)' : '$primary'}
               justifyContent="center"
               alignItems="center"

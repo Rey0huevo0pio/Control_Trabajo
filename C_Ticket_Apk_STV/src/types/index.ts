@@ -22,12 +22,23 @@ export type InstalacionStackParamList = {
   RegistroArea: { instalacionId: string; instalacionNombre: string }
 }
 
+// Tipos para navegación - Tickets
+export type TicketStackParamList = {
+  TicketsHome: undefined
+  CrearTicket: undefined
+  MisTickets: undefined
+  TodosTickets: undefined
+  ReportesTickets: undefined
+  DetalleTicket: { ticketId: string }
+  EditarTicket: { ticketId: string }
+}
+
 // Tipos para navegación principal
 export type RootStackParamList = {
   Login: undefined
   Home: undefined
   Principal: undefined
-} & InstalacionStackParamList
+} & InstalacionStackParamList & TicketStackParamList
 
 // Tipos para API
 export interface ApiResponse<T> {

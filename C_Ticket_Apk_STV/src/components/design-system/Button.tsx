@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons'
 export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' | 'ghost'
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
-interface ButtonProps extends Omit<TamaguiButtonProps, 'size'> {
+interface CustomButtonProps {
   title?: string
   icon?: keyof typeof Ionicons.glyphMap
   iconPosition?: 'left' | 'right'
@@ -20,6 +20,8 @@ interface ButtonProps extends Omit<TamaguiButtonProps, 'size'> {
   loading?: boolean
   fullWidth?: boolean
 }
+
+type ButtonProps = Omit<TamaguiButtonProps, 'size' | 'variant'> & CustomButtonProps
 
 const variantStyles: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
   primary: { bg: '$primary', text: 'white' },

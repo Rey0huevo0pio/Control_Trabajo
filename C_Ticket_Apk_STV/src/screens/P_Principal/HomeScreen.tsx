@@ -28,6 +28,10 @@ export default function HomeScreen() {
     navigation.navigate('InstalacionesHome')
   }
 
+  const handleNavigateToTickets = () => {
+    navigation.navigate('TicketsHome')
+  }
+
   const modules = [
     {
       id: 'instalaciones',
@@ -183,7 +187,12 @@ export default function HomeScreen() {
           )}
 
           {(hasRole('it') || hasRole('rh') || hasRole('supervisor')) && (
-            <Card variant="outlined" padding={isMobile ? '$4' : '$5'}>
+            <Card
+              variant="outlined"
+              borderColor="$warning"
+              onPress={handleNavigateToTickets}
+              padding={isMobile ? '$4' : '$5'}
+            >
               <HStack gap="$3">
                 <YStack
                   backgroundColor="$warning"
@@ -205,7 +214,7 @@ export default function HomeScreen() {
                   </Text>
                 </Stack>
 
-                <Ionicons name="chevron-forward" size={24} color="$color3" />
+                <Ionicons name="chevron-forward" size={24} color="$warning" />
               </HStack>
             </Card>
           )}

@@ -22,7 +22,7 @@ export function HStack({
   align = 'center',
   justify,
   ...props
-}: XStackProps & { align?: 'start' | 'center' | 'end' | 'stretch'; justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around' }) {
+}: XStackProps & { align?: 'flex-start' | 'center' | 'flex-end' | 'stretch'; justify?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly' }) {
   return (
     <XStack
       alignItems={align}
