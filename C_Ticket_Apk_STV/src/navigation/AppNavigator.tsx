@@ -5,6 +5,7 @@ import { HomeScreen } from '../screens/P_Principal'
 import { InstalacionNavigator } from '../../src_Instalaciones_STV/navigation'
 import { TicketNavigator } from '../../src_P_Ticket_IT/navigation'
 import { ChatNavigator } from '../../src_Chat_STV/navigation'
+import { ArchiveroNavigator } from '../../src_Archivero_STV/navigation'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -35,6 +36,13 @@ export default function AppNavigator() {
       <Stack.Screen
         name="ChatHome"
         component={ChatNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ArchiveroHome"
+        component={ArchiveroNavigator}
         options={{
           headerShown: false,
         }}

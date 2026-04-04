@@ -1,0 +1,6 @@
+export { default as ArchiveroHomeScreen } from './ArchiveroHomeScreen'
+export { default as ArchiveroDetalleScreen } from './ArchiveroDetalleScreen'
+export { default as CrearArchiveroScreen } from './CrearArchiveroScreen'
+export { default as GestionarMiembrosScreen } from './GestionarMiembrosScreen'
+export { default as EscanearDocumentoScreen } from './EscanearDocumentoScreen'
+export { default as CarpetaDetalleScreen } from './CarpetaDetalleScreen'

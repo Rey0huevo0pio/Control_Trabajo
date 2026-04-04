@@ -50,12 +50,28 @@ export type ChatStackParamList = {
   MediaViewer: { mediaUrl: string; tipo: string }
 }
 
+// Tipos para navegación - Archivero
+export type ArchiveroStackParamList = {
+  ArchiveroHome: undefined
+  CrearArchivero: undefined
+  ArchiveroDetalle: { archiveroId: string }
+  CrearCarpeta: { archiveroId: string; carpetaPadreId?: string }
+  CarpetaDetalle: { carpetaId: string; archiveroId: string }
+  GestionarMiembros: { archiveroId: string }
+  SubirArchivo: { archiveroId: string; carpetaId?: string }
+  EscanearDocumento: { archiveroId: string; carpetaId?: string }
+  ArchivoDetalle: { archivoId: string }
+  ArchivoPreview: { archivoUrl: string; tipo: string }
+  ConfiguracionArchivero: { archiveroId: string }
+  ConfiguracionCarpeta: { carpetaId: string }
+}
+
 // Tipos para navegación principal
 export type RootStackParamList = {
   Login: undefined
   Home: undefined
   Principal: undefined
-} & InstalacionStackParamList & TicketStackParamList & ChatStackParamList
+} & InstalacionStackParamList & TicketStackParamList & ChatStackParamList & ArchiveroStackParamList
 
 // Tipos para API
 export interface ApiResponse<T> {

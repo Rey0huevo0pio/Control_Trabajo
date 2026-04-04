@@ -36,6 +36,10 @@ export default function HomeScreen() {
     navigation.navigate('ChatHome')
   }
 
+  const handleNavigateToArchivero = () => {
+    navigation.navigate('ArchiveroHome')
+  }
+
   const modules = [
     {
       id: 'instalaciones',
@@ -190,6 +194,37 @@ export default function HomeScreen() {
               </Stack>
 
               <Ionicons name="chevron-forward" size={24} color="$success" />
+            </HStack>
+          </Card>
+
+          <Card
+            variant="outlined"
+            borderColor="$secondary"
+            onPress={handleNavigateToArchivero}
+            padding={isMobile ? '$4' : '$5'}
+          >
+            <HStack gap="$3">
+              <YStack
+                backgroundColor="$secondary"
+                width={isMobile ? 50 : 60}
+                height={isMobile ? 50 : 60}
+                borderRadius={14}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons name="folder" size={isMobile ? 24 : 28} color="white" />
+              </YStack>
+
+              <Stack flex={1} gap="$1">
+                <Text variant="h6" fontWeight="700" color="$color">
+                  Archivero
+                </Text>
+                <Text variant="bodySmall" color="$color2">
+                  Gestión documental y archivos
+                </Text>
+              </Stack>
+
+              <Ionicons name="chevron-forward" size={24} color="$secondary" />
             </HStack>
           </Card>
 
