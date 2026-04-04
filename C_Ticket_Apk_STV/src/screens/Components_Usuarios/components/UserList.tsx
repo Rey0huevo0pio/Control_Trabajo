@@ -245,10 +245,7 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                 <HStack gap="$1">
                   <IconButton
                     icon="create"
-                    onPress={(e: any) => {
-                      e.stopPropagation()
-                      onEdit(user)
-                    }}
+                    onPress={() => onEdit(user)}
                     variant="ghost"
                     size={20}
                   />
