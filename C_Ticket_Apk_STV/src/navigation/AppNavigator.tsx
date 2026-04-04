@@ -4,6 +4,7 @@ import { LoginScreen } from '../screens/P_Auth'
 import { HomeScreen } from '../screens/P_Principal'
 import { InstalacionNavigator } from '../../src_Instalaciones_STV/navigation'
 import { TicketNavigator } from '../../src_P_Ticket_IT/navigation'
+import { ChatNavigator } from '../../src_Chat_STV/navigation'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -27,6 +28,13 @@ export default function AppNavigator() {
       <Stack.Screen
         name="TicketsHome"
         component={TicketNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ChatHome"
+        component={ChatNavigator}
         options={{
           headerShown: false,
         }}

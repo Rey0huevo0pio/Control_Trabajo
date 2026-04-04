@@ -33,12 +33,29 @@ export type TicketStackParamList = {
   EditarTicket: { ticketId: string }
 }
 
+// Tipos para navegación - Chat
+export type ChatStackParamList = {
+  ChatHome: undefined
+  ChatTabs: undefined
+  PrivateChats: undefined
+  GroupChats: undefined
+  ChatConversation: { chatId: string; tipo: 'private' | 'group'; nombre?: string; avatar?: string }
+  ChatSearch: undefined
+  EmployeeDirectory: undefined
+  NewsBoard: undefined
+  NewsDetail: { noticiaId: string }
+  CreateGroup: undefined
+  GroupInfo: { groupId: string }
+  UserProfile: { userId: string }
+  MediaViewer: { mediaUrl: string; tipo: string }
+}
+
 // Tipos para navegación principal
 export type RootStackParamList = {
   Login: undefined
   Home: undefined
   Principal: undefined
-} & InstalacionStackParamList & TicketStackParamList
+} & InstalacionStackParamList & TicketStackParamList & ChatStackParamList
 
 // Tipos para API
 export interface ApiResponse<T> {

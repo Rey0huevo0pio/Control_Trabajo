@@ -32,6 +32,10 @@ export default function HomeScreen() {
     navigation.navigate('TicketsHome')
   }
 
+  const handleNavigateToChat = () => {
+    navigation.navigate('ChatHome')
+  }
+
   const modules = [
     {
       id: 'instalaciones',
@@ -155,6 +159,37 @@ export default function HomeScreen() {
               </Stack>
 
               <Ionicons name="chevron-forward" size={24} color="$primary" />
+            </HStack>
+          </Card>
+
+          <Card
+            variant="outlined"
+            borderColor="$success"
+            onPress={handleNavigateToChat}
+            padding={isMobile ? '$4' : '$5'}
+          >
+            <HStack gap="$3">
+              <YStack
+                backgroundColor="$success"
+                width={isMobile ? 50 : 60}
+                height={isMobile ? 50 : 60}
+                borderRadius={14}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons name="chatbubbles" size={isMobile ? 24 : 28} color="white" />
+              </YStack>
+
+              <Stack flex={1} gap="$1">
+                <Text variant="h6" fontWeight="700" color="$color">
+                  Chat y Mensajería
+                </Text>
+                <Text variant="bodySmall" color="$color2">
+                  Mensajería privada, grupal y noticias
+                </Text>
+              </Stack>
+
+              <Ionicons name="chevron-forward" size={24} color="$success" />
             </HStack>
           </Card>
 
