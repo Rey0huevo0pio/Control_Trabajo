@@ -71,6 +71,7 @@ export type RootStackParamList = {
   Login: undefined
   Home: undefined
   Principal: undefined
+  UserManagement: undefined
 } & InstalacionStackParamList & TicketStackParamList & ChatStackParamList & ArchiveroStackParamList
 
 // Tipos para API

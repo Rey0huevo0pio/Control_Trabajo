@@ -6,6 +6,7 @@ import { InstalacionNavigator } from '../../src_Instalaciones_STV/navigation'
 import { TicketNavigator } from '../../src_P_Ticket_IT/navigation'
 import { ChatNavigator } from '../../src_Chat_STV/navigation'
 import { ArchiveroNavigator } from '../../src_Archivero_STV/navigation'
+import UserManagementScreen from '../screens/Components_Usuarios/screens/UserManagementScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -43,6 +44,13 @@ export default function AppNavigator() {
       <Stack.Screen
         name="ArchiveroHome"
         component={ArchiveroNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="UserManagement"
+        component={UserManagementScreen}
         options={{
           headerShown: false,
         }}

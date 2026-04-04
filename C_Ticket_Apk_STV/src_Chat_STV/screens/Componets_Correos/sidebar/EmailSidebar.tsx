@@ -81,7 +81,7 @@ export function EmailSidebar({ currentFolder, onFolderChange, onClose }: EmailSi
             <Card
               key={item.id}
               variant={currentFolder === item.id ? 'filled' : 'outlined'}
-              backgroundColor={currentFolder === item.id ? item.color + '20' : 'transparent'}
+              backgroundColor={currentFolder === item.id ? '$background' : 'transparent'}
               borderColor={currentFolder === item.id ? item.color : '$border'}
               padding="$3"
               onPress={() => onFolderChange(item.id)}
