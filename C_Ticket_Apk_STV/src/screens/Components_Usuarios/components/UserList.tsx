@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { YStack, ScrollView, Input } from 'tamagui'
+import { YStack, ScrollView, Input, XStack } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
@@ -115,163 +115,186 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
   })
 
   return (
-    <Card variant="outlined" padding="$4">
-      {/* Buscador y acciones */}
-      <HStack gap="$3" marginBottom="$4">
-        <Input
-          flex={1}
-          placeholder="Buscar usuarios..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <IconButton
-          icon="add"
-          onPress={onCreate}
-          variant="primary"
-          size={24}
-        />
-      </HStack>
-
-      {/* Filtros de rol */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} marginBottom="$4">
-        <HStack gap="$2">
-          <FilterChip
-            label="Todos"
-            active={filterRol === 'all'}
-            onPress={() => setFilterRol('all')}
-          />
-          {(Object.keys(roleLabels) as UserRole[]).map((rol) => (
-            <FilterChip
-              key={rol}
-              label={roleLabels[rol]}
-              active={filterRol === rol}
-              onPress={() => setFilterRol(rol)}
-              color={roleColors[rol]}
+    <YStack gap="$4">
+      {/* iOS-style Search Bar */}
+      <Card variant="grouped" padding="$3" borderRadius="$lg">
+        <XStack gap="$3" alignItems="center">
+          <YStack
+            flex={1}
+            backgroundColor="$backgroundTertiary"
+            borderRadius="$lg"
+            paddingHorizontal="$4"
+            paddingVertical="$3"
+            justifyContent="center"
+          >
+            <Input
+              placeholder="Buscar usuarios..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              backgroundColor="transparent"
+              borderWidth={0}
+              padding={0}
+              height="auto"
+              fontSize={17}
+              placeholderTextColor="$color3"
             />
-          ))}
-        </HStack>
-      </ScrollView>
+          </YStack>
+          <IconButton
+            icon="add"
+            onPress={onCreate}
+            variant="primary"
+            size={24}
+          />
+        </XStack>
+      </Card>
 
-      {/* Lista de usuarios */}
-      <ScrollView>
-        <YStack gap="$3">
-          {filteredUsers.map((user) => (
-            <Card
-              key={user._id}
-              variant="outlined"
-              padding="$4"
-              onPress={() => onUserSelect(user)}
-              cursor="pointer"
-            >
-              <HStack gap="$3">
-                {/* Avatar */}
-                <YStack
-                  backgroundColor={roleColors[user.rol]}
-                  width={56}
-                  height={56}
-                  borderRadius="$full"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Text variant="h6" color="white" fontWeight="700">
-                    {user.nombre.charAt(0)}
-                    {user.apellido.charAt(0)}
-                  </Text>
-                </YStack>
-
-                {/* Info */}
-                <Stack flex={1} gap="$1">
-                  <HStack justify="space-between" align="center">
-                    <Text variant="body" fontWeight="700" color="$color">
-                      {user.nombre} {user.apellido}
-                    </Text>
-                    <YStack
-                      backgroundColor={
-                        user.estado === 'activo'
-                          ? '$successMuted'
-                          : user.estado === 'inactivo'
-                          ? '$color3'
-                          : '$errorMuted'
-                      }
-                      paddingHorizontal="$2"
-                      paddingVertical="$1"
-                      borderRadius={6}
-                    >
-                      <Text
-                        variant="caption"
-                        color={
-                          user.estado === 'activo'
-                            ? '$success'
-                            : user.estado === 'inactivo'
-                            ? '$color3'
-                            : '$error'
-                        }
-                        fontWeight="600"
-                      >
-                        {user.estado}
-                      </Text>
-                    </YStack>
-                  </HStack>
-
-                  <Text variant="caption" color="$color2">
-                    {user.email}
-                  </Text>
-
-                  <HStack gap="$2" align="center" marginTop="$1">
-                    <YStack
-                      backgroundColor={roleColors[user.rol]}
-                      paddingHorizontal="$2"
-                      paddingVertical="$1"
-                      borderRadius={6}
-                    >
-                      <Text variant="caption" color="white" fontWeight="600">
-                        {roleLabels[user.rol]}
-                      </Text>
-                    </YStack>
-                    <Text variant="caption" color="$color3">
-                      • {user.departamento}
-                    </Text>
-                    <Text variant="caption" color="$color3">
-                      • {user.Control_Usuario}
-                    </Text>
-                  </HStack>
-
-                  <Text variant="caption" color="$color4" marginTop="$1">
-                    Último acceso: {user.ultimoAcceso || 'Nunca'}
-                  </Text>
-                </Stack>
-
-                {/* Acciones */}
-                <HStack gap="$1">
-                  <IconButton
-                    icon="create"
-                    onPress={() => onEdit(user)}
-                    variant="ghost"
-                    size={20}
-                  />
-                  <Ionicons name="chevron-forward" size={20} color="$color3" />
-                </HStack>
-              </HStack>
-            </Card>
-          ))}
-        </YStack>
-      </ScrollView>
-
-      {/* Resumen */}
-      <YStack
-        borderTopWidth={1}
-        borderTopColor="$border"
-        paddingTop="$3"
-        marginTop="$3"
+      {/* iOS-style Filter Chips - Horizontal scroll */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: isMobile ? 16 : 24, gap: 8 }}
       >
+        <FilterChip
+          label="Todos"
+          active={filterRol === 'all'}
+          onPress={() => setFilterRol('all')}
+        />
+        {(Object.keys(roleLabels) as UserRole[]).map((rol) => (
+          <FilterChip
+            key={rol}
+            label={roleLabels[rol]}
+            active={filterRol === rol}
+            onPress={() => setFilterRol(rol)}
+            color={roleColors[rol]}
+          />
+        ))}
+      </ScrollView>
+
+      {/* iOS-style Grouped User List */}
+      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+        <ScrollView>
+          <YStack>
+            {filteredUsers.map((user, index) => (
+              <YStack
+                key={user._id}
+                onPress={() => onUserSelect(user)}
+                cursor="pointer"
+                backgroundColor="$backgroundSecondary"
+                borderBottomWidth={index < filteredUsers.length - 1 ? 0.5 : 0}
+                borderBottomColor="$borderSubtle"
+                padding="$4"
+              >
+                {/* Press styling handled by parent */}
+                <HStack gap="$4" alignItems="center">
+                  {/* Large Avatar */}
+                  <YStack
+                    backgroundColor={roleColors[user.rol]}
+                    width={60}
+                    height={60}
+                    borderRadius="$full"
+                    justifyContent="center"
+                    alignItems="center"
+                    shadowColor="$color"
+                    shadowOpacity={0.1}
+                    shadowRadius={4}
+                    shadowOffset={{ width: 0, height: 2 }}
+                  >
+                    <Text variant="h5" color="white" fontWeight="700">
+                      {user.nombre.charAt(0)}
+                      {user.apellido.charAt(0)}
+                    </Text>
+                  </YStack>
+
+                  {/* User Info */}
+                  <Stack flex={1} gap="$2">
+                    <HStack justifyContent="space-between" alignItems="center">
+                      <Text variant="body" fontWeight="600" color="$color" flex={1}>
+                        {user.nombre} {user.apellido}
+                      </Text>
+                      <YStack
+                        backgroundColor={
+                          user.estado === 'activo'
+                            ? '$successMuted'
+                            : user.estado === 'inactivo'
+                            ? '$backgroundTertiary'
+                            : '$errorMuted'
+                        }
+                        paddingHorizontal="$3"
+                        paddingVertical="$2"
+                        borderRadius="$full"
+                      >
+                        <Text
+                          variant="caption"
+                          color={
+                            user.estado === 'activo'
+                              ? '$success'
+                              : user.estado === 'inactivo'
+                              ? '$color3'
+                              : '$error'
+                          }
+                          fontWeight="600"
+                        >
+                          {user.estado === 'activo' ? 'Activo' : user.estado === 'inactivo' ? 'Inactivo' : 'Suspendido'}
+                        </Text>
+                      </YStack>
+                    </HStack>
+
+                    <Text variant="bodySmall" color="$color2">
+                      {user.email}
+                    </Text>
+
+                    <HStack gap="$2" alignItems="center" flexWrap="wrap">
+                      <YStack
+                        backgroundColor={roleColors[user.rol]}
+                        paddingHorizontal="$3"
+                        paddingVertical="$2"
+                        borderRadius="$full"
+                      >
+                        <Text variant="caption" color="white" fontWeight="600">
+                          {roleLabels[user.rol]}
+                        </Text>
+                      </YStack>
+                      <Text variant="caption" color="$color3">
+                        {user.departamento}
+                      </Text>
+                      <Text variant="caption" color="$color3">
+                        {user.Control_Usuario}
+                      </Text>
+                    </HStack>
+
+                    <Text variant="caption" color="$color4">
+                      Último acceso: {user.ultimoAcceso || 'Nunca'}
+                    </Text>
+                  </Stack>
+
+                  {/* Edit button and chevron */}
+                  <HStack gap="$1" alignItems="center">
+                    <IconButton
+                      icon="create"
+                      onPress={() => onEdit(user)}
+                      variant="ghost"
+                      size={22}
+                    />
+                    <Ionicons name="chevron-forward" size={20} color="$color3" />
+                  </HStack>
+                </HStack>
+              </YStack>
+            ))}
+          </YStack>
+        </ScrollView>
+      </Card>
+
+      {/* Summary */}
+      <YStack alignItems="center" paddingVertical="$3">
         <Text variant="caption" color="$color3">
           Mostrando {filteredUsers.length} de {users.length} usuarios
         </Text>
       </YStack>
-    </Card>
+    </YStack>
   )
 }
 
+// iOS-style filter chip
 function FilterChip({
   label,
   active,
@@ -286,15 +309,17 @@ function FilterChip({
   return (
     <Card
       variant={active ? 'filled' : 'outlined'}
-      backgroundColor={active ? '$primaryMuted' : 'transparent'}
+      backgroundColor={active ? (color === '$primary' ? '$primaryMuted' : color === '$success' ? '$successMuted' : color === '$warning' ? '$warningMuted' : '$backgroundTertiary') : 'transparent'}
       borderColor={active ? color || '$primary' : '$border'}
-      paddingVertical="$2"
-      paddingHorizontal="$3"
+      borderWidth={active ? 0 : 0.5}
+      paddingHorizontal="$4"
+      paddingVertical="$3"
+      borderRadius="$full"
       onPress={onPress}
       cursor="pointer"
     >
       <Text
-        variant="caption"
+        variant="labelSmall"
         fontWeight="600"
         color={active ? color || '$primary' : '$color2'}
       >

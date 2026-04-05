@@ -1,5 +1,5 @@
 import React from 'react'
-import { YStack, ScrollView } from 'tamagui'
+import { YStack, ScrollView, XStack } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
@@ -39,158 +39,286 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
   const { isMobile } = useResponsive()
 
   return (
-    <Card variant="outlined" padding="$4">
-      {/* Header */}
-      <HStack gap="$3" align="center" marginBottom="$4">
-        <IconButton icon="arrow-back-outline" onPress={onBack} variant="ghost" size={24} />
-        <Text variant="h5" fontWeight="700" color="$color" flex={1}>
-          Detalle del Usuario
-        </Text>
-        <IconButton icon="create" onPress={onEdit} variant="outline" size={20} />
-      </HStack>
+    <YStack gap="$5">
+      {/* iOS-style Profile Header */}
+      <Card variant="grouped" padding="$5" borderRadius="$xl" overflow="hidden">
+        <YStack alignItems="center" gap="$4" paddingTop="$2">
+          {/* Back and Edit buttons */}
+          <XStack width="100%" justifyContent="space-between" alignItems="center">
+            <IconButton 
+              icon="chevron-back" 
+              onPress={onBack} 
+              variant="ghost" 
+              size={24} 
+            />
+            <Text variant="title3" fontWeight="600" color="$color">
+              Perfil del Usuario
+            </Text>
+            <IconButton 
+              icon="create" 
+              onPress={onEdit} 
+              variant="ghost" 
+              size={24} 
+            />
+          </XStack>
 
-      <ScrollView>
-        <YStack gap="$4">
-          {/* Avatar e info principal */}
-          <YStack alignItems="center" gap="$3" paddingVertical="$4">
+          {/* Large Avatar with shadow */}
+          <YStack
+            backgroundColor={roleColors[user.rol]}
+            width={110}
+            height={110}
+            borderRadius="$full"
+            justifyContent="center"
+            alignItems="center"
+            shadowColor="$color"
+            shadowOpacity={0.15}
+            shadowRadius={8}
+            shadowOffset={{ width: 0, height: 4 }}
+          >
+            <Text variant="h2" color="white" fontWeight="700">
+              {user.nombre.charAt(0)}
+              {user.apellido.charAt(0)}
+            </Text>
+          </YStack>
+
+          {/* Name */}
+          <Text variant="h3" fontWeight="700" color="$color" textAlign="center">
+            {user.nombre} {user.apellido}
+          </Text>
+
+          {/* Role and Status badges */}
+          <HStack gap="$2" alignItems="center" flexWrap="wrap" justifyContent="center">
             <YStack
               backgroundColor={roleColors[user.rol]}
-              width={96}
-              height={96}
+              paddingHorizontal="$4"
+              paddingVertical="$2"
               borderRadius="$full"
-              justifyContent="center"
-              alignItems="center"
             >
-              <Text variant="h1" color="white" fontWeight="700">
-                {user.nombre.charAt(0)}
-                {user.apellido.charAt(0)}
+              <Text variant="labelSmall" color="white" fontWeight="600">
+                {roleLabels[user.rol]}
               </Text>
             </YStack>
 
-            <Text variant="h4" fontWeight="700" color="$color">
-              {user.nombre} {user.apellido}
-            </Text>
-
-            <HStack gap="$2" align="center">
-              <YStack
-                backgroundColor={roleColors[user.rol]}
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderRadius="$full"
-              >
-                <Text variant="caption" color="white" fontWeight="600">
-                  {roleLabels[user.rol]}
-                </Text>
-              </YStack>
-
-              <YStack
-                backgroundColor={
+            <YStack
+              backgroundColor={
+                user.estado === 'activo'
+                  ? '$successMuted'
+                  : user.estado === 'inactivo'
+                  ? '$backgroundTertiary'
+                  : '$errorMuted'
+              }
+              paddingHorizontal="$4"
+              paddingVertical="$2"
+              borderRadius="$full"
+            >
+              <Text
+                variant="labelSmall"
+                color={
                   user.estado === 'activo'
-                    ? '$successMuted'
+                    ? '$success'
                     : user.estado === 'inactivo'
                     ? '$color3'
-                    : '$errorMuted'
+                    : '$error'
                 }
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderRadius="$full"
+                fontWeight="600"
               >
-                <Text
-                  variant="caption"
-                  color={
-                    user.estado === 'activo'
-                      ? '$success'
-                      : user.estado === 'inactivo'
-                      ? '$color3'
-                      : '$error'
-                  }
-                  fontWeight="600"
-                >
-                  {user.estado.charAt(0).toUpperCase() + user.estado.slice(1)}
-                </Text>
-              </YStack>
-            </HStack>
-          </YStack>
+                {user.estado === 'activo' ? '● Activo' : user.estado === 'inactivo' ? '● Inactivo' : '● Suspendido'}
+              </Text>
+            </YStack>
+          </HStack>
 
-          {/* Información de contacto */}
-          <Stack gap="$3">
-            <Text variant="h6" fontWeight="600" color="$color">
-              Información de Contacto
-            </Text>
-
-            <InfoRow icon="mail" label="Email" value={user.email} />
-            {user.telefono && <InfoRow icon="call" label="Teléfono" value={user.telefono} />}
-            <InfoRow icon="id-card" label="Control Usuario" value={user.Control_Usuario} />
-          </Stack>
-
-          {/* Información laboral */}
-          <Stack gap="$3">
-            <Text variant="h6" fontWeight="600" color="$color">
-              Información Laboral
-            </Text>
-
-            <InfoRow icon="business" label="Departamento" value={user.departamento} />
-            <InfoRow icon="briefcase" label="Puesto" value={user.puesto} />
-            <InfoRow
-              icon="calendar"
-              label="Fecha de Ingreso"
-              value={new Date(user.fecha_ingreso).toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            />
-            {user.ultimoAcceso && (
-              <InfoRow icon="time" label="Último Acceso" value={user.ultimoAcceso} />
-            )}
-          </Stack>
-
-          {/* Acciones */}
-          <YStack gap="$2" marginTop="$4">
-            <Text variant="h6" fontWeight="600" color="$color">
-              Acciones
-            </Text>
-
-            <HStack gap="$2" flexWrap="wrap">
-              <ActionButton icon="create" label="Editar" onPress={onEdit} />
-              <ActionButton icon="mail" label="Enviar Email" onPress={() => {}} />
-              <ActionButton icon="call" label="Llamar" onPress={() => {}} />
-              <ActionButton icon="lock-closed" label="Reset Password" onPress={() => {}} />
-              <ActionButton icon="ban" label="Suspender" onPress={() => {}} color="$warning" />
-              <ActionButton icon="trash" label="Eliminar" onPress={() => {}} color="$error" />
-            </HStack>
-          </YStack>
+          {/* Department */}
+          <Text variant="bodySmall" color="$color2">
+            {user.departamento} • {user.puesto}
+          </Text>
         </YStack>
-      </ScrollView>
-    </Card>
+      </Card>
+
+      {/* iOS-style Grouped Information Sections */
+      /* Información de contacto */}
+      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+        <YStack backgroundColor="$backgroundSecondary">
+          <SectionHeader icon="call" title="Información de Contacto" />
+          
+          <InfoRow 
+            icon="mail-outline" 
+            label="Email" 
+            value={user.email} 
+            isLast={!user.telefono}
+          />
+          {user.telefono && (
+            <InfoRow 
+              icon="call-outline" 
+              label="Teléfono" 
+              value={user.telefono} 
+              isLast 
+            />
+          )}
+          <InfoRow 
+            icon="id-card-outline" 
+            label="Control Usuario" 
+            value={user.Control_Usuario} 
+            isLast 
+          />
+        </YStack>
+      </Card>
+
+      {/* Información laboral */}
+      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+        <YStack backgroundColor="$backgroundSecondary">
+          <SectionHeader icon="briefcase" title="Información Laboral" />
+          
+          <InfoRow 
+            icon="business-outline" 
+            label="Departamento" 
+            value={user.departamento} 
+          />
+          <InfoRow 
+            icon="briefcase-outline" 
+            label="Puesto" 
+            value={user.puesto} 
+          />
+          <InfoRow
+            icon="calendar-outline"
+            label="Fecha de Ingreso"
+            value={new Date(user.fecha_ingreso).toLocaleDateString('es-MX', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          />
+          {user.ultimoAcceso && (
+            <InfoRow 
+              icon="time-outline" 
+              label="Último Acceso" 
+              value={user.ultimoAcceso} 
+              isLast 
+            />
+          )}
+        </YStack>
+      </Card>
+
+      {/* iOS-style Action Buttons Grid */}
+      <Card variant="grouped" padding="$4" borderRadius={20}>
+        <SectionHeader icon="sparkles" title="Acciones" marginBottom={12} />
+        
+        <YStack gap="$3">
+          {/* Primary actions */}
+          <XStack gap="$3">
+            <ActionButton 
+              icon="create" 
+              label="Editar" 
+              onPress={onEdit}
+              color="$primary"
+            />
+            <ActionButton 
+              icon="mail-outline" 
+              label="Enviar Email" 
+              onPress={() => {}}
+              color="$primary"
+            />
+          </XStack>
+          
+          <XStack gap="$3">
+            <ActionButton 
+              icon="call-outline" 
+              label="Llamar" 
+              onPress={() => {}}
+              color="$success"
+            />
+            <ActionButton 
+              icon="lock-closed-outline" 
+              label="Reset Password" 
+              onPress={() => {}}
+              color="$warning"
+            />
+          </XStack>
+
+          {/* Dangerous actions */}
+          <XStack gap="$3">
+            <ActionButton 
+              icon="ban-outline" 
+              label="Suspender" 
+              onPress={() => {}}
+              color="$warning"
+            />
+            <ActionButton 
+              icon="trash-outline" 
+              label="Eliminar" 
+              onPress={() => {}}
+              color="$error"
+            />
+          </XStack>
+        </YStack>
+      </Card>
+    </YStack>
   )
 }
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+// iOS-style section header
+function SectionHeader({ icon, title, marginBottom = 0 }: { icon: string; title: string; marginBottom?: number }) {
   return (
-    <HStack gap="$3" align="center">
+    <XStack 
+      gap="$2" 
+      alignItems="center" 
+      padding="$4"
+      paddingBottom="$3"
+      backgroundColor="$backgroundTertiary"
+      marginBottom={marginBottom}
+    >
+      <Ionicons name={icon as any} size={20} color="$primary" />
+      <Text variant="label" fontWeight="600" color="$color">
+        {title}
+      </Text>
+    </XStack>
+  )
+}
+
+// iOS-style info row (like Settings app)
+function InfoRow({ 
+  icon, 
+  label, 
+  value, 
+  isLast = false 
+}: { 
+  icon: string; 
+  label: string; 
+  value: string;
+  isLast?: boolean;
+}) {
+  return (
+    <XStack 
+      gap="$3" 
+      alignItems="center" 
+      padding="$4"
+      paddingTop="$3"
+      backgroundColor="$backgroundSecondary"
+      borderBottomWidth={isLast ? 0 : 0.5}
+      borderBottomColor="$borderSubtle"
+    >
       <YStack
-        backgroundColor="$background"
-        width={40}
-        height={40}
-        borderRadius={8}
+        backgroundColor="$backgroundTertiary"
+        width={44}
+        height={44}
+        borderRadius="$md"
         justifyContent="center"
         alignItems="center"
       >
-        <Ionicons name={icon as any} size={20} color="$color2" />
+        <Ionicons name={icon as any} size={22} color="$primary" />
       </YStack>
       <Stack flex={1}>
         <Text variant="caption" color="$color3">
           {label}
         </Text>
-        <Text variant="bodySmall" fontWeight="500" color="$color">
+        <Text variant="body" fontWeight="500" color="$color">
           {value}
         </Text>
       </Stack>
-    </HStack>
+    </XStack>
   )
 }
 
+// iOS-style action button
 function ActionButton({
   icon,
   label,
@@ -202,16 +330,17 @@ function ActionButton({
   onPress: () => void
   color?: string
 }) {
-  const { isMobile } = useResponsive()
-  
   return (
     <Card
       variant="outlined"
-      padding="$3"
+      padding="$4"
       onPress={onPress}
       cursor="pointer"
       flex={1}
-      minWidth={isMobile ? '48%' : '30%'}
+      borderColor="$border"
+      borderWidth={0.5}
+      backgroundColor="$backgroundSecondary"
+      pressStyle={{ opacity: 0.7, backgroundColor: '$backgroundTertiary' }}
     >
       <YStack alignItems="center" gap="$2">
         <Ionicons name={icon as any} size={24} color={color || '$primary'} />

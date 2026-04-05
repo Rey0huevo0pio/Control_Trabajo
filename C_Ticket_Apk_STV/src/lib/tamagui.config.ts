@@ -1,19 +1,19 @@
 import { createTamagui, createFont, createTokens } from '@tamagui/core'
 
-// Tipografía profesional
+// Tipografía profesional estilo iOS - San Francisco/System fonts
 const font = createFont({
-  family: 'System, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
+  family: 'System, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
   size: {
-    true: 16,
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 20,
-    '2xl': 24,
-    '3xl': 28,
-    '4xl': 32,
-    '5xl': 40,
+    true: 17, // iOS base font size (más grande para accesibilidad)
+    xs: 13,
+    sm: 15,
+    md: 17,
+    lg: 20,
+    xl: 22,
+    '2xl': 28,
+    '3xl': 34,
+    '4xl': 40,
+    '5xl': 48,
   },
   weight: {
     true: '400',
@@ -26,57 +26,66 @@ const font = createFont({
   },
   letterSpacing: {
     true: 0,
-    tight: -0.5,
+    tight: -0.4,
     normal: 0,
-    wide: 0.5,
+    wide: 0.3,
   },
   lineHeight: {
-    true: 1.5,
-    tight: 1.25,
-    normal: 1.5,
-    relaxed: 1.75,
+    true: 1.47,
+    tight: 1.2,
+    normal: 1.47,
+    relaxed: 1.6,
   },
 })
 
-// Tokens de diseño
+// Tokens de diseño estilo iOS - Colores suaves y accesibles
 const tokens = createTokens({
   color: {
-    // Texto
-    text: '#1a1a1a',
-    textSecondary: '#4a5568',
-    textTertiary: '#718096',
-    textMuted: '#a0aec0',
+    // Texto (alto contraste para accesibilidad)
+    text: '#000000',
+    textSecondary: '#3C3C43', // iOS secondary label
+    textTertiary: '#8E8E93', // iOS tertiary label
+    textMuted: '#C7C7CC',
     textInverse: '#ffffff',
-    
-    // Fondos
-    background: '#ffffff',
-    backgroundSecondary: '#f7fafc',
-    backgroundTertiary: '#edf2f7',
-    
-    // Bordes
-    border: '#e2e8f0',
-    borderStrong: '#cbd5e0',
-    
-    // Colores de marca
-    primary: '#2563eb',
-    primaryLight: '#3b82f6',
-    primaryDark: '#1d4ed8',
-    primaryMuted: '#dbeafe',
-    
-    secondary: '#7c3aed',
-    secondaryLight: '#8b5cf6',
-    secondaryDark: '#6d28d9',
-    secondaryMuted: '#ede9fe',
-    
-    // Estados
-    success: '#10b981',
-    successMuted: '#d1fae5',
-    warning: '#f59e0b',
-    warningMuted: '#fef3c7',
-    error: '#ef4444',
-    errorMuted: '#fee2e2',
-    info: '#3b82f6',
-    infoMuted: '#dbeafe',
+
+    // Fondos estilo iOS
+    background: '#F2F2F7', // iOS system background
+    backgroundSecondary: '#FFFFFF',
+    backgroundTertiary: '#F9F9F9',
+    backgroundGrouped: '#F2F2F7',
+    backgroundElevated: '#FFFFFF',
+
+    // Bordes sutiles
+    border: '#D1D1D6', // iOS separator
+    borderStrong: '#AEAEB2',
+    borderSubtle: '#E5E5EA',
+
+    // Colores de marca - más suaves y modernos
+    primary: '#007AFF', // iOS system blue
+    primaryLight: '#409CFF',
+    primaryDark: '#0055D4',
+    primaryMuted: '#E5F1FF',
+
+    secondary: '#5856D6', // iOS system purple
+    secondaryLight: '#7A78E8',
+    secondaryDark: '#3634A3',
+    secondaryMuted: '#F0EFFB',
+
+    // Estados con colores iOS system
+    success: '#34C759', // iOS system green
+    successMuted: '#E3F9E8',
+    warning: '#FF9500', // iOS system orange
+    warningMuted: '#FFF3E0',
+    error: '#FF3B30', // iOS system red
+    errorMuted: '#FFE5E3',
+    info: '#5AC8FA', // iOS system cyan
+    infoMuted: '#E5F7FD',
+    orange: '#FF9500',
+    orangeMuted: '#FFF3E0',
+    pink: '#FF2D55',
+    pinkMuted: '#FFE5EB',
+    teal: '#5AC8FA',
+    tealMuted: '#E5F7FD',
   },
   space: {
     true: 0,
@@ -89,6 +98,7 @@ const tokens = createTokens({
     '3xl': 32,
     '4xl': 40,
     '5xl': 48,
+    '6xl': 64,
   },
   size: {
     true: 0,
@@ -102,23 +112,26 @@ const tokens = createTokens({
     '4xl': 40,
     '5xl': 48,
   },
+  // Radios grandes estilo iOS
   radius: {
     true: 0,
-    xs: 4,
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    '2xl': 20,
-    '3xl': 24,
+    xs: 6,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    '2xl': 24,
+    '3xl': 28,
     full: 9999,
   },
+  // Sombras sutiles estilo iOS
   shadow: {
     none: 'none',
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    xs: '0 1px 2px rgba(0, 0, 0, 0.04)',
+    sm: '0 2px 4px rgba(0, 0, 0, 0.06)',
+    md: '0 4px 8px rgba(0, 0, 0, 0.08)',
+    lg: '0 8px 16px rgba(0, 0, 0, 0.10)',
+    xl: '0 12px 24px rgba(0, 0, 0, 0.12)',
   },
   zIndex: {
     dropdown: 1000,
@@ -133,7 +146,7 @@ const tokens = createTokens({
   },
 })
 
-// Temas
+// Temas estilo iOS
 const themes = {
   light: {
     color: tokens.color.text,
@@ -151,19 +164,19 @@ const themes = {
     error: tokens.color.error,
   },
   dark: {
-    color: '#f7fafc',
-    color2: '#e2e8f0',
-    color3: '#cbd5e0',
-    color4: '#a0aec0',
-    background: '#0f172a',
-    background2: '#1e293b',
-    background3: '#334155',
-    borderColor: '#475569',
-    primary: '#60a5fa',
-    secondary: '#a78bfa',
-    success: '#34d399',
-    warning: '#fbbf24',
-    error: '#f87171',
+    color: '#FFFFFF',
+    color2: '#EBEBF5',
+    color3: '#8E8E93',
+    color4: '#636366',
+    background: '#000000',
+    background2: '#1C1C1E',
+    background3: '#2C2C2E',
+    borderColor: '#38383A',
+    primary: '#0A84FF',
+    secondary: '#5E5CE6',
+    success: '#30D158',
+    warning: '#FF9F0A',
+    error: '#FF453A',
   },
 }
 

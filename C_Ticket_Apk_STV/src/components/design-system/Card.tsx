@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card as TamaguiCard, YStack, XStack, type CardProps } from 'tamagui'
 
-export type CardVariant = 'default' | 'elevated' | 'outlined' | 'filled'
+export type CardVariant = 'default' | 'elevated' | 'outlined' | 'filled' | 'grouped'
 
 interface CustomCardProps extends CardProps {
   variant?: CardVariant
@@ -9,28 +9,37 @@ interface CustomCardProps extends CardProps {
   padding?: number | string
 }
 
+// iOS-style card variants
 const variantStyles: Record<CardVariant, Partial<CardProps>> = {
   default: {
-    backgroundColor: '$background',
-    shadowColor: '$shadow',
-    shadowOpacity: 0.1,
+    backgroundColor: '$backgroundSecondary',
+    shadowColor: '$color',
+    shadowOpacity: 0.06,
     shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   elevated: {
-    backgroundColor: '$background',
-    shadowColor: '$shadow',
-    shadowOpacity: 0.15,
+    backgroundColor: '$backgroundSecondary',
+    shadowColor: '$color',
+    shadowOpacity: 0.1,
     shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
   outlined: {
-    backgroundColor: '$background',
+    backgroundColor: '$backgroundSecondary',
     borderColor: '$border',
-    borderWidth: 1,
+    borderWidth: 0.5,
   },
   filled: {
-    backgroundColor: '$background2',
+    backgroundColor: '$backgroundTertiary',
+  },
+  // iOS Settings-style grouped card
+  grouped: {
+    backgroundColor: '$backgroundSecondary',
+    borderColor: '$borderSubtle',
+    borderWidth: 0.5,
   },
 }
 
@@ -38,7 +47,7 @@ export function Card({
   variant = 'default',
   children,
   padding = '$4',
-  borderRadius = 16,
+  borderRadius = '$lg',
   ...props
 }: CustomCardProps) {
   const styles = variantStyles[variant]
@@ -55,7 +64,7 @@ export function Card({
   )
 }
 
-// Card clickeable
+// iOS-style pressable card with subtle feedback
 interface PressableCardProps extends CustomCardProps {
   onPress: () => void
   disabled?: boolean
@@ -70,7 +79,11 @@ export function PressableCard({
   return (
     <TamaguiCard
       onPress={onPress}
-      pressStyle={{ opacity: 0.9, scale: 0.98 }}
+      pressStyle={{ 
+        opacity: 0.7, 
+        scale: 0.98,
+        backgroundColor: '$backgroundTertiary',
+      }}
       disabled={disabled}
       {...props}
     >

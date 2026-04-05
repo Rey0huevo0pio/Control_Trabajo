@@ -2,10 +2,10 @@ import React from 'react'
 import { YStack, XStack, ScrollView, type YStackProps, type XStackProps } from 'tamagui'
 import { useResponsive } from '../useResponsive'
 
-// Stack vertical
+// iOS-style vertical stack with accessible spacing
 export function Stack({
   children,
-  gap = '$3',
+  gap = '$4',
   ...props
 }: YStackProps) {
   return (
@@ -15,10 +15,10 @@ export function Stack({
   )
 }
 
-// Stack horizontal
+// iOS-style horizontal stack with accessible spacing
 export function HStack({
   children,
-  gap = '$3',
+  gap = '$4',
   align = 'center',
   justify,
   ...props
@@ -35,30 +35,33 @@ export function HStack({
   )
 }
 
-// Layout principal de pantalla
+// iOS-style screen layout with safe areas and accessible spacing
 interface ScreenLayoutProps {
   children: React.ReactNode
   padding?: number | string
   showHeader?: boolean
   headerTitle?: string
   scrollable?: boolean
+  backgroundColor?: string
 }
 
 export function ScreenLayout({
   children,
   padding,
   scrollable = true,
+  backgroundColor = '$background',
 }: ScreenLayoutProps) {
   const { isMobile } = useResponsive()
-  const paddingHorizontal = padding || (isMobile ? '$4' : '$6')
+  // Generous padding for accessibility
+  const paddingHorizontal = padding || (isMobile ? '$5' : '$8')
 
   const content = (
     <YStack
       flex={1}
-      backgroundColor="$background"
+      backgroundColor={backgroundColor}
       paddingHorizontal={paddingHorizontal}
-      paddingVertical="$4"
-      gap="$4"
+      paddingVertical="$5"
+      gap="$5"
     >
       {children}
     </YStack>
@@ -68,8 +71,9 @@ export function ScreenLayout({
     return (
       <ScrollView
         flex={1}
-        backgroundColor="$background"
+        backgroundColor={backgroundColor}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
       >
         {content}
       </ScrollView>
@@ -79,19 +83,20 @@ export function ScreenLayout({
   return content
 }
 
-// Sección dentro de una pantalla
+// iOS-style screen section with clear visual hierarchy
 interface ScreenSectionProps {
   title?: string
   children: React.ReactNode
   gap?: number | string
+  padding?: number | string
 }
 
-export function ScreenSection({ title, children, gap = '$3' }: ScreenSectionProps) {
+export function ScreenSection({ title, children, gap = '$4', padding }: ScreenSectionProps) {
   return (
-    <YStack gap={gap}>
+    <YStack gap={gap} padding={padding}>
       {title && (
-        <YStack>
-          {/* Rendered inline to avoid circular dependency */}
+        <YStack paddingHorizontal="$1" marginBottom="$2">
+          {/* Title rendered inline */}
         </YStack>
       )}
       {children}
