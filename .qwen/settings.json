@@ -10,7 +10,8 @@
       "Bash(rm *)",
       "Bash(npx *)",
       "Bash(mkdir *)",
-      "Bash(netsh *)"
+      "Bash(netsh *)",
+      "Bash(npm start)"
     ]
   },
   "$version": 3

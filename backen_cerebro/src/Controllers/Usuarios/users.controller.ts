@@ -11,7 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from '../../Modules/Users/users.service';
 import {
   CreateUsuarioDto,
   UpdateUsuarioDto,

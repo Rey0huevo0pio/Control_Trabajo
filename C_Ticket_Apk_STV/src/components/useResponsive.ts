@@ -20,12 +20,24 @@ export function useResponsive() {
   const isMobile = width < 768
   const isDesktop = width >= 1024
   
-  // Dynamic sizing for accessibility
-  // Larger spacing on bigger screens
-  const spacingScale = isPhone ? 1 : isTablet ? 1.2 : 1.4
-  // Font scaling for accessibility
-  const fontScale = isSmallPhone ? 0.9 : isPhone ? 1 : isTablet ? 1.1 : 1.2
+  // Dynamic spacing for mobile - more generous spacing
+  const spacing = {
+    xs: isMobile ? 4 : 6,
+    sm: isMobile ? 8 : 10,
+    md: isMobile ? 12 : 16,
+    lg: isMobile ? 16 : 20,
+    xl: isMobile ? 20 : 24,
+    '2xl': isMobile ? 24 : 32,
+    '3xl': isMobile ? 32 : 40,
+  }
   
+  // Padding for screens
+  const padding = {
+    screen: isMobile ? 16 : 24,
+    card: isMobile ? 16 : 20,
+    section: isMobile ? 12 : 16,
+  }
+
   return {
     width,
     height,
@@ -38,8 +50,8 @@ export function useResponsive() {
     isDesktop,
     isPortrait,
     isLandscape,
-    spacingScale,
-    fontScale,
+    spacing,
+    padding,
     // Platform-specific helpers
     isIOS: Platform.OS === 'ios',
     isAndroid: Platform.OS === 'android',

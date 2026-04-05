@@ -48,11 +48,11 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
   }
 
   return (
-    <YStack gap="$5">
+    <YStack gap={isMobile ? 16 : 20}>
       {/* Form Header */}
-      <Card variant="grouped" padding="$4" borderRadius="$lg">
+      <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
         <XStack justifyContent="space-between" alignItems="center">
-          <Text variant="title2" fontWeight="700" color="$color">
+          <Text variant={isMobile ? "title3" : "title2"} fontWeight="700" color="$color" flex={1}>
             {mode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}
           </Text>
           <IconButton icon="close" onPress={onCancel} variant="ghost" size={24} />
@@ -60,48 +60,48 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
       </Card>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap="$5">
+        <YStack gap={isMobile ? 16 : 20}>
           {/* iOS-style Grouped Form Sections */
           /* Información personal */}
-          <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+          <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
             <YStack backgroundColor="$backgroundSecondary">
               <SectionHeader icon="person" title="Información Personal" />
               
-              <YStack padding="$4" paddingTop="$3">
+              <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
                 <FormField label="Nombre" icon="person-outline">
                   <Input
                     placeholder="Nombre del usuario"
                     value={formData.nombre}
                     onChangeText={(text) => setFormData({ ...formData, nombre: text })}
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
               </YStack>
 
-              <YStack padding="$4" paddingTop={0}>
+              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
                 <FormField label="Apellido" icon="person-outline">
                   <Input
                     placeholder="Apellido del usuario"
                     value={formData.apellido}
                     onChangeText={(text) => setFormData({ ...formData, apellido: text })}
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
               </YStack>
 
-              <YStack padding="$4" paddingTop={0}>
+              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
                 <FormField label="Email" icon="mail-outline">
                   <Input
                     placeholder="correo@empresa.com"
@@ -110,17 +110,17 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
               </YStack>
 
-              <YStack padding="$4" paddingTop={0}>
+              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
                 <FormField label="Teléfono" icon="call-outline">
                   <Input
                     placeholder="+52 55 1234 5678"
@@ -128,11 +128,11 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
                     onChangeText={(text) => setFormData({ ...formData, telefono: text })}
                     keyboardType="phone-pad"
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
@@ -141,39 +141,39 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
           </Card>
 
           {/* Información laboral */}
-          <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+          <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
             <YStack backgroundColor="$backgroundSecondary">
               <SectionHeader icon="briefcase" title="Información Laboral" />
               
-              <YStack padding="$4" paddingTop="$3">
+              <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
                 <FormField label="Departamento" icon="business-outline">
                   <Input
                     placeholder="Departamento o área"
                     value={formData.departamento}
                     onChangeText={(text) => setFormData({ ...formData, departamento: text })}
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
               </YStack>
 
-              <YStack padding="$4" paddingTop={0}>
+              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
                 <FormField label="Puesto" icon="id-card-outline">
                   <Input
                     placeholder="Cargo o posición"
                     value={formData.puesto}
                     onChangeText={(text) => setFormData({ ...formData, puesto: text })}
                     backgroundColor="$backgroundTertiary"
-                    borderRadius="$md"
+                    borderRadius={12}
                     borderWidth={0}
                     height={52}
                     fontSize={17}
-                    paddingHorizontal="$4"
+                    paddingHorizontal={16}
                     placeholderTextColor="$color3"
                   />
                 </FormField>
@@ -182,10 +182,10 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
           </Card>
 
           {/* Rol - iOS-style selection cards */}
-          <Card variant="grouped" padding="$4" borderRadius={20}>
+          <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
             <SectionHeader icon="shield-checkmark" title="Rol y Permisos" marginBottom={12} />
             
-            <YStack gap="$3">
+            <YStack gap={isMobile ? 12 : 16}>
               {roles.map((role) => (
                 <Card
                   key={role.id}
@@ -193,17 +193,17 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
                   backgroundColor={(formData as any).rol === role.id ? '$primaryMuted' : '$backgroundSecondary'}
                   borderColor={(formData as any).rol === role.id ? '$primary' : '$border'}
                   borderWidth={(formData as any).rol === role.id ? 1.5 : 0.5}
-                  padding="$4"
+                  padding={isMobile ? 14 : 16}
                   onPress={() => setFormData({ ...formData, rol: role.id })}
                   cursor="pointer"
                   pressStyle={{ opacity: 0.7 }}
                 >
-                  <XStack gap="$3" alignItems="center">
+                  <XStack gap={isMobile ? 12 : 16} alignItems="center">
                     <YStack
                       backgroundColor={(formData as any).rol === role.id ? '$primary' : '$backgroundTertiary'}
                       width={48}
                       height={48}
-                      borderRadius="$md"
+                      borderRadius={12}
                       justifyContent="center"
                       alignItems="center"
                     >
@@ -213,7 +213,7 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
                         color={(formData as any).rol === role.id ? 'white' : '$color2'} 
                       />
                     </YStack>
-                    <Stack flex={1} gap="$1">
+                    <Stack flex={1} gap={isMobile ? 4 : 6}>
                       <Text variant="body" fontWeight="600" color="$color">
                         {role.label}
                       </Text>
@@ -232,11 +232,11 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
 
           {/* Password (solo crear) */}
           {mode === 'create' && (
-            <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+            <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
               <YStack backgroundColor="$backgroundSecondary">
                 <SectionHeader icon="lock-closed" title="Contraseña" />
                 
-                <YStack padding="$4" paddingTop="$3">
+                <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
                   <FormField label="Contraseña temporal" icon="lock-closed-outline">
                     <Input
                       placeholder="••••••••"
@@ -246,15 +246,15 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
                       }
                       secureTextEntry
                       backgroundColor="$backgroundTertiary"
-                      borderRadius="$md"
+                      borderRadius={12}
                       borderWidth={0}
                       height={52}
                       fontSize={17}
-                      paddingHorizontal="$4"
+                      paddingHorizontal={16}
                       placeholderTextColor="$color3"
                     />
                   </FormField>
-                  <Text variant="caption" color="$color3" marginTop="$2" marginLeft="$1">
+                  <Text variant="caption" color="$color3" marginTop={8} marginLeft={4}>
                     Se solicitará al usuario cambiar esta contraseña en el primer inicio de sesión
                   </Text>
                 </YStack>
@@ -263,7 +263,7 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
           )}
 
           {/* iOS-style Action Buttons */}
-          <YStack gap="$3" paddingVertical="$4">
+          <YStack gap={isMobile ? 12 : 16} paddingVertical={isMobile ? 20 : 24}>
             <Button
               onPress={handleSave}
               variant="primary"

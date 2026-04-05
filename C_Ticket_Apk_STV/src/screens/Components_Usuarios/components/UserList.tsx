@@ -115,16 +115,16 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
   })
 
   return (
-    <YStack gap="$4">
+    <YStack gap={isMobile ? 16 : 20}>
       {/* iOS-style Search Bar */}
-      <Card variant="grouped" padding="$3" borderRadius="$lg">
-        <XStack gap="$3" alignItems="center">
+      <Card variant="grouped" padding={isMobile ? 12 : 16} borderRadius={16}>
+        <XStack gap={isMobile ? 12 : 16} alignItems="center">
           <YStack
             flex={1}
             backgroundColor="$backgroundTertiary"
-            borderRadius="$lg"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
+            borderRadius={12}
+            paddingHorizontal={16}
+            paddingVertical={isMobile ? 12 : 14}
             justifyContent="center"
           >
             <Input
@@ -152,7 +152,8 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: isMobile ? 16 : 24, gap: 8 }}
+        contentContainerStyle={{ paddingHorizontal: isMobile ? 4 : 8, gap: 8 }}
+        style={{ marginLeft: -4, marginRight: -4 }}
       >
         <FilterChip
           label="Todos"
@@ -171,8 +172,8 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
       </ScrollView>
 
       {/* iOS-style Grouped User List */}
-      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
-        <ScrollView>
+      <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
+        <ScrollView showsVerticalScrollIndicator={false}>
           <YStack>
             {filteredUsers.map((user, index) => (
               <YStack
@@ -182,15 +183,14 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                 backgroundColor="$backgroundSecondary"
                 borderBottomWidth={index < filteredUsers.length - 1 ? 0.5 : 0}
                 borderBottomColor="$borderSubtle"
-                padding="$4"
+                padding={isMobile ? 16 : 20}
               >
-                {/* Press styling handled by parent */}
-                <HStack gap="$4" alignItems="center">
+                <HStack gap={isMobile ? 12 : 16} alignItems="center">
                   {/* Large Avatar */}
                   <YStack
                     backgroundColor={roleColors[user.rol]}
-                    width={60}
-                    height={60}
+                    width={isMobile ? 56 : 60}
+                    height={isMobile ? 56 : 60}
                     borderRadius="$full"
                     justifyContent="center"
                     alignItems="center"
@@ -199,16 +199,16 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                     shadowRadius={4}
                     shadowOffset={{ width: 0, height: 2 }}
                   >
-                    <Text variant="h5" color="white" fontWeight="700">
+                    <Text variant={isMobile ? "h6" : "h5"} color="white" fontWeight="700">
                       {user.nombre.charAt(0)}
                       {user.apellido.charAt(0)}
                     </Text>
                   </YStack>
 
                   {/* User Info */}
-                  <Stack flex={1} gap="$2">
+                  <Stack flex={1} gap={isMobile ? 6 : 8}>
                     <HStack justifyContent="space-between" alignItems="center">
-                      <Text variant="body" fontWeight="600" color="$color" flex={1}>
+                      <Text variant={isMobile ? "bodySmall" : "body"} fontWeight="600" color="$color" flex={1} flexShrink={1}>
                         {user.nombre} {user.apellido}
                       </Text>
                       <YStack
@@ -219,9 +219,10 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                             ? '$backgroundTertiary'
                             : '$errorMuted'
                         }
-                        paddingHorizontal="$3"
-                        paddingVertical="$2"
+                        paddingHorizontal={10}
+                        paddingVertical={4}
                         borderRadius="$full"
+                        marginLeft={8}
                       >
                         <Text
                           variant="caption"
@@ -239,15 +240,15 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                       </YStack>
                     </HStack>
 
-                    <Text variant="bodySmall" color="$color2">
+                    <Text variant="caption" color="$color2" flexShrink={1}>
                       {user.email}
                     </Text>
 
-                    <HStack gap="$2" alignItems="center" flexWrap="wrap">
+                    <HStack gap={8} alignItems="center" flexWrap="wrap">
                       <YStack
                         backgroundColor={roleColors[user.rol]}
-                        paddingHorizontal="$3"
-                        paddingVertical="$2"
+                        paddingHorizontal={10}
+                        paddingVertical={4}
                         borderRadius="$full"
                       >
                         <Text variant="caption" color="white" fontWeight="600">
@@ -268,12 +269,12 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
                   </Stack>
 
                   {/* Edit button and chevron */}
-                  <HStack gap="$1" alignItems="center">
+                  <HStack gap={4} alignItems="center">
                     <IconButton
                       icon="create"
                       onPress={() => onEdit(user)}
                       variant="ghost"
-                      size={22}
+                      size={20}
                     />
                     <Ionicons name="chevron-forward" size={20} color="$color3" />
                   </HStack>
@@ -285,7 +286,7 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
       </Card>
 
       {/* Summary */}
-      <YStack alignItems="center" paddingVertical="$3">
+      <YStack alignItems="center" paddingVertical={12}>
         <Text variant="caption" color="$color3">
           Mostrando {filteredUsers.length} de {users.length} usuarios
         </Text>

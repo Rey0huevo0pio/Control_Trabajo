@@ -9,12 +9,6 @@ export {
 } from './T_Instalaciones';
 
 // Usuarios
-export {
-  Usuario,
-  UsuarioSchema,
-  type UsuarioDocument,
-  RolUsuario,
-} from './Usuarios';
 
 // T_ticket_IT_STV
 export {

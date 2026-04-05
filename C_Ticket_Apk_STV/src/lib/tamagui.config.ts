@@ -5,6 +5,18 @@ const font = createFont({
   family: 'System, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
   size: {
     true: 17, // iOS base font size (más grande para accesibilidad)
+    // Legacy numeric tokens for backward compatibility
+    '1': 10,
+    '2': 12,
+    '3': 14,
+    '4': 16,
+    '5': 18,
+    '6': 20,
+    '7': 22,
+    '8': 24,
+    '9': 28,
+    '10': 32,
+    // Named tokens
     xs: 13,
     sm: 15,
     md: 17,
@@ -102,6 +114,18 @@ const tokens = createTokens({
   },
   size: {
     true: 0,
+    // Legacy numeric tokens for backward compatibility
+    '1': 4,
+    '2': 8,
+    '3': 12,
+    '4': 16,
+    '5': 20,
+    '6': 24,
+    '7': 28,
+    '8': 32,
+    '9': 36,
+    '10': 40,
+    // Named tokens
     xs: 4,
     sm: 8,
     md: 12,

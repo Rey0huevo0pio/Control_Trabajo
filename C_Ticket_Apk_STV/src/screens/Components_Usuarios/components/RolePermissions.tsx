@@ -119,12 +119,12 @@ export function RolePermissions() {
   const [expandedRole, setExpandedRole] = useState<string | null>(null)
 
   return (
-    <YStack gap="$4">
+    <YStack gap={isMobile ? 16 : 20}>
       {/* Header */}
-      <Card variant="grouped" padding="$4" borderRadius="$lg">
+      <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
         <XStack justifyContent="space-between" alignItems="center">
-          <Stack gap="$1">
-            <Text variant="title2" fontWeight="700" color="$color">
+          <Stack gap={isMobile ? 4 : 6} flex={1}>
+            <Text variant={isMobile ? "title3" : "title2"} fontWeight="700" color="$color">
               Roles y Permisos
             </Text>
             <Text variant="bodySmall" color="$color2">
@@ -137,21 +137,21 @@ export function RolePermissions() {
 
       {/* iOS Settings-style Role Cards */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap="$4">
+        <YStack gap={isMobile ? 16 : 20}>
           {roles.map((role) => (
             <Card
               key={role.id}
               variant="grouped"
               padding={0}
-              borderRadius="$lg"
+              borderRadius={16}
               overflow="hidden"
             >
               <YStack backgroundColor="$backgroundSecondary">
                 {/* Role Header (clickable to expand/collapse) */}
                 <XStack
-                  gap="$4"
+                  gap={isMobile ? 12 : 16}
                   alignItems="center"
-                  padding="$4"
+                  padding={isMobile ? 16 : 20}
                   onPress={() =>
                     setExpandedRole(expandedRole === role.id ? null : role.id)
                   }
@@ -162,9 +162,9 @@ export function RolePermissions() {
                   {/* Role Icon */}
                   <YStack
                     backgroundColor={role.color}
-                    width={56}
-                    height={56}
-                    borderRadius="$md"
+                    width={isMobile ? 52 : 56}
+                    height={isMobile ? 52 : 56}
+                    borderRadius={12}
                     justifyContent="center"
                     alignItems="center"
                     shadowColor={role.color}
@@ -172,20 +172,20 @@ export function RolePermissions() {
                     shadowRadius={4}
                     shadowOffset={{ width: 0, height: 2 }}
                   >
-                    <Ionicons name={role.icon as any} size={28} color="white" />
+                    <Ionicons name={role.icon as any} size={isMobile ? 24 : 28} color="white" />
                   </YStack>
 
                   {/* Role Info */}
-                  <Stack flex={1} gap="$1">
-                    <Text variant="body" fontWeight="600" color="$color">
+                  <Stack flex={1} gap={isMobile ? 4 : 6}>
+                    <Text variant={isMobile ? "bodySmall" : "body"} fontWeight="600" color="$color">
                       {role.name}
                     </Text>
-                    <Text variant="bodySmall" color="$color2">
+                    <Text variant="caption" color="$color2">
                       {role.description}
                     </Text>
 
                     {/* Permission badges */}
-                    <HStack gap="$2" marginTop="$2" flexWrap="wrap">
+                    <HStack gap={6} marginTop={6} flexWrap="wrap">
                       {Object.entries(role.permissions)
                         .filter(([_, value]) => value)
                         .slice(0, 3)
@@ -193,8 +193,8 @@ export function RolePermissions() {
                           <YStack
                             key={key}
                             backgroundColor="$backgroundTertiary"
-                            paddingHorizontal="$3"
-                            paddingVertical="$1"
+                            paddingHorizontal={8}
+                            paddingVertical={4}
                             borderRadius="$full"
                           >
                             <Text variant="caption" color={role.color} fontWeight="600">
@@ -226,8 +226,8 @@ export function RolePermissions() {
                     backgroundColor="$backgroundTertiary"
                   >
                     <XStack 
-                      padding="$4" 
-                      paddingBottom="$3"
+                      padding={isMobile ? 16 : 20} 
+                      paddingBottom={12}
                       borderBottomWidth={0.5}
                       borderBottomColor="$borderSubtle"
                     >
@@ -239,22 +239,22 @@ export function RolePermissions() {
                     {Object.entries(role.permissions).map(([permission, hasPermission], index) => (
                       <XStack
                         key={permission}
-                        gap="$3"
+                        gap={isMobile ? 12 : 16}
                         alignItems="center"
-                        padding="$4"
-                        paddingTop="$3"
+                        padding={isMobile ? 16 : 20}
+                        paddingTop={12}
                         borderBottomWidth={index < Object.entries(role.permissions).length - 1 ? 0.5 : 0}
                         borderBottomColor="$borderSubtle"
                         backgroundColor="$backgroundSecondary"
                       >
                         <Ionicons
                           name={hasPermission ? 'checkmark-circle' : 'close-circle-outline'}
-                          size={24}
+                          size={isMobile ? 20 : 24}
                           color={hasPermission ? '$success' : '$color4'}
                         />
                         <Stack flex={1}>
                           <Text 
-                            variant="body" 
+                            variant={isMobile ? "bodySmall" : "body"}
                             fontWeight={hasPermission ? '600' : '400'}
                             color={hasPermission ? '$color' : '$color3'}
                           >
@@ -263,8 +263,8 @@ export function RolePermissions() {
                         </Stack>
                         <YStack
                           backgroundColor={hasPermission ? '$successMuted' : '$backgroundTertiary'}
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
+                          paddingHorizontal={10}
+                          paddingVertical={4}
                           borderRadius="$full"
                         >
                           <Text

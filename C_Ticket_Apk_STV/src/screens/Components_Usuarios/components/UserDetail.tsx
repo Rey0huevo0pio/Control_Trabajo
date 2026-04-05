@@ -39,10 +39,10 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
   const { isMobile } = useResponsive()
 
   return (
-    <YStack gap="$5">
+    <YStack gap={isMobile ? 16 : 20}>
       {/* iOS-style Profile Header */}
-      <Card variant="grouped" padding="$5" borderRadius="$xl" overflow="hidden">
-        <YStack alignItems="center" gap="$4" paddingTop="$2">
+      <Card variant="grouped" padding={isMobile ? 20 : 24} borderRadius={20} overflow="hidden">
+        <YStack alignItems="center" gap={isMobile ? 16 : 20} paddingTop={4}>
           {/* Back and Edit buttons */}
           <XStack width="100%" justifyContent="space-between" alignItems="center">
             <IconButton 
@@ -51,7 +51,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
               variant="ghost" 
               size={24} 
             />
-            <Text variant="title3" fontWeight="600" color="$color">
+            <Text variant={isMobile ? "title3" : "title2"} fontWeight="600" color="$color">
               Perfil del Usuario
             </Text>
             <IconButton 
@@ -65,8 +65,8 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
           {/* Large Avatar with shadow */}
           <YStack
             backgroundColor={roleColors[user.rol]}
-            width={110}
-            height={110}
+            width={isMobile ? 100 : 120}
+            height={isMobile ? 100 : 120}
             borderRadius="$full"
             justifyContent="center"
             alignItems="center"
@@ -75,23 +75,23 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
             shadowRadius={8}
             shadowOffset={{ width: 0, height: 4 }}
           >
-            <Text variant="h2" color="white" fontWeight="700">
+            <Text variant={isMobile ? "h2" : "h1"} color="white" fontWeight="700">
               {user.nombre.charAt(0)}
               {user.apellido.charAt(0)}
             </Text>
           </YStack>
 
           {/* Name */}
-          <Text variant="h3" fontWeight="700" color="$color" textAlign="center">
+          <Text variant={isMobile ? "h3" : "h2"} fontWeight="700" color="$color" textAlign="center">
             {user.nombre} {user.apellido}
           </Text>
 
           {/* Role and Status badges */}
-          <HStack gap="$2" alignItems="center" flexWrap="wrap" justifyContent="center">
+          <HStack gap={8} alignItems="center" flexWrap="wrap" justifyContent="center">
             <YStack
               backgroundColor={roleColors[user.rol]}
-              paddingHorizontal="$4"
-              paddingVertical="$2"
+              paddingHorizontal={12}
+              paddingVertical={6}
               borderRadius="$full"
             >
               <Text variant="labelSmall" color="white" fontWeight="600">
@@ -107,8 +107,8 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
                   ? '$backgroundTertiary'
                   : '$errorMuted'
               }
-              paddingHorizontal="$4"
-              paddingVertical="$2"
+              paddingHorizontal={12}
+              paddingVertical={6}
               borderRadius="$full"
             >
               <Text
@@ -128,7 +128,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
           </HStack>
 
           {/* Department */}
-          <Text variant="bodySmall" color="$color2">
+          <Text variant="bodySmall" color="$color2" textAlign="center">
             {user.departamento} • {user.puesto}
           </Text>
         </YStack>
@@ -136,7 +136,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
       {/* iOS-style Grouped Information Sections */
       /* Información de contacto */}
-      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+      <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="call" title="Información de Contacto" />
           
@@ -164,7 +164,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
       </Card>
 
       {/* Información laboral */}
-      <Card variant="grouped" padding={0} borderRadius="$lg" overflow="hidden">
+      <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="briefcase" title="Información Laboral" />
           
@@ -199,12 +199,12 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
       </Card>
 
       {/* iOS-style Action Buttons Grid */}
-      <Card variant="grouped" padding="$4" borderRadius={20}>
+      <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
         <SectionHeader icon="sparkles" title="Acciones" marginBottom={12} />
         
-        <YStack gap="$3">
+        <YStack gap={isMobile ? 12 : 16}>
           {/* Primary actions */}
-          <XStack gap="$3">
+          <XStack gap={isMobile ? 12 : 16}>
             <ActionButton 
               icon="create" 
               label="Editar" 
@@ -219,7 +219,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
             />
           </XStack>
           
-          <XStack gap="$3">
+          <XStack gap={isMobile ? 12 : 16}>
             <ActionButton 
               icon="call-outline" 
               label="Llamar" 
@@ -235,7 +235,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
           </XStack>
 
           {/* Dangerous actions */}
-          <XStack gap="$3">
+          <XStack gap={isMobile ? 12 : 16}>
             <ActionButton 
               icon="ban-outline" 
               label="Suspender" 

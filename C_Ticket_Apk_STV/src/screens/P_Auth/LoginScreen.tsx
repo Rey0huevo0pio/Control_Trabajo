@@ -86,7 +86,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             fontSize={isMobile ? '$3' : '$4'}
             color="$color2"
             textAlign="center"
-            lineHeight="$1"
+            lineHeight={20}
           >
             Sistema de Tickets de Soporte
           </Text>
@@ -211,11 +211,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           >
             Versión 1.0.0
           </Text>
-          <Text 
-            fontSize={isMobile ? '$3' : '$2'} 
-            color="$color2" 
-            textAlign="center" 
-            lineHeight="$2"
+          <Text
+            fontSize={isMobile ? '$3' : '$2'}
+            color="$color2"
+            textAlign="center"
+            lineHeight={22}
             fontWeight="400"
             numberOfLines={2}
           >

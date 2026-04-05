@@ -21,7 +21,7 @@ type UserView = 'list' | 'roles' | 'create' | 'edit' | 'detail'
 
 export default function UserManagementScreen() {
   const navigation = useNavigation<any>()
-  const { isMobile } = useResponsive()
+  const { isMobile, padding } = useResponsive()
   const [currentView, setCurrentView] = useState<UserView>('list')
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null)
 
@@ -80,23 +80,24 @@ export default function UserManagementScreen() {
   const showTabs = currentView === 'list' || currentView === 'roles'
 
   return (
-    <ScreenLayout>
+    <ScreenLayout padding={0}>
       {/* iOS-style Large Header */}
       <Card
         backgroundColor="$backgroundSecondary"
         padding={0}
         overflow="hidden"
-        marginBottom={showTabs ? 0 : '$4'}
+        marginBottom={showTabs ? 0 : 0}
+        borderRadius={0}
       >
         <YStack
           backgroundColor="$secondary"
-          paddingHorizontal={isMobile ? '$5' : '$6'}
-          paddingTop="$6"
-          paddingBottom="$5"
-          gap="$2"
+          paddingHorizontal={isMobile ? 20 : 28}
+          paddingTop={isMobile ? 56 : 64}
+          paddingBottom={isMobile ? 24 : 28}
+          gap={isMobile ? 12 : 16}
         >
-          <XStack alignItems="center" justifyContent="space-between" marginBottom="$2">
-            <XStack alignItems="center" gap="$2">
+          <XStack alignItems="center" justifyContent="space-between" marginBottom={4}>
+            <XStack alignItems="center" gap={8}>
               <IconButton
                 icon="chevron-back"
                 onPress={handleBack}
@@ -105,7 +106,7 @@ export default function UserManagementScreen() {
               />
             </XStack>
 
-            <XStack alignItems="center" gap="$2">
+            <XStack alignItems="center" gap={8}>
               <IconButton
                 icon="refresh"
                 onPress={() => {}}
@@ -121,10 +122,10 @@ export default function UserManagementScreen() {
             </XStack>
           </XStack>
 
-          <Text variant="h1" color="white" fontWeight="700">
+          <Text variant={isMobile ? "h2" : "h1"} color="white" fontWeight="700">
             Gestión de Usuarios
           </Text>
-          <Text variant="bodySmall" color="rgba(255,255,255,0.85)">
+          <Text variant="body" color="rgba(255,255,255,0.85)" lineHeight={22}>
             Administra usuarios, roles y permisos del sistema
           </Text>
 
@@ -132,12 +133,12 @@ export default function UserManagementScreen() {
           <YStack
             backgroundColor="rgba(255,255,255,0.25)"
             alignSelf="flex-start"
-            paddingHorizontal="$3"
-            paddingVertical="$2"
-            borderRadius="$full"
-            marginTop="$2"
+            paddingHorizontal={12}
+            paddingVertical={6}
+            borderRadius={20}
+            marginTop={4}
           >
-            <Text variant="caption" color="white" fontWeight="700" letterSpacing={0.5}>
+            <Text variant="labelSmall" color="white" fontWeight="700" letterSpacing={0.5}>
               ADMINISTRADOR
             </Text>
           </YStack>
@@ -146,32 +147,41 @@ export default function UserManagementScreen() {
 
       {/* iOS-style Segmented Control (Tabs) */}
       {showTabs && (
-        <Card
-          variant="filled"
-          padding="$2"
-          marginHorizontal={isMobile ? '$4' : '$6'}
-          marginTop="$3"
-          marginBottom="$4"
+        <YStack 
+          backgroundColor="$background" 
+          paddingHorizontal={isMobile ? 16 : 24}
+          paddingVertical={16}
         >
-          <XStack gap="$2">
-            <TabButton
-              icon="people"
-              label="Usuarios"
-              active={currentView !== 'roles'}
-              onPress={() => setCurrentView('list')}
-            />
-            <TabButton
-              icon="shield-checkmark"
-              label="Roles y Permisos"
-              active={currentView === 'roles'}
-              onPress={() => setCurrentView('roles')}
-            />
-          </XStack>
-        </Card>
+          <Card
+            variant="filled"
+            padding={8}
+          >
+            <XStack gap={8}>
+              <TabButton
+                icon="people"
+                label="Usuarios"
+                active={currentView !== 'roles'}
+                onPress={() => setCurrentView('list')}
+              />
+              <TabButton
+                icon="shield-checkmark"
+                label="Roles y Permisos"
+                active={currentView === 'roles'}
+                onPress={() => setCurrentView('roles')}
+              />
+            </XStack>
+          </Card>
+        </YStack>
       )}
 
       {/* Contenido */}
-      <Stack flex={1} marginTop={showTabs ? '$4' : '$2'}>{renderView()}</Stack>
+      <YStack 
+        flex={1} 
+        paddingHorizontal={padding.screen}
+        paddingVertical={showTabs ? 8 : 16}
+      >
+        {renderView()}
+      </YStack>
     </ScreenLayout>
   )
 }

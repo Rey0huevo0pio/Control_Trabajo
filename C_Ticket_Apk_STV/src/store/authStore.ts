@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { User, Role } from '../types'
 import { ROLE_PERMISSIONS, CRUDPermissions } from '../constants'
+import { setAuthToken } from '../services/api'
 
 interface AuthState {
   user: User | null
@@ -24,10 +25,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
 
   login: (user, token) => {
+    // Guardar token en el interceptor de axios
+    setAuthToken(token)
     set({ user, token, isAuthenticated: true })
   },
 
   logout: () => {
+    // Eliminar token del interceptor
+    setAuthToken(null)
     set({ user: null, token: null, isAuthenticated: false })
   },
 
