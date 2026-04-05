@@ -29,8 +29,14 @@ export class UploadsService {
     }
   }
 
-  private getRutaBase(numeroControl: string, fecha: string): string {
-    return join(this.uploadsDir, numeroControl, fecha);
+  private getRutaBase(numeroControl: string): string {
+    const ahora = new Date();
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    
+    // Estructura: EMP-001/2026/2026-02/2026-02-04/
+    return join(this.uploadsDir, numeroControl, String(año), `${año}-${mes}`, `${año}-${mes}-${dia}`);
   }
 
   private getRutaPorTipo(
@@ -63,14 +69,58 @@ export class UploadsService {
         }
         ruta = join(ruta, 'chat', 'imagen_privados', subcategoria);
         break;
+      case TipoArchivo.CHAT_ARCHIVO:
+        ruta = join(ruta, 'chat', 'archivos');
+        break;
       case TipoArchivo.PERFIL:
         ruta = join(ruta, 'usuario', 'imagen_perfil');
         break;
       case TipoArchivo.TICKET_EVIDENCIA:
-        ruta = join(ruta, 'Tickets_IT', 'Tickets_evidencia_solucionado');
+        ruta = join(ruta, 'Tickets_IT', 'evidencias');
         break;
       case TipoArchivo.TICKET_PROBLEMA:
-        ruta = join(ruta, 'Tickets_IT', 'Tickets_plobrema_solucionar');
+        ruta = join(ruta, 'Tickets_IT', 'problemas');
+        break;
+      case TipoArchivo.TICKET_ADJUNTO:
+        ruta = join(ruta, 'Tickets_IT', 'adjuntos');
+        break;
+      case TipoArchivo.ARCHIVERO_DOCUMENTO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        ruta = join(ruta, 'archivero', subcategoria, 'documentos');
+        break;
+      case TipoArchivo.ARCHIVERO_IMAGEN:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        ruta = join(ruta, 'archivero', subcategoria, 'imagenes');
+        break;
+      case TipoArchivo.ARCHIVERO_VIDEO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        ruta = join(ruta, 'archivero', subcategoria, 'videos');
+        break;
+      case TipoArchivo.ARCHIVERO_ARCHIVO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        ruta = join(ruta, 'archivero', subcategoria, 'archivos');
+        break;
+      case TipoArchivo.NOTICIA_IMAGEN:
+        ruta = join(ruta, 'noticias', 'imagenes');
+        break;
+      case TipoArchivo.NOTICIA_ADJUNTO:
+        ruta = join(ruta, 'noticias', 'adjuntos');
         break;
       default:
         throw new BadRequestException(
@@ -92,8 +142,13 @@ export class UploadsService {
     uploadDto: UploadFileDto,
   ): Promise<{ url: string; ruta: string; filename: string }> {
     try {
-      const fecha = new Date().toISOString().split('T')[0]; // Formato: YYYY-MM-DD
-      const rutaBase = this.getRutaBase(uploadDto.numero_control, fecha);
+      const ahora = new Date();
+      const año = ahora.getFullYear();
+      const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+      const dia = String(ahora.getDate()).padStart(2, '0');
+      const fecha = `${año}-${mes}-${dia}`;
+      
+      const rutaBase = this.getRutaBase(uploadDto.numero_control);
       const rutaDestino = this.getRutaPorTipo(
         rutaBase,
         uploadDto.tipo,
@@ -110,6 +165,8 @@ export class UploadsService {
       // Generar URL relativa desde la carpeta uploads
       const rutaRelativa = join(
         uploadDto.numero_control,
+        String(año),
+        `${año}-${mes}`,
         fecha,
         this.getRutaRelativaPorTipo(uploadDto.tipo, uploadDto.subcategoria),
       );
@@ -147,12 +204,48 @@ export class UploadsService {
           );
         }
         return join('chat', 'imagen_privados', subcategoria);
+      case TipoArchivo.CHAT_ARCHIVO:
+        return join('chat', 'archivos');
       case TipoArchivo.PERFIL:
         return join('usuario', 'imagen_perfil');
       case TipoArchivo.TICKET_EVIDENCIA:
-        return join('Tickets_IT', 'Tickets_evidencia_solucionado');
+        return join('Tickets_IT', 'evidencias');
       case TipoArchivo.TICKET_PROBLEMA:
-        return join('Tickets_IT', 'Tickets_plobrema_solucionar');
+        return join('Tickets_IT', 'problemas');
+      case TipoArchivo.TICKET_ADJUNTO:
+        return join('Tickets_IT', 'adjuntos');
+      case TipoArchivo.ARCHIVERO_DOCUMENTO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        return join('archivero', subcategoria, 'documentos');
+      case TipoArchivo.ARCHIVERO_IMAGEN:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        return join('archivero', subcategoria, 'imagenes');
+      case TipoArchivo.ARCHIVERO_VIDEO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        return join('archivero', subcategoria, 'videos');
+      case TipoArchivo.ARCHIVERO_ARCHIVO:
+        if (!subcategoria) {
+          throw new BadRequestException(
+            'La subcategoria (archivero/carpeta) es requerida',
+          );
+        }
+        return join('archivero', subcategoria, 'archivos');
+      case TipoArchivo.NOTICIA_IMAGEN:
+        return join('noticias', 'imagenes');
+      case TipoArchivo.NOTICIA_ADJUNTO:
+        return join('noticias', 'adjuntos');
       default:
         throw new BadRequestException(
           `Tipo de archivo no válido: ${String(tipo)}`,
