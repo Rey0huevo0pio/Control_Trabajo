@@ -27,17 +27,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
+    console.log('\n🔐 [JWT Strategy] Validando token...');
+    console.log('📋 Payload:', JSON.stringify(payload, null, 2));
+    
     const usuario = await this.usuarioModel
       .findById(payload.sub)
       .select('-password');
 
     if (!usuario) {
+      console.log('❌ [JWT Strategy] Usuario NO encontrado con ID:', payload.sub);
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
     if (!usuario.activo) {
+      console.log('❌ [JWT Strategy] Usuario está INACTIVO');
       throw new UnauthorizedException('Usuario inactivo');
     }
+
+    console.log('✅ [JWT Strategy] Usuario validado:', usuario.Control_Usuario);
 
     return {
       userId: payload.sub,

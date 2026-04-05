@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { YStack, ScrollView, Input, XStack } from 'tamagui'
+import React, { useState, useEffect } from 'react'
+import { YStack, ScrollView, Input, XStack, Spinner } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
@@ -9,75 +9,18 @@ import {
   IconButton,
 } from '../../../components/design-system'
 import { useResponsive } from '../../../components/useResponsive'
-import { Employee, UserRole } from '../types'
+import { Employee, UserRole, UserFilter } from '../types'
+import { userService } from '../../../services/userService'
 
-const mockUsers: Employee[] = [
-  {
-    _id: '1',
-    Control_Usuario: 'EMP001',
-    nombre: 'Carlos',
-    apellido: 'Ramírez',
-    email: 'carlos.ramirez@empresa.com',
-    telefono: '+52 55 1234 5678',
-    departamento: 'TI',
-    puesto: 'Desarrollador Senior',
-    rol: 'it',
-    estado: 'activo',
-    fecha_ingreso: '2023-01-15',
-    fecha_creacion: '2023-01-15',
-    ultimoAcceso: 'Hace 2 horas',
-  },
-  {
-    _id: '2',
-    Control_Usuario: 'EMP002',
-    nombre: 'María',
-    apellido: 'González',
-    email: 'maria.gonzalez@empresa.com',
-    departamento: 'RRHH',
-    puesto: 'Coordinadora de RRHH',
-    rol: 'rh',
-    estado: 'activo',
-    fecha_ingreso: '2022-06-20',
-    fecha_creacion: '2022-06-20',
-    ultimoAcceso: 'Hace 1 día',
-  },
-  {
-    _id: '3',
-    Control_Usuario: 'EMP003',
-    nombre: 'Juan',
-    apellido: 'Pérez',
-    email: 'juan.perez@empresa.com',
-    departamento: 'Operaciones',
-    puesto: 'Supervisor de Planta',
-    rol: 'supervisor',
-    estado: 'activo',
-    fecha_ingreso: '2021-03-10',
-    fecha_creacion: '2021-03-10',
-    ultimoAcceso: 'Hace 30 minutos',
-  },
-  {
-    _id: '4',
-    Control_Usuario: 'EMP004',
-    nombre: 'Ana',
-    apellido: 'Martínez',
-    email: 'ana.martinez@empresa.com',
-    departamento: 'Administración',
-    puesto: 'Administrador',
-    rol: 'admin',
-    estado: 'activo',
-    fecha_ingreso: '2020-01-05',
-    fecha_creacion: '2020-01-05',
-    ultimoAcceso: 'En línea',
-  },
-]
-
+// ==========================================
+// COLORES Y ETIQUETAS POR ROL
+// ==========================================
 const roleColors: Record<UserRole, string> = {
   admin: '$error',
   it: '$primary',
   rh: '$warning',
   supervisor: '$success',
-  empleado: '$info',
-  guest: '$color3',
+  vigilante: '$info',
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -85,57 +28,160 @@ const roleLabels: Record<UserRole, string> = {
   it: 'TI',
   rh: 'RRHH',
   supervisor: 'Supervisor',
-  empleado: 'Empleado',
-  guest: 'Invitado',
+  vigilante: 'Vigilante',
 }
 
 interface UserListProps {
   onUserSelect: (user: Employee) => void
   onEdit: (user: Employee) => void
   onCreate: () => void
+  onRefresh?: () => void
 }
 
-export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
+export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }: UserListProps) {
   const { isMobile } = useResponsive()
-  const [users, setUsers] = useState(mockUsers)
+  const [users, setUsers] = useState<Employee[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRol, setFilterRol] = useState<UserRole | 'all'>('all')
+  const [filterActivo, setFilterActivo] = useState<boolean | null>(null)
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      user.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.apellido.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.Control_Usuario.toLowerCase().includes(searchQuery.toLowerCase())
+  // ==========================================
+  // CARGAR USUARIOS DESDE EL BACKEND
+  // ==========================================
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Debug: Verificar token
+      const { getAuthToken } = await import('../../../services/api')
+      const currentToken = getAuthToken()
+      console.log('🔑 Token actual en UserList:', currentToken ? '✅ Token presente' : '❌ NO hay token')
+      
+      const filters: any = {}
+      if (searchQuery) filters.search = searchQuery
+      if (filterRol !== 'all') filters.rol = filterRol
+      if (filterActivo !== null) filters.activo = filterActivo
 
-    const matchesRol = filterRol === 'all' || user.rol === filterRol
+      const data = await userService.getUsers(filters)
+      console.log('✅ Usuarios cargados:', data.length)
+      setUsers(data)
+    } catch (err: any) {
+      console.error('❌ Error cargando usuarios:', err.message)
+      
+      if (err.response?.status === 401) {
+        setError('No autorizado. Por favor, cierra sesión y vuelve a iniciar.')
+      } else {
+        setError(err.response?.data?.message || 'Error al cargar usuarios')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    return matchesSearch && matchesRol
-  })
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  // Recargar cuando cambian los filtros
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadUsers()
+    }, 500) // Debounce de 500ms
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, filterRol, filterActivo])
+
+  // Función para refrescar manualmente
+  const handleRefresh = async () => {
+    await loadUsers()
+    onRefresh?.()
+  }
+
+  // ==========================================
+  // TOGGLE ESTADO DEL USUARIO
+  // ==========================================
+  const handleToggleActive = async (userId: string, e: any) => {
+    e.stopPropagation()
+    try {
+      await userService.toggleUserActive(userId)
+      await loadUsers() // Recargar lista
+    } catch (err: any) {
+      console.error('Error cambiando estado:', err)
+      alert('Error al cambiar estado del usuario')
+    }
+  }
+
+  // ==========================================
+  // ELIMINAR USUARIO
+  // ==========================================
+  const handleDelete = async (userId: string, e: any) => {
+    e.stopPropagation()
+    const confirmDelete = confirm('¿Estás seguro de eliminar este usuario?')
+    if (!confirmDelete) return
+
+    try {
+      await userService.deleteUser(userId)
+      await loadUsers() // Recargar lista
+    } catch (err: any) {
+      console.error('Error eliminando usuario:', err)
+      alert('Error al eliminar usuario')
+    }
+  }
+
+  // ==========================================
+  // RENDER
+  // ==========================================
+  if (loading && users.length === 0) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$5">
+        <Spinner size="large" color="$primary" />
+        <Text variant="body" color="$color2" marginTop="$3">
+          Cargando usuarios...
+        </Text>
+      </YStack>
+    )
+  }
+
+  if (error) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$5" gap="$3">
+        <Ionicons name="alert-circle" size={48} color="$error" />
+        <Text variant="body" color="$error" textAlign="center">
+          {error}
+        </Text>
+        <IconButton
+          icon="refresh"
+          onPress={loadUsers}
+          variant="primary"
+          size={24}
+        />
+      </YStack>
+    )
+  }
 
   return (
     <YStack gap={isMobile ? 16 : 20}>
-      {/* iOS-style Search Bar */}
-      <Card variant="grouped" padding={isMobile ? 12 : 16} borderRadius={16}>
+      {/* Search Bar */}
+      <Card variant="outlined" padding={isMobile ? 12 : 16} borderRadius={16}>
         <XStack gap={isMobile ? 12 : 16} alignItems="center">
           <YStack
             flex={1}
-            backgroundColor="$backgroundTertiary"
+            backgroundColor="$background2"
             borderRadius={12}
             paddingHorizontal={16}
             paddingVertical={isMobile ? 12 : 14}
-            justifyContent="center"
           >
             <Input
-              placeholder="Buscar usuarios..."
+              placeholder="Buscar por nombre, email o código..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               backgroundColor="transparent"
               borderWidth={0}
               padding={0}
-              height="auto"
-              fontSize={17}
+              fontSize={16}
               placeholderTextColor="$color3"
             />
           </YStack>
@@ -148,15 +194,14 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
         </XStack>
       </Card>
 
-      {/* iOS-style Filter Chips - Horizontal scroll */}
-      <ScrollView 
-        horizontal 
+      {/* Filtros */}
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: isMobile ? 4 : 8, gap: 8 }}
-        style={{ marginLeft: -4, marginRight: -4 }}
       >
         <FilterChip
-          label="Todos"
+          label={`Todos (${users.length})`}
           active={filterRol === 'all'}
           onPress={() => setFilterRol('all')}
         />
@@ -171,131 +216,135 @@ export function UserList({ onUserSelect, onEdit, onCreate }: UserListProps) {
         ))}
       </ScrollView>
 
-      {/* iOS-style Grouped User List */}
-      <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
+      {/* Lista de Usuarios */}
+      <Card variant="outlined" padding={0} borderRadius={16} overflow="hidden">
         <ScrollView showsVerticalScrollIndicator={false}>
           <YStack>
-            {filteredUsers.map((user, index) => (
-              <YStack
-                key={user._id}
-                onPress={() => onUserSelect(user)}
-                cursor="pointer"
-                backgroundColor="$backgroundSecondary"
-                borderBottomWidth={index < filteredUsers.length - 1 ? 0.5 : 0}
-                borderBottomColor="$borderSubtle"
-                padding={isMobile ? 16 : 20}
-              >
-                <HStack gap={isMobile ? 12 : 16} alignItems="center">
-                  {/* Large Avatar */}
-                  <YStack
-                    backgroundColor={roleColors[user.rol]}
-                    width={isMobile ? 56 : 60}
-                    height={isMobile ? 56 : 60}
-                    borderRadius="$full"
-                    justifyContent="center"
-                    alignItems="center"
-                    shadowColor="$color"
-                    shadowOpacity={0.1}
-                    shadowRadius={4}
-                    shadowOffset={{ width: 0, height: 2 }}
-                  >
-                    <Text variant={isMobile ? "h6" : "h5"} color="white" fontWeight="700">
-                      {user.nombre.charAt(0)}
-                      {user.apellido.charAt(0)}
-                    </Text>
-                  </YStack>
-
-                  {/* User Info */}
-                  <Stack flex={1} gap={isMobile ? 6 : 8}>
-                    <HStack justifyContent="space-between" alignItems="center">
-                      <Text variant={isMobile ? "bodySmall" : "body"} fontWeight="600" color="$color" flex={1} flexShrink={1}>
-                        {user.nombre} {user.apellido}
-                      </Text>
-                      <YStack
-                        backgroundColor={
-                          user.estado === 'activo'
-                            ? '$successMuted'
-                            : user.estado === 'inactivo'
-                            ? '$backgroundTertiary'
-                            : '$errorMuted'
-                        }
-                        paddingHorizontal={10}
-                        paddingVertical={4}
-                        borderRadius="$full"
-                        marginLeft={8}
-                      >
-                        <Text
-                          variant="caption"
-                          color={
-                            user.estado === 'activo'
-                              ? '$success'
-                              : user.estado === 'inactivo'
-                              ? '$color3'
-                              : '$error'
-                          }
-                          fontWeight="600"
-                        >
-                          {user.estado === 'activo' ? 'Activo' : user.estado === 'inactivo' ? 'Inactivo' : 'Suspendido'}
-                        </Text>
-                      </YStack>
-                    </HStack>
-
-                    <Text variant="caption" color="$color2" flexShrink={1}>
-                      {user.email}
-                    </Text>
-
-                    <HStack gap={8} alignItems="center" flexWrap="wrap">
-                      <YStack
-                        backgroundColor={roleColors[user.rol]}
-                        paddingHorizontal={10}
-                        paddingVertical={4}
-                        borderRadius="$full"
-                      >
-                        <Text variant="caption" color="white" fontWeight="600">
-                          {roleLabels[user.rol]}
-                        </Text>
-                      </YStack>
-                      <Text variant="caption" color="$color3">
-                        {user.departamento}
-                      </Text>
-                      <Text variant="caption" color="$color3">
-                        {user.Control_Usuario}
-                      </Text>
-                    </HStack>
-
-                    <Text variant="caption" color="$color4">
-                      Último acceso: {user.ultimoAcceso || 'Nunca'}
-                    </Text>
-                  </Stack>
-
-                  {/* Edit button and chevron */}
-                  <HStack gap={4} alignItems="center">
-                    <IconButton
-                      icon="create"
-                      onPress={() => onEdit(user)}
-                      variant="ghost"
-                      size={20}
-                    />
-                    <Ionicons name="chevron-forward" size={20} color="$color3" />
-                  </HStack>
-                </HStack>
+            {users.length === 0 ? (
+              <YStack padding="$5" alignItems="center" gap="$3">
+                <Ionicons name="people" size={48} color="$color3" />
+                <Text variant="body" color="$color2" textAlign="center">
+                  No se encontraron usuarios
+                </Text>
               </YStack>
-            ))}
+            ) : (
+              users.map((user, index) => (
+                <YStack
+                  key={user.id}
+                  onPress={() => onUserSelect(user)}
+                  cursor="pointer"
+                  backgroundColor="$background"
+                  borderBottomWidth={index < users.length - 1 ? 1 : 0}
+                  borderBottomColor="$border"
+                  padding={isMobile ? 16 : 20}
+                >
+                  <HStack gap={isMobile ? 12 : 16} alignItems="center">
+                    {/* Avatar */}
+                    <YStack
+                      backgroundColor={roleColors[user.rol]}
+                      width={isMobile ? 56 : 60}
+                      height={isMobile ? 56 : 60}
+                      borderRadius="$full"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text variant={isMobile ? 'h6' : 'h5'} color="white" fontWeight="700">
+                        {user.nombre.charAt(0)}
+                        {user.apellido.charAt(0)}
+                      </Text>
+                    </YStack>
+
+                    {/* Info */}
+                    <Stack flex={1} gap={isMobile ? 6 : 8}>
+                      <HStack justifyContent="space-between" alignItems="center">
+                        <Text variant={isMobile ? 'bodySmall' : 'body'} fontWeight="600" color="$color" flex={1}>
+                          {user.nombre} {user.apellido}
+                        </Text>
+                        <YStack
+                          backgroundColor={user.activo ? '$successMuted' : '$errorMuted'}
+                          paddingHorizontal={10}
+                          paddingVertical={4}
+                          borderRadius="$full"
+                          marginLeft={8}
+                          onPress={(e) => handleToggleActive(user.id, e)}
+                        >
+                          <Text
+                            variant="caption"
+                            color={user.activo ? '$success' : '$error'}
+                            fontWeight="600"
+                          >
+                            {user.activo ? 'Activo' : 'Inactivo'}
+                          </Text>
+                        </YStack>
+                      </HStack>
+
+                      <Text variant="caption" color="$color2">
+                        {user.email || user.Control_Usuario}
+                      </Text>
+
+                      <HStack gap={8} alignItems="center" flexWrap="wrap">
+                        <YStack
+                          backgroundColor={roleColors[user.rol]}
+                          paddingHorizontal={10}
+                          paddingVertical={4}
+                          borderRadius="$full"
+                        >
+                          <Text variant="caption" color="white" fontWeight="600">
+                            {roleLabels[user.rol]}
+                          </Text>
+                        </YStack>
+                        {user.departamento && (
+                          <Text variant="caption" color="$color3">
+                            {user.departamento}
+                          </Text>
+                        )}
+                        <Text variant="caption" color="$color3">
+                          {user.Control_Usuario}
+                        </Text>
+                      </HStack>
+
+                      <Text variant="caption" color="$color3">
+                        Último acceso: {user.ultimoAcceso ? new Date(user.ultimoAcceso).toLocaleString() : 'Nunca'}
+                      </Text>
+                    </Stack>
+
+                    {/* Acciones */}
+                    <HStack gap={4} alignItems="center">
+                      <IconButton
+                        icon="create"
+                        onPress={() => onEdit(user)}
+                        variant="ghost"
+                        size={20}
+                      />
+                      <IconButton
+                        icon="trash"
+                        onPress={(e) => handleDelete(user.id, e)}
+                        variant="ghost"
+                        size={20}
+                      />
+                      <Ionicons name="chevron-forward" size={20} color="$color3" />
+                    </HStack>
+                  </HStack>
+                </YStack>
+              ))
+            )}
           </YStack>
         </ScrollView>
       </Card>
 
-      {/* Summary */}
+      {/* Resumen */}
       <YStack alignItems="center" paddingVertical={12}>
-        <Text variant="caption" color="$color3">
-          Mostrando {filteredUsers.length} de {users.length} usuarios
+        <Text variant="caption" color="$color2">
+          {users.length} usuario{users.length !== 1 ? 's' : ''} encontrado{users.length !== 1 ? 's' : ''}
         </Text>
       </YStack>
     </YStack>
   )
 }
 
-// iOS-style filter chip
+// ==========================================
+// FILTER CHIP
+// ==========================================
 function FilterChip({
   label,
   active,
@@ -309,20 +358,20 @@ function FilterChip({
 }) {
   return (
     <Card
-      variant={active ? 'filled' : 'outlined'}
-      backgroundColor={active ? (color === '$primary' ? '$primaryMuted' : color === '$success' ? '$successMuted' : color === '$warning' ? '$warningMuted' : '$backgroundTertiary') : 'transparent'}
-      borderColor={active ? color || '$primary' : '$border'}
-      borderWidth={active ? 0 : 0.5}
-      paddingHorizontal="$4"
-      paddingVertical="$3"
+      variant={active ? 'default' : 'outlined'}
+      backgroundColor={active ? `${color}20` : 'transparent'}
+      borderColor={active ? color : '$border'}
+      borderWidth={1}
+      paddingHorizontal="$3"
+      paddingVertical="$2"
       borderRadius="$full"
       onPress={onPress}
       cursor="pointer"
     >
       <Text
-        variant="labelSmall"
+        variant="caption"
         fontWeight="600"
-        color={active ? color || '$primary' : '$color2'}
+        color={active ? color : '$color2'}
       >
         {label}
       </Text>

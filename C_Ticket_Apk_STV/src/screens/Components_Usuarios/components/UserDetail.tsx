@@ -16,8 +16,7 @@ const roleLabels: Record<UserRole, string> = {
   it: 'TI',
   rh: 'RRHH',
   supervisor: 'Supervisor',
-  empleado: 'Empleado',
-  guest: 'Invitado',
+  vigilante: 'Vigilante',
 }
 
 const roleColors: Record<UserRole, string> = {
@@ -25,8 +24,7 @@ const roleColors: Record<UserRole, string> = {
   it: '$primary',
   rh: '$warning',
   supervisor: '$success',
-  empleado: '$info',
-  guest: '$color3',
+  vigilante: '$color3',
 }
 
 interface UserDetailProps {

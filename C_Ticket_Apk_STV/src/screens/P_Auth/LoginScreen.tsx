@@ -31,16 +31,32 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     }
 
     try {
+      console.log('🔐 Intentando login con:', controlUsuario)
       const data: LoginRequest = { Control_Usuario: controlUsuario, password }
       const response = await authApi.login(data)
+      
+      console.log('📩 Respuesta del servidor:', JSON.stringify(response, null, 2))
 
+      // La estructura de respuesta del backend es:
+      // { success: true, message: "...", data: { user: {...}, token: "..." } }
       if (response.success && response.data) {
-        login(response.data.user, response.data.token)
-        navigation.replace('Home')
+        const { user, token } = response.data
+        console.log('🔑 Token recibido:', token ? `✅ ${token.substring(0, 20)}...` : '❌ NULL')
+        console.log('👤 Usuario:', user)
+        
+        if (token) {
+          login(user, token)
+          console.log('✅ Token guardado en authStore')
+          navigation.replace('Home')
+        } else {
+          setError('No se recibió token de autenticación')
+        }
       } else {
         setError(response.message || 'Error al iniciar sesión')
       }
     } catch (err: any) {
+      console.error('❌ Error de login:', err)
+      console.error('Respuesta:', err.response?.data)
       setError(err.response?.data?.message || 'Error de conexión con el servidor')
     }
   }

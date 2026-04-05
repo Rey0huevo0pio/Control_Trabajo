@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from '../../Modules/Users/users.service';
 import {
@@ -49,7 +50,10 @@ export class UsersController {
     RolUsuario.ADMIN,
     RolUsuario.SUPERVISOR,
   )
-  findAll(@Query() searchDto: SearchUsuariosDto) {
+  findAll(@Query() searchDto: SearchUsuariosDto, @Req() req: any) {
+    console.log('\n📥 [UsersController] GET /api/users');
+    console.log('🔑 Authorization header:', req.headers['authorization'] ? '✅ PRESENTE' : '❌ AUSENTE');
+    console.log('🔍 Filtros:', searchDto);
     return this.usersService.findAll(searchDto);
   }
 

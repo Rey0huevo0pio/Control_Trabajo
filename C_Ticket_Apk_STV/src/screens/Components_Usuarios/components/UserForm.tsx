@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { YStack, ScrollView, Input, XStack } from 'tamagui'
+import { YStack, ScrollView, Input, XStack, Spinner } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
@@ -11,6 +11,7 @@ import {
 } from '../../../components/design-system'
 import { useResponsive } from '../../../components/useResponsive'
 import { Employee, UserRole, CreateUserDto, UpdateUserDto } from '../types'
+import { userService } from '../../../services/userService'
 
 interface UserFormProps {
   mode: 'create' | 'edit'
@@ -21,265 +22,266 @@ interface UserFormProps {
 
 export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
   const { isMobile } = useResponsive()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState<CreateUserDto | UpdateUserDto>({
+  const [formData, setFormData] = useState<any>({
+    Control_Usuario: user?.Control_Usuario || '',
     nombre: user?.nombre || '',
     apellido: user?.apellido || '',
     email: user?.email || '',
     telefono: user?.telefono || '',
     departamento: user?.departamento || '',
     puesto: user?.puesto || '',
-    rol: user?.rol || 'empleado',
+    rol: user?.rol || 'vigilante',
     ...(mode === 'create' ? { password: '' } : {}),
   })
 
   const roles: { id: UserRole; label: string; description: string; icon: string }[] = [
-    { id: 'admin', label: 'Administrador', description: 'Acceso completo al sistema', icon: 'shield-checkmark' },
-    { id: 'it', label: 'TI', description: 'Soporte técnico y sistemas', icon: 'hardware-chip' },
-    { id: 'rh', label: 'RRHH', description: 'Gestión de recursos humanos', icon: 'people' },
-    { id: 'supervisor', label: 'Supervisor', description: 'Supervisión de operaciones', icon: 'eye' },
-    { id: 'empleado', label: 'Empleado', description: 'Acceso estándar', icon: 'person' },
-    { id: 'guest', label: 'Invitado', description: 'Acceso limitado de solo lectura', icon: 'person-outline' },
+    { id: 'admin', label: 'Administrador', description: 'Acceso completo', icon: 'shield-checkmark' },
+    { id: 'it', label: 'TI', description: 'Soporte técnico', icon: 'hardware-chip' },
+    { id: 'rh', label: 'RRHH', description: 'Recursos humanos', icon: 'people' },
+    { id: 'supervisor', label: 'Supervisor', description: 'Supervisión', icon: 'eye' },
+    { id: 'vigilante', label: 'Vigilante', description: 'Acceso básico', icon: 'person' },
   ]
 
-  const handleSave = () => {
-    // TODO: Implementar lógica de guardado
-    onSave()
+  const handleSave = async () => {
+    setError(null)
+
+    if (mode === 'create' && !formData.Control_Usuario) {
+      setError('El código es obligatorio')
+      return
+    }
+    if (!formData.nombre || !formData.apellido) {
+      setError('Nombre y apellido son obligatorios')
+      return
+    }
+    if (mode === 'create' && !formData.password) {
+      setError('La contraseña es obligatoria')
+      return
+    }
+
+    try {
+      setLoading(true)
+      if (mode === 'create') {
+        await userService.createUser(formData as CreateUserDto)
+      } else if (user) {
+        await userService.updateUser(user.id, formData as UpdateUserDto)
+      }
+      onSave()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al guardar')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <YStack gap={isMobile ? 16 : 20}>
-      {/* Form Header */}
-      <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
-        <XStack justifyContent="space-between" alignItems="center">
-          <Text variant={isMobile ? "title3" : "title2"} fontWeight="700" color="$color" flex={1}>
+    <YStack gap="$4">
+      {/* Header */}
+      <Card variant="outlined" padding="$4" borderRadius={16}>
+        <HStack justify="space-between">
+          <Text variant="h5" fontWeight="700" color="$color">
             {mode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}
           </Text>
           <IconButton icon="close" onPress={onCancel} variant="ghost" size={24} />
-        </XStack>
+        </HStack>
       </Card>
 
+      {error && (
+        <Card backgroundColor="$errorMuted" borderColor="$error" borderWidth={1} padding="$3">
+          <Text variant="bodySmall" color="$error" fontWeight="600">
+            ⚠️ {error}
+          </Text>
+        </Card>
+      )}
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={isMobile ? 16 : 20}>
-          {/* iOS-style Grouped Form Sections */
-          /* Información personal */}
-          <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
-            <YStack backgroundColor="$backgroundSecondary">
-              <SectionHeader icon="person" title="Información Personal" />
-              
-              <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
-                <FormField label="Nombre" icon="person-outline">
-                  <Input
-                    placeholder="Nombre del usuario"
-                    value={formData.nombre}
-                    onChangeText={(text) => setFormData({ ...formData, nombre: text })}
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-
-              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
-                <FormField label="Apellido" icon="person-outline">
-                  <Input
-                    placeholder="Apellido del usuario"
-                    value={formData.apellido}
-                    onChangeText={(text) => setFormData({ ...formData, apellido: text })}
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-
-              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
-                <FormField label="Email" icon="mail-outline">
-                  <Input
-                    placeholder="correo@empresa.com"
-                    value={formData.email}
-                    onChangeText={(text) => setFormData({ ...formData, email: text })}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-
-              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
-                <FormField label="Teléfono" icon="call-outline">
-                  <Input
-                    placeholder="+52 55 1234 5678"
-                    value={formData.telefono}
-                    onChangeText={(text) => setFormData({ ...formData, telefono: text })}
-                    keyboardType="phone-pad"
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-            </YStack>
-          </Card>
-
-          {/* Información laboral */}
-          <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
-            <YStack backgroundColor="$backgroundSecondary">
-              <SectionHeader icon="briefcase" title="Información Laboral" />
-              
-              <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
-                <FormField label="Departamento" icon="business-outline">
-                  <Input
-                    placeholder="Departamento o área"
-                    value={formData.departamento}
-                    onChangeText={(text) => setFormData({ ...formData, departamento: text })}
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-
-              <YStack padding={isMobile ? 16 : 20} paddingTop={0}>
-                <FormField label="Puesto" icon="id-card-outline">
-                  <Input
-                    placeholder="Cargo o posición"
-                    value={formData.puesto}
-                    onChangeText={(text) => setFormData({ ...formData, puesto: text })}
-                    backgroundColor="$backgroundTertiary"
-                    borderRadius={12}
-                    borderWidth={0}
-                    height={52}
-                    fontSize={17}
-                    paddingHorizontal={16}
-                    placeholderTextColor="$color3"
-                  />
-                </FormField>
-              </YStack>
-            </YStack>
-          </Card>
-
-          {/* Rol - iOS-style selection cards */}
-          <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
-            <SectionHeader icon="shield-checkmark" title="Rol y Permisos" marginBottom={12} />
-            
-            <YStack gap={isMobile ? 12 : 16}>
-              {roles.map((role) => (
-                <Card
-                  key={role.id}
-                  variant={(formData as any).rol === role.id ? 'filled' : 'outlined'}
-                  backgroundColor={(formData as any).rol === role.id ? '$primaryMuted' : '$backgroundSecondary'}
-                  borderColor={(formData as any).rol === role.id ? '$primary' : '$border'}
-                  borderWidth={(formData as any).rol === role.id ? 1.5 : 0.5}
-                  padding={isMobile ? 14 : 16}
-                  onPress={() => setFormData({ ...formData, rol: role.id })}
-                  cursor="pointer"
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <XStack gap={isMobile ? 12 : 16} alignItems="center">
-                    <YStack
-                      backgroundColor={(formData as any).rol === role.id ? '$primary' : '$backgroundTertiary'}
-                      width={48}
-                      height={48}
-                      borderRadius={12}
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Ionicons 
-                        name={role.icon as any} 
-                        size={24} 
-                        color={(formData as any).rol === role.id ? 'white' : '$color2'} 
-                      />
-                    </YStack>
-                    <Stack flex={1} gap={isMobile ? 4 : 6}>
-                      <Text variant="body" fontWeight="600" color="$color">
-                        {role.label}
-                      </Text>
-                      <Text variant="caption" color="$color3">
-                        {role.description}
-                      </Text>
-                    </Stack>
-                    {(formData as any).rol === role.id && (
-                      <Ionicons name="checkmark-circle" size={28} color="$primary" />
-                    )}
-                  </XStack>
-                </Card>
-              ))}
-            </YStack>
-          </Card>
-
-          {/* Password (solo crear) */}
+        <YStack gap="$4">
+          {/* Código (solo crear) */}
           {mode === 'create' && (
-            <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
-              <YStack backgroundColor="$backgroundSecondary">
-                <SectionHeader icon="lock-closed" title="Contraseña" />
-                
-                <YStack padding={isMobile ? 16 : 20} paddingTop={isMobile ? 12 : 16}>
-                  <FormField label="Contraseña temporal" icon="lock-closed-outline">
-                    <Input
-                      placeholder="••••••••"
-                      value={(formData as CreateUserDto).password}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, password: text } as CreateUserDto)
-                      }
-                      secureTextEntry
-                      backgroundColor="$backgroundTertiary"
-                      borderRadius={12}
-                      borderWidth={0}
-                      height={52}
-                      fontSize={17}
-                      paddingHorizontal={16}
-                      placeholderTextColor="$color3"
-                    />
-                  </FormField>
-                  <Text variant="caption" color="$color3" marginTop={8} marginLeft={4}>
-                    Se solicitará al usuario cambiar esta contraseña en el primer inicio de sesión
-                  </Text>
-                </YStack>
-              </YStack>
-            </Card>
+            <FormField label="Código de Usuario" icon="id-card-outline">
+              <Input
+                placeholder="Ej: USR001"
+                value={formData.Control_Usuario}
+                onChangeText={(text) => setFormData({ ...formData, Control_Usuario: text.toUpperCase() })}
+                autoCapitalize="characters"
+                borderWidth={1}
+                borderColor="$border"
+                borderRadius={12}
+                height={50}
+                paddingHorizontal="$3"
+              />
+            </FormField>
           )}
 
-          {/* iOS-style Action Buttons */}
-          <YStack gap={isMobile ? 12 : 16} paddingVertical={isMobile ? 20 : 24}>
+          {/* Nombre y Apellido */}
+          <HStack gap="$3">
+            <Stack flex={1}>
+              <FormField label="Nombre" icon="person-outline">
+                <Input
+                  placeholder="Nombre"
+                  value={formData.nombre}
+                  onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                  borderWidth={1}
+                  borderColor="$border"
+                  borderRadius={12}
+                  height={50}
+                  paddingHorizontal="$3"
+                />
+              </FormField>
+            </Stack>
+            <Stack flex={1}>
+              <FormField label="Apellido" icon="person-outline">
+                <Input
+                  placeholder="Apellido"
+                  value={formData.apellido}
+                  onChangeText={(text) => setFormData({ ...formData, apellido: text })}
+                  borderWidth={1}
+                  borderColor="$border"
+                  borderRadius={12}
+                  height={50}
+                  paddingHorizontal="$3"
+                />
+              </FormField>
+            </Stack>
+          </HStack>
+
+          {/* Email y Teléfono */}
+          <FormField label="Email" icon="mail-outline">
+            <Input
+              placeholder="correo@empresa.com"
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              borderWidth={1}
+              borderColor="$border"
+              borderRadius={12}
+              height={50}
+              paddingHorizontal="$3"
+            />
+          </FormField>
+
+          <FormField label="Teléfono" icon="call-outline">
+            <Input
+              placeholder="+52 55 1234 5678"
+              value={formData.telefono}
+              onChangeText={(text) => setFormData({ ...formData, telefono: text })}
+              keyboardType="phone-pad"
+              borderWidth={1}
+              borderColor="$border"
+              borderRadius={12}
+              height={50}
+              paddingHorizontal="$3"
+            />
+          </FormField>
+
+          {/* Departamento y Puesto */}
+          <FormField label="Departamento" icon="business-outline">
+            <Input
+              placeholder="Departamento o área"
+              value={formData.departamento}
+              onChangeText={(text) => setFormData({ ...formData, departamento: text })}
+              borderWidth={1}
+              borderColor="$border"
+              borderRadius={12}
+              height={50}
+              paddingHorizontal="$3"
+            />
+          </FormField>
+
+          <FormField label="Puesto" icon="briefcase-outline">
+            <Input
+              placeholder="Cargo o posición"
+              value={formData.puesto}
+              onChangeText={(text) => setFormData({ ...formData, puesto: text })}
+              borderWidth={1}
+              borderColor="$border"
+              borderRadius={12}
+              height={50}
+              paddingHorizontal="$3"
+            />
+          </FormField>
+
+          {/* Contraseña (solo crear) */}
+          {mode === 'create' && (
+            <FormField label="Contraseña" icon="lock-closed-outline">
+              <Input
+                placeholder="Mínimo 6 caracteres"
+                value={formData.password}
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
+                secureTextEntry
+                borderWidth={1}
+                borderColor="$border"
+                borderRadius={12}
+                height={50}
+                paddingHorizontal="$3"
+              />
+            </FormField>
+          )}
+
+          {/* Rol */}
+          <Stack gap="$3">
+            <Text variant="label" color="$color" fontWeight="600">
+              Rol del Usuario
+            </Text>
+            {roles.map((role) => (
+              <Card
+                key={role.id}
+                variant={formData.rol === role.id ? 'default' : 'outlined'}
+                backgroundColor={formData.rol === role.id ? '$primaryMuted' : '$background'}
+                borderColor={formData.rol === role.id ? '$primary' : '$border'}
+                borderWidth={1}
+                padding="$3"
+                onPress={() => setFormData({ ...formData, rol: role.id })}
+              >
+                <HStack gap="$3">
+                  <YStack
+                    width={48}
+                    height={48}
+                    borderRadius={12}
+                    backgroundColor={formData.rol === role.id ? '$primary' : '$background2'}
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <Ionicons name={role.icon as any} size={24} color={formData.rol === role.id ? 'white' : '$color2'} />
+                  </YStack>
+                  <Stack flex={1} gap="$1">
+                    <Text variant="body" fontWeight="600" color="$color">
+                      {role.label}
+                    </Text>
+                    <Text variant="bodySmall" color="$color2">
+                      {role.description}
+                    </Text>
+                  </Stack>
+                  {formData.rol === role.id && (
+                    <Ionicons name="checkmark-circle" size={28} color="$primary" />
+                  )}
+                </HStack>
+              </Card>
+            ))}
+          </Stack>
+
+          {/* Botones */}
+          <YStack gap="$3" paddingVertical="$4">
             <Button
+              title={loading ? 'Guardando...' : (mode === 'create' ? 'Crear Usuario' : 'Guardar Cambios')}
+              icon={loading ? undefined : (mode === 'create' ? 'person-add' : 'save')}
               onPress={handleSave}
+              disabled={loading}
               variant="primary"
               size="lg"
               fullWidth
-            >
-              {mode === 'create' ? 'Crear Usuario' : 'Guardar Cambios'}
-            </Button>
+            />
             <Button
+              title="Cancelar"
+              icon="close"
               onPress={onCancel}
               variant="outline"
               size="lg"
               fullWidth
-            >
-              Cancelar
-            </Button>
+            />
           </YStack>
         </YStack>
       </ScrollView>
@@ -287,36 +289,16 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
   )
 }
 
-// iOS-style section header
-function SectionHeader({ icon, title, marginBottom = 0 }: { icon: string; title: string; marginBottom?: number }) {
-  return (
-    <XStack 
-      gap="$2" 
-      alignItems="center" 
-      padding="$4"
-      paddingBottom="$3"
-      backgroundColor="$backgroundTertiary"
-      marginBottom={marginBottom}
-    >
-      <Ionicons name={icon as any} size={20} color="$primary" />
-      <Text variant="label" fontWeight="600" color="$color">
-        {title}
-      </Text>
-    </XStack>
-  )
-}
-
-// iOS-style form field with label
 function FormField({ label, icon, children }: { label: string; icon?: string; children: React.ReactNode }) {
   return (
-    <YStack gap="$2">
-      <XStack gap="$2" alignItems="center" paddingHorizontal="$1">
+    <Stack gap="$2">
+      <HStack gap="$2" align="center">
         {icon && <Ionicons name={icon as any} size={16} color="$color2" />}
-        <Text variant="labelSmall" fontWeight="600" color="$color2">
+        <Text variant="label" color="$color2">
           {label}
         </Text>
-      </XStack>
+      </HStack>
       {children}
-    </YStack>
+    </Stack>
   )
 }

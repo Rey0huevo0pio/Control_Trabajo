@@ -1,11 +1,10 @@
-import axios, { AxiosInstance } from 'axios';
-import { API_CONFIG } from './api';
+import api, { API_CONFIG, getAuthToken } from './api';
 import { User, UserRole } from '../types';
 
 // ==========================================
 // INTERFACES
 // ==========================================
-interface CreateUserDto {
+export interface CreateUserDto {
   Control_Usuario: string;
   password: string;
   nombre: string;
@@ -18,7 +17,7 @@ interface CreateUserDto {
   puesto?: string;
 }
 
-interface UpdateUserDto {
+export interface UpdateUserDto {
   Control_Usuario?: string;
   password?: string;
   nombre?: string;
@@ -34,7 +33,7 @@ interface UpdateUserDto {
   permisos?: string[];
 }
 
-interface SearchParams {
+export interface SearchParams {
   search?: string;
   rol?: UserRole;
   activo?: boolean;
@@ -45,40 +44,14 @@ interface SearchParams {
 // SERVICIO DE USUARIOS
 // ==========================================
 class UserService {
-  private api: AxiosInstance;
-
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_CONFIG.baseURL,
-      timeout: API_CONFIG.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Interceptor para agregar el token
-    this.api.interceptors.request.use((config) => {
-      const token = this.getToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-  }
-
-  private getToken(): string | null {
-    try {
-      // Aquí deberías obtener el token de tu store de auth
-      return null; // Reemplazar con lógica real
-    } catch {
-      return null;
-    }
-  }
+  // Usar la MISMA instancia de api.ts, NO crear una nueva
+  private api = api;
 
   // ==========================================
   // CREAR USUARIO
   // ==========================================
   async createUser(data: CreateUserDto): Promise<User> {
+    console.log('📤 [UserService] createUser:', data.Control_Usuario);
     const response = await this.api.post(API_CONFIG.endpoints.USERS, data);
     return response.data;
   }
@@ -87,6 +60,8 @@ class UserService {
   // OBTENER TODOS LOS USUARIOS
   // ==========================================
   async getUsers(params?: SearchParams): Promise<User[]> {
+    console.log('📤 [UserService] getUsers - Token:', getAuthToken() ? '✅' : '❌');
+    
     const response = await this.api.get(API_CONFIG.endpoints.USERS, {
       params: {
         search: params?.search,
@@ -102,6 +77,7 @@ class UserService {
   // OBTENER USUARIO POR ID
   // ==========================================
   async getUserById(id: string): Promise<User> {
+    console.log('📤 [UserService] getUserById:', id);
     const response = await this.api.get(
       API_CONFIG.endpoints.USERS_BY_ID(id),
     );
@@ -112,6 +88,7 @@ class UserService {
   // ACTUALIZAR USUARIO
   // ==========================================
   async updateUser(id: string, data: UpdateUserDto): Promise<User> {
+    console.log('📤 [UserService] updateUser:', id);
     const response = await this.api.patch(
       API_CONFIG.endpoints.USERS_BY_ID(id),
       data,
@@ -149,6 +126,7 @@ class UserService {
   // ACTIVAR/DESACTIVAR USUARIO
   // ==========================================
   async toggleUserActive(id: string): Promise<User> {
+    console.log('📤 [UserService] toggleUserActive:', id);
     const response = await this.api.patch(
       API_CONFIG.endpoints.USERS_TOGGLE_ACTIVE(id),
     );
@@ -159,6 +137,7 @@ class UserService {
   // ELIMINAR USUARIO
   // ==========================================
   async deleteUser(id: string): Promise<void> {
+    console.log('📤 [UserService] deleteUser:', id);
     await this.api.delete(API_CONFIG.endpoints.USERS_BY_ID(id));
   }
 
@@ -182,4 +161,3 @@ class UserService {
 }
 
 export const userService = new UserService();
-export type { CreateUserDto, UpdateUserDto, SearchParams };
