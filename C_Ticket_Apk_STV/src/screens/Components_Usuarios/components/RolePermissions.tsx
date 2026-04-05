@@ -194,7 +194,7 @@ export function RolePermissions() {
                   gap="$2"
                 >
                   <Text variant="bodySmall" fontWeight="600" color="$color" marginBottom="$2">
-                    Permisos detallados:
+                    Permisos detallados por it:
                   </Text>
                   {Object.entries(role.permissions).map(([permission, hasPermission]) => (
                     <HStack key={permission} gap="$2" align="center">
