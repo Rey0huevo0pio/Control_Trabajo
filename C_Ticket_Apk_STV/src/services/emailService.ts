@@ -54,7 +54,8 @@ class EmailService {
   // Obtener configuración de correo por ID de usuario
   async getEmailConfigByUserId(userId: string): Promise<EmailConfig | null> {
     try {
-      console.log('📧 [EmailService] Obteniendo config para userId:', userId);
+      console.log('📧 [EmailService] === INICIO getEmailConfigByUserId ===');
+      console.log('📧 [EmailService] userId:', userId);
       const token = getAuthToken();
       console.log('🔑 [EmailService] Token:', token ? '✅ PRESENTE' : '❌ NULO');
       
@@ -70,8 +71,15 @@ class EmailService {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('📩 [EmailService] Respuesta:', JSON.stringify(response.data, null, 2));
-      return response.data.data;
+      console.log('📩 [EmailService] response.data:', JSON.stringify(response.data, null, 2));
+      
+      // El backend devuelve los datos directamente en response.data
+      const config = response.data;
+      console.log('📩 [EmailService] config extraída:', config);
+      console.log('📩 [EmailService] config.email:', config?.email);
+      console.log('📧 [EmailService] === FIN getEmailConfigByUserId ===');
+      
+      return config;
     } catch (error: any) {
       console.log('❌ [EmailService] Error:', error.response?.data || error.message);
       return null;

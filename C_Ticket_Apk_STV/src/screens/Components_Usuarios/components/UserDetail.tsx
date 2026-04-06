@@ -48,13 +48,24 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
   const loadEmailConfig = async () => {
     try {
-      console.log('📧 [UserDetail] Cargando email config para userId:', user.id);
+      console.log('📧 [UserDetail] === INICIO CARGA EMAIL CONFIG ===');
+      console.log('📧 [UserDetail] userId:', user.id);
       setLoadingEmail(true)
+      
       const config = await emailService.getEmailConfigByUserId(user.id)
-      console.log('📩 [UserDetail] Config obtenida:', config ? config.email : 'NULL')
+      
+      console.log('📩 [UserDetail] config recibida:', config);
+      console.log('📩 [UserDetail] typeof config:', typeof config);
+      console.log('📩 [UserDetail] config es null?', config === null);
+      console.log('📩 [UserDetail] config.email:', config?.email);
+      
       if (config) {
         setEmailConfig(config)
+        console.log('✅ [UserDetail] emailConfig seteado:', config.email);
+      } else {
+        console.log('❌ [UserDetail] config es null/undefined, no se setea emailConfig');
       }
+      console.log('📧 [UserDetail] === FIN CARGA EMAIL CONFIG ===');
     } catch (error) {
       console.log('❌ [UserDetail] Error cargando email config:', error)
     } finally {
