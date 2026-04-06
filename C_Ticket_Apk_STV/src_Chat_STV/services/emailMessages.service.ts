@@ -263,6 +263,19 @@ class EmailMessagesService {
   // Obtener un correo específico con contenido completo (para abrir)
   async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
     try {
+      // Verificar si ya está en caché con contenido completo
+      const hasFull = await emailCacheService.hasFullContent(uid, folder);
+      if (hasFull) {
+        const cached = await emailCacheService.getCachedEmails(folder);
+        const fullEmail = cached.find(e => e.uid === uid);
+        if (fullEmail) {
+          console.log('📦 [EmailMessages] Contenido completo ya en caché (UID:', uid, ')');
+          return fullEmail;
+        }
+      }
+
+      // Descargar del servidor
+      console.log('🌐 [EmailMessages] Descargando contenido completo (UID:', uid, ')');
       const token = getAuthToken();
       if (!token) return null;
 
@@ -280,6 +293,10 @@ class EmailMessagesService {
       if (emails.length > 0) {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
+
+        // Guardar contenido completo en caché
+        await emailCacheService.saveFullEmail(fullEmail, folder);
+
         return fullEmail;
       }
 

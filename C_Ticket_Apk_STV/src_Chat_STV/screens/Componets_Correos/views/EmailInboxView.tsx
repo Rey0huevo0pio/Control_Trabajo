@@ -167,6 +167,79 @@ export function EmailInboxView() {
 
               <Text variant="h5" fontWeight="700" color="$color">{displayContent.subject || 'Sin asunto'}</Text>
               <Text variant="body" color="$color" lineHeight={24}>{displayContent.text || 'Sin contenido'}</Text>
+
+              {/* Adjuntos */}
+              {displayContent.attachments && displayContent.attachments.length > 0 && (
+                <YStack gap="$3" borderTopWidth={1} borderColor="$border" paddingTop="$4">
+                  <Text variant="label" fontWeight="600" color="$color">
+                    📎 {displayContent.attachments.length} adjunto{displayContent.attachments.length > 1 ? 's' : ''}
+                  </Text>
+                  {displayContent.attachments.map((att: any, idx: number) => {
+                    const contentType = (att.contentType || att.mimeType || '').toLowerCase();
+                    const isImage = contentType.startsWith('image');
+                    const isVideo = contentType.startsWith('video');
+                    const isPDF = contentType.includes('pdf');
+
+                    return (
+                      <Card key={idx} variant="outlined" padding="$3" backgroundColor="$backgroundSecondary">
+                        <HStack gap="$3" alignItems="center">
+                          {/* Icono según tipo */}
+                          <YStack
+                            width={44}
+                            height={44}
+                            borderRadius="$md"
+                            backgroundColor="$backgroundTertiary"
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <Ionicons
+                              name={
+                                isImage ? 'image' :
+                                isVideo ? 'videocam' :
+                                isPDF ? 'document-text' :
+                                'attach'
+                              }
+                              size={22}
+                              color={
+                                isImage ? '$success' :
+                                isVideo ? '$warning' :
+                                isPDF ? '$error' :
+                                '$primary'
+                              }
+                            />
+                          </YStack>
+
+                          {/* Info del adjunto */}
+                          <Stack flex={1} gap="$1">
+                            <Text variant="bodySmall" fontWeight="500" color="$color" numberOfLines={1}>
+                              {att.fileName || att.filename || 'Archivo adjunto'}
+                            </Text>
+                            <Text variant="caption" color="$color3">
+                              {att.size ? `${(att.size / 1024).toFixed(1)} KB` : ''} {contentType || 'tipo desconocido'}
+                            </Text>
+                          </Stack>
+                        </HStack>
+
+                        {/* Preview de imagen */}
+                        {isImage && att.content && (
+                          <YStack marginTop="$2" borderRadius="$md" overflow="hidden">
+                            <YStack
+                              backgroundColor="$backgroundTertiary"
+                              minHeight={100}
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <Text variant="caption" color="$color3">
+                                🖼️ Imagen (base64 disponible)
+                              </Text>
+                            </YStack>
+                          </YStack>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </YStack>
+              )}
             </YStack>
           </ScrollView>
         )}

@@ -857,6 +857,31 @@ export class EmailService {
             });
 
             msg.on('attributes', (attrs: any) => {
+              // Extraer metadata de adjuntos de la estructura del mensaje
+              const attachments: any[] = [];
+              if (attrs.struct && Array.isArray(attrs.struct)) {
+                attrs.struct.forEach((part: any) => {
+                  const type = (part.type || '').toLowerCase();
+                  if (
+                    type.startsWith('image') ||
+                    type.startsWith('video') ||
+                    type.startsWith('audio') ||
+                    type.includes('pdf') ||
+                    type.includes('application')
+                  ) {
+                    attachments.push({
+                      fileName:
+                        (part.params && part.params.name) ||
+                        `attachment.${type.split('/').pop() || 'bin'}`,
+                      contentType: type,
+                      size: part.size || 0,
+                      encoding: part.encoding || '',
+                      partId: part.partId || attachments.length,
+                    });
+                  }
+                });
+              }
+
               const email: EmailMessage = {
                 uid: attrs.uid,
                 id: `msg_${attrs.uid}`,
@@ -866,7 +891,7 @@ export class EmailService {
                 date: headers.date || new Date().toISOString(),
                 text: '',
                 html: '',
-                attachments: [],
+                attachments,
                 seen: attrs.flags.includes('\\Seen'),
                 flagged: attrs.flags.includes('\\Flagged'),
                 folder,
