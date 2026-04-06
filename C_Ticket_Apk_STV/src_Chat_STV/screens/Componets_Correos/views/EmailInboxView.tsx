@@ -38,12 +38,14 @@ export function EmailInboxView() {
   const loadEmails = async () => {
     try {
       setError(null)
+      console.log('📧 [EmailInboxView] Cargando correos...')
       const token = getAuthToken()
       if (!token) {
         setError('No hay sesión activa')
         return
       }
 
+      console.log('📧 [EmailInboxView] URL:', API_CONFIG.endpoints.EMAIL_MESSAGES)
       const response = await api.get(API_CONFIG.endpoints.EMAIL_MESSAGES, {
         params: {
           folder: 'INBOX',
@@ -53,11 +55,20 @@ export function EmailInboxView() {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      if (response.data.success) {
-        setEmails(response.data.data.emails || [])
+      console.log('📩 [EmailInboxView] Respuesta:', JSON.stringify(response.data, null, 2))
+      
+      // El backend devuelve los datos directamente o en response.data.data
+      let emailsList = []
+      if (response.data.success && response.data.data) {
+        emailsList = response.data.data.emails || []
+      } else if (response.data.emails) {
+        emailsList = response.data.emails || []
       }
+      
+      console.log('📩 [EmailInboxView] Emails encontrados:', emailsList.length)
+      setEmails(emailsList)
     } catch (err: any) {
-      console.error('Error cargando correos:', err)
+      console.error('❌ [EmailInboxView] Error cargando correos:', err.response?.data || err.message)
       setError(err.response?.data?.message || 'Error al cargar correos')
     } finally {
       setLoading(false)
