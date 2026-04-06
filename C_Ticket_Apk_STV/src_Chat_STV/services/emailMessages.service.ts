@@ -1,4 +1,4 @@
-import api, { API_CONFIG, getAuthToken } from '../../services/api';
+import api, { API_CONFIG, getAuthToken } from '../../src/services/api';
 
 // ==========================================
 // INTERFACES

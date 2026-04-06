@@ -9,53 +9,30 @@ import {
   IconButton,
 } from '../../../../src/components/design-system'
 
-type EmailFolder = 'inbox' | 'drafts' | 'deleted' | 'archives' | 'groups'
+type EmailViewType = 'inbox' | 'compose'
 
 interface EmailSidebarProps {
-  currentFolder: EmailFolder
-  onFolderChange: (folder: EmailFolder) => void
+  currentView: EmailViewType
+  onViewChange: (view: EmailViewType) => void
   onClose: () => void
 }
 
 const menuItems = [
   {
-    id: 'inbox' as EmailFolder,
-    title: 'Bandeja de entrada',
-    icon: 'mail-unread',
-    badge: 3,
-    color: '$info'
+    id: 'inbox' as EmailViewType,
+    title: 'Bandeja de Entrada',
+    icon: 'mail',
+    color: '$primary'
   },
   {
-    id: 'drafts' as EmailFolder,
-    title: 'Borradores',
+    id: 'compose' as EmailViewType,
+    title: 'Redactar Correo',
     icon: 'create',
-    badge: 1,
-    color: '$warning'
-  },
-  {
-    id: 'deleted' as EmailFolder,
-    title: 'Elementos eliminados',
-    icon: 'trash',
-    badge: 0,
-    color: '$error'
-  },
-  {
-    id: 'archives' as EmailFolder,
-    title: 'Archivos',
-    icon: 'archive',
-    badge: 0,
     color: '$success'
-  },
-  {
-    id: 'groups' as EmailFolder,
-    title: 'Grupos',
-    icon: 'people',
-    badge: 2,
-    color: '$secondary'
   }
 ]
 
-export function EmailSidebar({ currentFolder, onFolderChange, onClose }: EmailSidebarProps) {
+export function EmailSidebar({ currentView, onViewChange, onClose }: EmailSidebarProps) {
   return (
     <Card
       variant="outlined"
@@ -65,7 +42,7 @@ export function EmailSidebar({ currentFolder, onFolderChange, onClose }: EmailSi
     >
       <HStack justify="space-between" align="center" marginBottom="$3">
         <Text variant="h6" fontWeight="700" color="$color">
-          Carpetas
+          Correo
         </Text>
         <IconButton
           icon="close"
@@ -80,11 +57,11 @@ export function EmailSidebar({ currentFolder, onFolderChange, onClose }: EmailSi
           {menuItems.map((item) => (
             <Card
               key={item.id}
-              variant={currentFolder === item.id ? 'filled' : 'outlined'}
-              backgroundColor={currentFolder === item.id ? '$background' : 'transparent'}
-              borderColor={currentFolder === item.id ? item.color : '$border'}
+              variant={currentView === item.id ? 'filled' : 'outlined'}
+              backgroundColor={currentView === item.id ? item.color + '20' : 'transparent'}
+              borderColor={currentView === item.id ? item.color : '$border'}
               padding="$3"
-              onPress={() => onFolderChange(item.id)}
+              onPress={() => onViewChange(item.id)}
               cursor="pointer"
             >
               <HStack gap="$3" align="center">
@@ -99,31 +76,15 @@ export function EmailSidebar({ currentFolder, onFolderChange, onClose }: EmailSi
                   <Ionicons name={item.icon as any} size={20} color="white" />
                 </YStack>
 
-                <Stack flex={1} gap="$1">
+                <Stack flex={1}>
                   <Text
                     variant="body"
-                    fontWeight={currentFolder === item.id ? '700' : '500'}
+                    fontWeight={currentView === item.id ? '700' : '500'}
                     color="$color"
                   >
                     {item.title}
                   </Text>
                 </Stack>
-
-                {item.badge > 0 && (
-                  <YStack
-                    backgroundColor={item.color}
-                    minWidth={22}
-                    height={22}
-                    borderRadius="$full"
-                    justifyContent="center"
-                    alignItems="center"
-                    paddingHorizontal="$2"
-                  >
-                    <Text variant="caption" color="white" fontWeight="700" fontSize={11}>
-                      {item.badge}
-                    </Text>
-                  </YStack>
-                )}
               </HStack>
             </Card>
           ))}

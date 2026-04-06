@@ -8,8 +8,8 @@ import {
   HStack,
   IconButton,
   Button,
-} from '../../../../components/design-system'
-import { emailMessagesService, SendEmailData } from '../../services/emailMessages.service'
+} from '../../../../src/components/design-system'
+import { emailMessagesService, SendEmailData } from '../../../services/emailMessages.service'
 
 interface ComposeEmailViewProps {
   onBack: () => void

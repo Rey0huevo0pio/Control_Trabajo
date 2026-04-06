@@ -9,37 +9,33 @@ import {
   Stack,
   HStack,
   IconButton,
+  Button,
 } from '../../../src/components/design-system'
 import { useResponsive } from '../../../src/components/useResponsive'
 import { EmailSidebar } from './sidebar/EmailSidebar'
-import { InboxView } from './views/InboxView'
-import { DraftsView } from './views/DraftsView'
-import { DeletedView } from './views/DeletedView'
-import { ArchivesView } from './views/ArchivesView'
-import { GroupsView } from './views/GroupsView'
+import { EmailInboxView, ComposeEmailView } from './views'
 
-type EmailFolder = 'inbox' | 'drafts' | 'deleted' | 'archives' | 'groups'
+type EmailView = 'inbox' | 'compose'
 
 export default function EmailMainScreen() {
   const navigation = useNavigation<any>()
   const { isMobile } = useResponsive()
-  const [currentFolder, setCurrentFolder] = useState<EmailFolder>('inbox')
+  const [currentView, setCurrentView] = useState<EmailView>('inbox')
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
 
-  const renderFolderContent = () => {
-    switch (currentFolder) {
+  const renderView = () => {
+    switch (currentView) {
       case 'inbox':
-        return <InboxView />
-      case 'drafts':
-        return <DraftsView />
-      case 'deleted':
-        return <DeletedView />
-      case 'archives':
-        return <ArchivesView />
-      case 'groups':
-        return <GroupsView />
+        return <EmailInboxView />
+      case 'compose':
+        return (
+          <ComposeEmailView
+            onBack={() => setCurrentView('inbox')}
+            onSuccess={() => setCurrentView('inbox')}
+          />
+        )
       default:
-        return <InboxView />
+        return <EmailInboxView />
     }
   }
 
@@ -47,7 +43,7 @@ export default function EmailMainScreen() {
     <ScreenLayout>
       {/* Header de Correo */}
       <Card
-        backgroundColor="$info"
+        backgroundColor="$primary"
         padding={isMobile ? '$5' : '$6'}
         overflow="hidden"
         position="relative"
@@ -68,16 +64,6 @@ export default function EmailMainScreen() {
               <Text variant="h3" color="white" fontWeight="800">
                 Correo STV
               </Text>
-              <YStack
-                backgroundColor="rgba(255,255,255,0.3)"
-                paddingHorizontal="$3"
-                paddingVertical="$1"
-                borderRadius="$full"
-              >
-                <Text variant="caption" color="white" fontWeight="700">
-                  OUTLOOK
-                </Text>
-              </YStack>
             </HStack>
             <Text variant="bodySmall" color="rgba(255,255,255,0.8)">
               Bandeja de entrada empresarial
@@ -86,14 +72,14 @@ export default function EmailMainScreen() {
 
           <HStack gap="$2">
             <IconButton
-              icon="refresh"
-              onPress={() => {}}
+              icon="create"
+              onPress={() => setCurrentView('compose')}
               variant="ghost"
               size={24}
             />
             <IconButton
-              icon="ellipsis-vertical"
-              onPress={() => {}}
+              icon="refresh"
+              onPress={() => setCurrentView('inbox')}
               variant="ghost"
               size={24}
             />
@@ -106,17 +92,17 @@ export default function EmailMainScreen() {
         {/* Sidebar */}
         {(sidebarOpen || !isMobile) && (
           <EmailSidebar
-            currentFolder={currentFolder}
-            onFolderChange={(folder) => {
-              setCurrentFolder(folder)
+            currentView={currentView}
+            onViewChange={(view) => {
+              setCurrentView(view)
               if (isMobile) setSidebarOpen(false)
             }}
             onClose={() => setSidebarOpen(false)}
           />
         )}
 
-        {/* Contenido de la carpeta seleccionada */}
-        <Stack flex={1}>{renderFolderContent()}</Stack>
+        {/* Vista seleccionada */}
+        <Stack flex={1}>{renderView()}</Stack>
       </HStack>
     </ScreenLayout>
   )
