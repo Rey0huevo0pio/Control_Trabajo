@@ -1,4 +1,4 @@
-import api, { API_CONFIG, getAuthToken } from './api';
+import api, { API_CONFIG, getAuthToken } from "./api";
 
 // ==========================================
 // INTERFACES
@@ -13,7 +13,7 @@ export interface EmailConfig {
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
-  status: 'active' | 'inactive' | 'error' | 'syncing';
+  status: "active" | "inactive" | "error" | "syncing";
   lastSync: string | null;
   verified: boolean;
 }
@@ -54,34 +54,43 @@ class EmailService {
   // Obtener configuración de correo por ID de usuario
   async getEmailConfigByUserId(userId: string): Promise<EmailConfig | null> {
     try {
-      console.log('📧 [EmailService] === INICIO getEmailConfigByUserId ===');
-      console.log('📧 [EmailService] userId:', userId);
+      console.log("📧 [EmailService] === INICIO getEmailConfigByUserId ===");
+      console.log("📧 [EmailService] userId:", userId);
       const token = getAuthToken();
-      console.log('🔑 [EmailService] Token:', token ? '✅ PRESENTE' : '❌ NULO');
-      
+      console.log(
+        "🔑 [EmailService] Token:",
+        token ? "✅ PRESENTE" : "❌ NULO",
+      );
+
       if (!token) {
-        console.log('❌ [EmailService] No hay token, retornando null');
+        console.log("❌ [EmailService] No hay token, retornando null");
         return null;
       }
 
       const url = API_CONFIG.endpoints.EMAIL_CONFIG_BY_USER(userId);
-      console.log('🌐 [EmailService] URL:', url);
+      console.log("🌐 [EmailService] URL:", url);
 
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('📩 [EmailService] response.data:', JSON.stringify(response.data, null, 2));
-      
+      console.log(
+        "📩 [EmailService] response.data:",
+        JSON.stringify(response.data, null, 2),
+      );
+
       // El backend devuelve los datos directamente en response.data
       const config = response.data;
-      console.log('📩 [EmailService] config extraída:', config);
-      console.log('📩 [EmailService] config.email:', config?.email);
-      console.log('📧 [EmailService] === FIN getEmailConfigByUserId ===');
-      
+      console.log("📩 [EmailService] config extraída:", config);
+      console.log("📩 [EmailService] config.email:", config?.email);
+      console.log("📧 [EmailService] === FIN getEmailConfigByUserId ===");
+
       return config;
     } catch (error: any) {
-      console.log('❌ [EmailService] Error:', error.response?.data || error.message);
+      console.log(
+        "❌ [EmailService] Error:",
+        error.response?.data || error.message,
+      );
       return null;
     }
   }
@@ -98,8 +107,8 @@ class EmailService {
 
   // Guardar configuración para OTRO usuario (Admin)
   async saveConfigForUser(
-    targetUserId: string, 
-    configData: EmailConfigData
+    targetUserId: string,
+    configData: EmailConfigData,
   ): Promise<EmailConfig | null> {
     try {
       const token = getAuthToken();
@@ -108,12 +117,15 @@ class EmailService {
       const response = await api.post(
         API_CONFIG.endpoints.EMAIL_CONFIG_FOR_USER(targetUserId),
         configData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       return response.data.data;
     } catch (error: any) {
-      console.log('❌ [EmailService] Error guardando config para usuario:', error.response?.data);
+      console.log(
+        "❌ [EmailService] Error guardando config para usuario:",
+        error.response?.data,
+      );
       throw error;
     }
   }
@@ -131,6 +143,28 @@ class EmailService {
       return response.data || [];
     } catch (error) {
       return [];
+    }
+  }
+
+  // Toggle email status (active ↔ inactive)
+  async toggleEmailStatus(userId: string): Promise<EmailConfig | null> {
+    try {
+      const token = getAuthToken();
+      if (!token) return null;
+
+      const response = await api.patch(
+        `/api/email/config/user/${userId}/toggle-status`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      console.log(
+        "❌ [EmailService] Error toggling email status:",
+        error.response?.data || error.message,
+      );
+      throw error;
     }
   }
 }

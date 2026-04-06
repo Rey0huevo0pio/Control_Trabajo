@@ -117,6 +117,18 @@ export class EmailController {
   }
 
   // ==========================================
+  // TOGGLE EMAIL STATUS (Active ↔ Inactive)
+  // ==========================================
+  @Patch('config/user/:userId/toggle-status')
+  toggleEmailStatus(@Param('userId') userId: string) {
+    console.log(
+      '\n📧 [EmailController] PATCH config/user/:userId/toggle-status',
+    );
+    console.log('🎯 Target userId:', userId);
+    return this.emailService.toggleEmailStatus(userId);
+  }
+
+  // ==========================================
   // OBTENER CORREOS
   // ==========================================
   @Get('messages')

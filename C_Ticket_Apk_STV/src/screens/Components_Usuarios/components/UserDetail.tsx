@@ -1,99 +1,130 @@
-import React, { useState, useEffect } from 'react'
-import { YStack, ScrollView, XStack, Spinner } from 'tamagui'
-import { Ionicons } from '@expo/vector-icons'
+import React, { useState, useEffect } from "react";
+import { YStack, ScrollView, XStack, Spinner } from "tamagui";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Text,
   Card,
   Stack,
   HStack,
   IconButton,
-} from '../../../components/design-system'
-import { useResponsive } from '../../../components/useResponsive'
-import { Employee, UserRole } from '../types'
-import { emailService, EmailConfig } from '../../../services/emailService'
+} from "../../../components/design-system";
+import { useResponsive } from "../../../components/useResponsive";
+import { Employee, UserRole } from "../types";
+import { emailService, EmailConfig } from "../../../services/emailService";
 
 const roleLabels: Record<UserRole, string> = {
-  admin: 'Administrador',
-  it: 'TI',
-  rh: 'RRHH',
-  supervisor: 'Supervisor',
-  vigilante: 'Vigilante',
-}
+  admin: "Administrador",
+  it: "TI",
+  rh: "RRHH",
+  supervisor: "Supervisor",
+  vigilante: "Vigilante",
+};
 
 const roleColors: Record<UserRole, string> = {
-  admin: '$error',
-  it: '$primary',
-  rh: '$warning',
-  supervisor: '$success',
-  vigilante: '$color3',
-}
+  admin: "$error",
+  it: "$primary",
+  rh: "$warning",
+  supervisor: "$success",
+  vigilante: "$color3",
+};
 
 interface UserDetailProps {
-  user: Employee
-  onEdit: () => void
-  onBack: () => void
+  user: Employee;
+  onEdit: () => void;
+  onBack: () => void;
 }
 
 export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
-  const { isMobile } = useResponsive()
-  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null)
-  const [loadingEmail, setLoadingEmail] = useState(false)
+  const { isMobile } = useResponsive();
+  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [togglingEmail, setTogglingEmail] = useState(false);
 
   // Cargar configuración de correo al montar el componente
   useEffect(() => {
     if (user?.id) {
-      loadEmailConfig()
+      loadEmailConfig();
     }
-  }, [user?.id])
+  }, [user?.id]);
 
   const loadEmailConfig = async () => {
     try {
-      console.log('📧 [UserDetail] === INICIO CARGA EMAIL CONFIG ===');
-      console.log('📧 [UserDetail] userId:', user.id);
-      setLoadingEmail(true)
-      
-      const config = await emailService.getEmailConfigByUserId(user.id)
-      
-      console.log('📩 [UserDetail] config recibida:', config);
-      console.log('📩 [UserDetail] typeof config:', typeof config);
-      console.log('📩 [UserDetail] config es null?', config === null);
-      console.log('📩 [UserDetail] config.email:', config?.email);
-      
+      console.log("📧 [UserDetail] === INICIO CARGA EMAIL CONFIG ===");
+      console.log("📧 [UserDetail] userId:", user.id);
+      setLoadingEmail(true);
+
+      const config = await emailService.getEmailConfigByUserId(user.id);
+
+      console.log("📩 [UserDetail] config recibida:", config);
+      console.log("📩 [UserDetail] typeof config:", typeof config);
+      console.log("📩 [UserDetail] config es null?", config === null);
+      console.log("📩 [UserDetail] config.email:", config?.email);
+
       if (config) {
-        setEmailConfig(config)
-        console.log('✅ [UserDetail] emailConfig seteado:', config.email);
+        setEmailConfig(config);
+        console.log("✅ [UserDetail] emailConfig seteado:", config.email);
       } else {
-        console.log('❌ [UserDetail] config es null/undefined, no se setea emailConfig');
+        console.log(
+          "❌ [UserDetail] config es null/undefined, no se setea emailConfig",
+        );
       }
-      console.log('📧 [UserDetail] === FIN CARGA EMAIL CONFIG ===');
+      console.log("📧 [UserDetail] === FIN CARGA EMAIL CONFIG ===");
     } catch (error) {
-      console.log('❌ [UserDetail] Error cargando email config:', error)
+      console.log("❌ [UserDetail] Error cargando email config:", error);
     } finally {
-      setLoadingEmail(false)
+      setLoadingEmail(false);
     }
-  }
+  };
+
+  const handleToggleEmail = async () => {
+    if (!user?.id) return;
+    try {
+      setTogglingEmail(true);
+      const updatedConfig = await emailService.toggleEmailStatus(user.id);
+      if (updatedConfig) {
+        setEmailConfig(updatedConfig);
+      }
+    } catch (error) {
+      console.log("❌ [UserDetail] Error toggling email:", error);
+    } finally {
+      setTogglingEmail(false);
+    }
+  };
 
   return (
     <YStack gap={isMobile ? 16 : 20}>
       {/* iOS-style Profile Header */}
-      <Card variant="grouped" padding={isMobile ? 20 : 24} borderRadius={20} overflow="hidden">
+      <Card
+        variant="grouped"
+        padding={isMobile ? 20 : 24}
+        borderRadius={20}
+        overflow="hidden"
+      >
         <YStack alignItems="center" gap={isMobile ? 16 : 20} paddingTop={4}>
           {/* Back and Edit buttons */}
-          <XStack width="100%" justifyContent="space-between" alignItems="center">
-            <IconButton 
-              icon="chevron-back" 
-              onPress={onBack} 
-              variant="ghost" 
-              size={24} 
+          <XStack
+            width="100%"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <IconButton
+              icon="chevron-back"
+              onPress={onBack}
+              variant="ghost"
+              size={24}
             />
-            <Text variant={isMobile ? "title3" : "title2"} fontWeight="600" color="$color">
+            <Text
+              variant={isMobile ? "title3" : "title2"}
+              fontWeight="600"
+              color="$color"
+            >
               Perfil del Usuario
             </Text>
-            <IconButton 
-              icon="create" 
-              onPress={onEdit} 
-              variant="ghost" 
-              size={24} 
+            <IconButton
+              icon="create"
+              onPress={onEdit}
+              variant="ghost"
+              size={24}
             />
           </XStack>
 
@@ -110,19 +141,33 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
             shadowRadius={8}
             shadowOffset={{ width: 0, height: 4 }}
           >
-            <Text variant={isMobile ? "h2" : "h1"} color="white" fontWeight="700">
+            <Text
+              variant={isMobile ? "h2" : "h1"}
+              color="white"
+              fontWeight="700"
+            >
               {user.nombre.charAt(0)}
               {user.apellido.charAt(0)}
             </Text>
           </YStack>
 
           {/* Name */}
-          <Text variant={isMobile ? "h3" : "h2"} fontWeight="700" color="$color" textAlign="center">
+          <Text
+            variant={isMobile ? "h3" : "h2"}
+            fontWeight="700"
+            color="$color"
+            textAlign="center"
+          >
             {user.nombre} {user.apellido}
           </Text>
 
           {/* Role and Status badges */}
-          <HStack gap={8} alignItems="center" flexWrap="wrap" justifyContent="center">
+          <HStack
+            gap={8}
+            alignItems="center"
+            flexWrap="wrap"
+            justifyContent="center"
+          >
             <YStack
               backgroundColor={roleColors[user.rol]}
               paddingHorizontal={12}
@@ -136,9 +181,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
             <YStack
               backgroundColor={
-                user.activo
-                  ? '$successMuted'
-                  : '$backgroundTertiary'
+                user.activo ? "$successMuted" : "$backgroundTertiary"
               }
               paddingHorizontal={12}
               paddingVertical={6}
@@ -146,14 +189,10 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
             >
               <Text
                 variant="labelSmall"
-                color={
-                  user.activo
-                    ? '$success'
-                    : '$color3'
-                }
+                color={user.activo ? "$success" : "$color3"}
                 fontWeight="600"
               >
-                {user.activo ? '● Activo' : '● Inactivo'}
+                {user.activo ? "● Activo" : "● Inactivo"}
               </Text>
             </YStack>
           </HStack>
@@ -170,11 +209,11 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
       <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="call" title="Información de Contacto" />
-          
+
           <InfoRow
             icon="mail-outline"
             label="Email"
-            value={emailConfig?.email || user.email || 'No especificado'}
+            value={emailConfig?.email || user.email || "No especificado"}
             isLast={!user.telefono}
           />
           {user.telefono && (
@@ -202,7 +241,9 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
           {loadingEmail ? (
             <YStack padding="$4" alignItems="center">
               <Spinner size="small" color="$color2" />
-              <Text variant="caption" color="$color2" marginTop="$2">Cargando...</Text>
+              <Text variant="caption" color="$color2" marginTop="$2">
+                Cargando...
+              </Text>
             </YStack>
           ) : emailConfig ? (
             <YStack>
@@ -236,11 +277,61 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
                   isLast
                 />
               )}
-              <YStack padding="$3" backgroundColor="$successMuted">
-                <HStack gap="$2" alignItems="center">
-                  <Ionicons name="checkmark-circle" size={16} color="$success" />
-                  <Text variant="caption" color="$success" fontWeight="600">
-                    {emailConfig.status === 'active' ? 'Activo' : emailConfig.status === 'inactive' ? 'Inactivo' : 'Error'}
+              <XStack
+                padding="$3"
+                backgroundColor={
+                  emailConfig.status === "active"
+                    ? "$successMuted"
+                    : emailConfig.status === "error"
+                      ? "$errorMuted"
+                      : emailConfig.status === "syncing"
+                        ? "$warningMuted"
+                        : "$backgroundTertiary"
+                }
+              >
+                <HStack gap="$2" alignItems="center" flex={1}>
+                  <Ionicons
+                    name={
+                      emailConfig.status === "active"
+                        ? "checkmark-circle"
+                        : emailConfig.status === "error"
+                          ? "warning"
+                          : emailConfig.status === "syncing"
+                            ? "sync"
+                            : "stop-circle"
+                    }
+                    size={16}
+                    color={
+                      emailConfig.status === "active"
+                        ? "$success"
+                        : emailConfig.status === "error"
+                          ? "$error"
+                          : emailConfig.status === "syncing"
+                            ? "$warning"
+                            : "$color3"
+                    }
+                  />
+                  <Text
+                    variant="caption"
+                    color={
+                      emailConfig.status === "active"
+                        ? "$success"
+                        : emailConfig.status === "error"
+                          ? "$error"
+                          : emailConfig.status === "syncing"
+                            ? "$warning"
+                            : "$color3"
+                    }
+                    fontWeight="600"
+                  >
+                    Status:{" "}
+                    {emailConfig.status === "active"
+                      ? "Active"
+                      : emailConfig.status === "inactive"
+                        ? "Inactive"
+                        : emailConfig.status === "error"
+                          ? "Error"
+                          : "Syncing"}
                   </Text>
                   {emailConfig.verified && (
                     <Text variant="caption" color="$color3">
@@ -248,12 +339,76 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
                     </Text>
                   )}
                 </HStack>
-              </YStack>
+              </XStack>
+              {/* Toggle button - only for active/inactive */}
+              {(emailConfig.status === "active" ||
+                emailConfig.status === "inactive") && (
+                <XStack padding="$3" paddingTop="$0" justifyContent="center">
+                  <Card
+                    variant="outlined"
+                    padding="$3"
+                    onPress={handleToggleEmail}
+                    disabled={togglingEmail}
+                    cursor="pointer"
+                    width="100%"
+                    borderColor={
+                      emailConfig.status === "active" ? "$error" : "$success"
+                    }
+                    borderWidth={1}
+                    backgroundColor="$backgroundSecondary"
+                    pressStyle={{ opacity: 0.7 }}
+                  >
+                    <XStack
+                      gap="$2"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      {togglingEmail ? (
+                        <Spinner size="small" color="$color2" />
+                      ) : (
+                        <Ionicons
+                          name={
+                            emailConfig.status === "active"
+                              ? "stop-circle-outline"
+                              : "play-circle-outline"
+                          }
+                          size={20}
+                          color={
+                            emailConfig.status === "active"
+                              ? "$error"
+                              : "$success"
+                          }
+                        />
+                      )}
+                      <Text
+                        variant="label"
+                        fontWeight="600"
+                        color={
+                          emailConfig.status === "active"
+                            ? "$error"
+                            : "$success"
+                        }
+                      >
+                        {togglingEmail
+                          ? "Procesando..."
+                          : emailConfig.status === "active"
+                            ? "Desactivar Correo"
+                            : "Activar Correo"}
+                      </Text>
+                    </XStack>
+                  </Card>
+                </XStack>
+              )}
             </YStack>
           ) : (
             <YStack padding="$4" alignItems="center">
               <Ionicons name="mail-unread" size={32} color="$color3" />
-              <Text variant="bodySmall" color="$color3" marginTop="$2" textAlign="center">
+              <Text
+                variant="bodySmall"
+                color="$color3"
+                marginTop="$2"
+                textAlign="center"
+              >
                 No hay correo configurado para este usuario
               </Text>
             </YStack>
@@ -265,34 +420,34 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
       <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="briefcase" title="Información Laboral" />
-          
+
           <InfoRow
             icon="business-outline"
             label="Departamento"
-            value={user.departamento || 'No especificado'}
+            value={user.departamento || "No especificado"}
           />
           <InfoRow
             icon="briefcase-outline"
             label="Puesto"
-            value={user.puesto || 'No especificado'}
+            value={user.puesto || "No especificado"}
           />
           {user.fechaIngreso && (
             <InfoRow
               icon="calendar-outline"
               label="Fecha de Ingreso"
-              value={new Date(user.fechaIngreso).toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
+              value={new Date(user.fechaIngreso).toLocaleDateString("es-MX", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             />
           )}
           {user.ultimoAcceso && (
-            <InfoRow 
-              icon="time-outline" 
-              label="Último Acceso" 
-              value={user.ultimoAcceso} 
-              isLast 
+            <InfoRow
+              icon="time-outline"
+              label="Último Acceso"
+              value={user.ultimoAcceso}
+              isLast
             />
           )}
         </YStack>
@@ -301,34 +456,34 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
       {/* iOS-style Action Buttons Grid */}
       <Card variant="grouped" padding={isMobile ? 16 : 20} borderRadius={16}>
         <SectionHeader icon="sparkles" title="Acciones" marginBottom={12} />
-        
+
         <YStack gap={isMobile ? 12 : 16}>
           {/* Primary actions */}
           <XStack gap={isMobile ? 12 : 16}>
-            <ActionButton 
-              icon="create" 
-              label="Editar" 
+            <ActionButton
+              icon="create"
+              label="Editar"
               onPress={onEdit}
               color="$primary"
             />
-            <ActionButton 
-              icon="mail-outline" 
-              label="Enviar Email" 
+            <ActionButton
+              icon="mail-outline"
+              label="Enviar Email"
               onPress={() => {}}
               color="$primary"
             />
           </XStack>
-          
+
           <XStack gap={isMobile ? 12 : 16}>
-            <ActionButton 
-              icon="call-outline" 
-              label="Llamar" 
+            <ActionButton
+              icon="call-outline"
+              label="Llamar"
               onPress={() => {}}
               color="$success"
             />
-            <ActionButton 
-              icon="lock-closed-outline" 
-              label="Reset Password" 
+            <ActionButton
+              icon="lock-closed-outline"
+              label="Reset Password"
               onPress={() => {}}
               color="$warning"
             />
@@ -336,15 +491,15 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
           {/* Dangerous actions */}
           <XStack gap={isMobile ? 12 : 16}>
-            <ActionButton 
-              icon="ban-outline" 
-              label="Suspender" 
+            <ActionButton
+              icon="ban-outline"
+              label="Suspender"
               onPress={() => {}}
               color="$warning"
             />
-            <ActionButton 
-              icon="trash-outline" 
-              label="Eliminar" 
+            <ActionButton
+              icon="trash-outline"
+              label="Eliminar"
               onPress={() => {}}
               color="$error"
             />
@@ -352,15 +507,23 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
         </YStack>
       </Card>
     </YStack>
-  )
+  );
 }
 
 // iOS-style section header
-function SectionHeader({ icon, title, marginBottom = 0 }: { icon: string; title: string; marginBottom?: number }) {
+function SectionHeader({
+  icon,
+  title,
+  marginBottom = 0,
+}: {
+  icon: string;
+  title: string;
+  marginBottom?: number;
+}) {
   return (
-    <XStack 
-      gap="$2" 
-      alignItems="center" 
+    <XStack
+      gap="$2"
+      alignItems="center"
       padding="$4"
       paddingBottom="$3"
       backgroundColor="$backgroundTertiary"
@@ -371,25 +534,25 @@ function SectionHeader({ icon, title, marginBottom = 0 }: { icon: string; title:
         {title}
       </Text>
     </XStack>
-  )
+  );
 }
 
 // iOS-style info row (like Settings app)
-function InfoRow({ 
-  icon, 
-  label, 
-  value, 
-  isLast = false 
-}: { 
-  icon: string; 
-  label: string; 
+function InfoRow({
+  icon,
+  label,
+  value,
+  isLast = false,
+}: {
+  icon: string;
+  label: string;
   value: string;
   isLast?: boolean;
 }) {
   return (
-    <XStack 
-      gap="$3" 
-      alignItems="center" 
+    <XStack
+      gap="$3"
+      alignItems="center"
       padding="$4"
       paddingTop="$3"
       backgroundColor="$backgroundSecondary"
@@ -415,7 +578,7 @@ function InfoRow({
         </Text>
       </Stack>
     </XStack>
-  )
+  );
 }
 
 // iOS-style action button
@@ -425,10 +588,10 @@ function ActionButton({
   onPress,
   color,
 }: {
-  icon: string
-  label: string
-  onPress: () => void
-  color?: string
+  icon: string;
+  label: string;
+  onPress: () => void;
+  color?: string;
 }) {
   return (
     <Card
@@ -440,14 +603,14 @@ function ActionButton({
       borderColor="$border"
       borderWidth={0.5}
       backgroundColor="$backgroundSecondary"
-      pressStyle={{ opacity: 0.7, backgroundColor: '$backgroundTertiary' }}
+      pressStyle={{ opacity: 0.7, backgroundColor: "$backgroundTertiary" }}
     >
       <YStack alignItems="center" gap="$2">
-        <Ionicons name={icon as any} size={24} color={color || '$primary'} />
-        <Text variant="caption" color={color || '$primary'} fontWeight="600">
+        <Ionicons name={icon as any} size={24} color={color || "$primary"} />
+        <Text variant="caption" color={color || "$primary"} fontWeight="600">
           {label}
         </Text>
       </YStack>
     </Card>
-  )
+  );
 }

@@ -109,16 +109,25 @@ export class EmailService {
     const config = new this.emailConfigModel({
       usuario: new Types.ObjectId(usuarioId),
       email: createDto.email.toLowerCase(),
-      displayName: createDto.displayName || createDto.email.split('@')[0] || 'Usuario',
+      displayName:
+        createDto.displayName || createDto.email.split('@')[0] || 'Usuario',
       passwordEmail: this.encryptPassword(createDto.passwordEmail),
       status: EmailStatus.INACTIVE,
       // Usar valores por defecto si vienen vacíos
-      imapHost: createDto.imapHost && createDto.imapHost.trim() ? createDto.imapHost : 'bh8966.banahosting.com',
+      imapHost:
+        createDto.imapHost && createDto.imapHost.trim()
+          ? createDto.imapHost
+          : 'bh8966.banahosting.com',
       imapPort: createDto.imapPort || 993,
-      imapSecure: createDto.imapSecure !== undefined ? createDto.imapSecure : true,
-      smtpHost: createDto.smtpHost && createDto.smtpHost.trim() ? createDto.smtpHost : 'bh8966.banahosting.com',
+      imapSecure:
+        createDto.imapSecure !== undefined ? createDto.imapSecure : true,
+      smtpHost:
+        createDto.smtpHost && createDto.smtpHost.trim()
+          ? createDto.smtpHost
+          : 'bh8966.banahosting.com',
       smtpPort: createDto.smtpPort || 465,
-      smtpSecure: createDto.smtpSecure !== undefined ? createDto.smtpSecure : true,
+      smtpSecure:
+        createDto.smtpSecure !== undefined ? createDto.smtpSecure : true,
     });
 
     await config.save();
@@ -135,15 +144,22 @@ export class EmailService {
   // ==========================================
   async getAllConfigs(): Promise<any[]> {
     console.log('\n📧 [EmailService] getAllConfigs');
-    const configs = await this.emailConfigModel.find().populate('usuario', 'Control_Usuario nombre apellido').exec();
-    
-    console.log(`📩 [EmailService] Encontradas ${configs.length} configuraciones`);
+    const configs = await this.emailConfigModel
+      .find()
+      .populate('usuario', 'Control_Usuario nombre apellido')
+      .exec();
+
+    console.log(
+      `📩 [EmailService] Encontradas ${configs.length} configuraciones`,
+    );
     configs.forEach((c: any) => {
       const usuario = c.usuario as any;
-      console.log(`  - Usuario: ${usuario?.Control_Usuario || 'N/A'} | Email: ${c.email} | Status: ${c.status}`);
+      console.log(
+        `  - Usuario: ${usuario?.Control_Usuario || 'N/A'} | Email: ${c.email} | Status: ${c.status}`,
+      );
     });
-    
-    return configs.map(c => this.sanitizeConfig(c));
+
+    return configs.map((c) => this.sanitizeConfig(c));
   }
 
   // ==========================================
@@ -151,12 +167,15 @@ export class EmailService {
   // ==========================================
   async getConfigByUsuario(usuarioId: string): Promise<any> {
     console.log('\n📧 [EmailService] getConfigByUsuario, ID:', usuarioId);
-    
+
     const config = await this.emailConfigModel
       .findOne({ usuario: new Types.ObjectId(usuarioId) })
       .exec();
 
-    console.log('📩 [EmailService] Config encontrada:', config ? '✅ SÍ' : '❌ NO');
+    console.log(
+      '📩 [EmailService] Config encontrada:',
+      config ? '✅ SÍ' : '❌ NO',
+    );
     if (config) {
       console.log('📧 [EmailService] Email:', config.email);
       console.log('📧 [EmailService] Status:', config.status);
@@ -277,7 +296,9 @@ export class EmailService {
   // ==========================================
   // PROBAR SMTP
   // ==========================================
-  private async testSmtpConnection(testDto: TestEmailConnectionDto): Promise<void> {
+  private async testSmtpConnection(
+    testDto: TestEmailConnectionDto,
+  ): Promise<void> {
     const transporter = nodemailer.createTransport({
       host: testDto.smtpHost,
       port: testDto.smtpPort,
@@ -301,7 +322,7 @@ export class EmailService {
   // ==========================================
   async activateConfigForce(usuarioId: string): Promise<any> {
     console.log('\n📧 [EmailService] activateConfigForce, ID:', usuarioId);
-    
+
     const config = await this.emailConfigModel
       .findOne({ usuario: new Types.ObjectId(usuarioId) })
       .exec();
@@ -378,20 +399,58 @@ export class EmailService {
   // ==========================================
   // OBTENER CORREOS (IMAP)
   // ==========================================
-  async getEmails(
-    usuarioId: string,
-    getEmailsDto: GetEmailsDto,
-  ): Promise<any> {
+
+  // ==========================================
+  // TOGGLE EMAIL STATUS (Active ↔ Inactive only)
+  // ==========================================
+  async toggleEmailStatus(usuarioId: string): Promise<any> {
+    const config = await this.emailConfigModel
+      .findOne({ usuario: new Types.ObjectId(usuarioId) })
+      .exec();
+
+    if (!config) {
+      throw new NotFoundException(
+        'No se encontró configuración de correo para este usuario',
+      );
+    }
+
+    // Solo permite toggle entre active e inactive
+    const newStatus =
+      config.status === EmailStatus.ACTIVE
+        ? EmailStatus.INACTIVE
+        : EmailStatus.ACTIVE;
+
+    config.status = newStatus;
+    await config.save();
+
+    console.log(
+      `📧 [EmailService] Toggle status: ${config.email} → ${newStatus}`,
+    );
+
+    return {
+      success: true,
+      message: `Correo ${newStatus === EmailStatus.ACTIVE ? 'activado' : 'desactivado'} correctamente`,
+      data: this.sanitizeConfig(config),
+    };
+  }
+
+  // ==========================================
+  // OBTENER CORREOS (IMAP)
+  // ==========================================
+  async getEmails(usuarioId: string, getEmailsDto: GetEmailsDto): Promise<any> {
     console.log('\n📧 [EmailService] getEmails - userId:', usuarioId);
     console.log('📧 [EmailService] getEmails - params:', getEmailsDto);
-    
+
     const config = await this.emailConfigModel
       .findOne({
         usuario: new Types.ObjectId(usuarioId),
       })
       .exec();
 
-    console.log('📩 [EmailService] Config encontrada:', config ? '✅ SÍ' : '❌ NO');
+    console.log(
+      '📩 [EmailService] Config encontrada:',
+      config ? '✅ SÍ' : '❌ NO',
+    );
     if (config) {
       console.log('📧 [EmailService] Email:', config.email);
       console.log('📧 [EmailService] Status:', config.status);
@@ -399,7 +458,9 @@ export class EmailService {
     }
 
     if (!config) {
-      console.log('❌ [EmailService] No hay configuración de correo para este usuario');
+      console.log(
+        '❌ [EmailService] No hay configuración de correo para este usuario',
+      );
       return {
         success: false,
         message: 'No hay configuración de correo para este usuario',
@@ -408,7 +469,10 @@ export class EmailService {
     }
 
     if (config.status !== EmailStatus.ACTIVE) {
-      console.log('⚠️ [EmailService] La configuración no está activa. Status:', config.status);
+      console.log(
+        '⚠️ [EmailService] La configuración no está activa. Status:',
+        config.status,
+      );
       return {
         success: false,
         message: `La configuración de correo no está activa. Status: ${config.status}. Actívala primero.`,
@@ -417,8 +481,13 @@ export class EmailService {
     }
 
     return new Promise((resolve) => {
-      console.log('📧 [EmailService] Intentando conectar a IMAP:', config.imapHost, ':', config.imapPort);
-      
+      console.log(
+        '📧 [EmailService] Intentando conectar a IMAP:',
+        config.imapHost,
+        ':',
+        config.imapPort,
+      );
+
       const imapConnection = new Imap({
         user: config.email,
         password: this.decryptPassword(config.passwordEmail),
@@ -433,13 +502,13 @@ export class EmailService {
       // Si hay timeout o error de conexión, devolver respuesta graceful
       imapConnection.once('error', (err: any) => {
         console.log('⚠️ [EmailService] IMAP error:', err.message || err);
-        
+
         // Siempre devolver respuesta graceful en lugar de error
         resolve({
           success: true,
           message: `No se pudo conectar al servidor IMAP (${config.imapHost}:${config.imapPort}). ${err.message || 'Error de conexión'}`,
-          data: { 
-            emails: [], 
+          data: {
+            emails: [],
             total: 0,
             configStatus: config.status,
             imapHost: config.imapHost,
@@ -451,146 +520,182 @@ export class EmailService {
 
       imapConnection.once('ready', () => {
         console.log('✅ [EmailService] Conectado a IMAP exitosamente');
-        
-        imapConnection.openBox(getEmailsDto.folder || 'INBOX', true, (err: any, box: any) => {
-          if (err) {
-            console.log('❌ [EmailService] Error abriendo carpeta:', err.message);
-            resolve({
-              success: true,
-              message: `Error abriendo carpeta: ${err.message}`,
-              data: { emails: [], total: 0 },
-            });
-            return;
-          }
 
-          console.log('📬 [EmailService] Carpeta abierta. Mensajes totales:', box.messages.total);
-
-          const searchCriteria = getEmailsDto.unreadOnly ? ['UNSEEN'] : ['ALL'];
-
-          imapConnection.search(searchCriteria, (err: any, results: number[]) => {
+        imapConnection.openBox(
+          getEmailsDto.folder || 'INBOX',
+          true,
+          (err: any, box: any) => {
             if (err) {
-              console.log('❌ [EmailService] Error en búsqueda:', err.message);
-              imapConnection.end();
+              console.log(
+                '❌ [EmailService] Error abriendo carpeta:',
+                err.message,
+              );
               resolve({
                 success: true,
-                message: `Error en búsqueda: ${err.message}`,
+                message: `Error abriendo carpeta: ${err.message}`,
                 data: { emails: [], total: 0 },
               });
               return;
             }
 
-            console.log('📩 [EmailService] Mensajes encontrados:', results.length);
+            console.log(
+              '📬 [EmailService] Carpeta abierta. Mensajes totales:',
+              box.messages.total,
+            );
 
-            if (results.length === 0) {
-              imapConnection.end();
-              resolve({
-                success: true,
-                message: 'No hay correos en esta carpeta',
-                data: { emails: [], total: 0 },
-              });
-              return;
-            }
+            const searchCriteria = getEmailsDto.unreadOnly
+              ? ['UNSEEN']
+              : ['ALL'];
 
-            const fetch = imapConnection.fetch(results, {
-              bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
-              struct: true,
-            });
+            imapConnection.search(
+              searchCriteria,
+              (err: any, results: number[]) => {
+                if (err) {
+                  console.log(
+                    '❌ [EmailService] Error en búsqueda:',
+                    err.message,
+                  );
+                  imapConnection.end();
+                  resolve({
+                    success: true,
+                    message: `Error en búsqueda: ${err.message}`,
+                    data: { emails: [], total: 0 },
+                  });
+                  return;
+                }
 
-            fetch.on('message', (msg: any) => {
-              const headers: any = {};
-              let textBuffer = '';
-              let isHeaderPart = true;
+                console.log(
+                  '📩 [EmailService] Mensajes encontrados:',
+                  results.length,
+                );
 
-              msg.on('body', (stream: any, info: any) => {
-                let buffer = '';
-                stream.on('data', (chunk: Buffer) => {
-                  buffer += chunk.toString('utf8');
+                if (results.length === 0) {
+                  imapConnection.end();
+                  resolve({
+                    success: true,
+                    message: 'No hay correos en esta carpeta',
+                    data: { emails: [], total: 0 },
+                  });
+                  return;
+                }
+
+                const fetch = imapConnection.fetch(results, {
+                  bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+                  struct: true,
                 });
-                stream.once('end', () => {
-                  const which = (info.which || '').toUpperCase();
-                  
-                  // SOLO procesar headers - NO el cuerpo del mensaje
-                  if (which.includes('HEADER')) {
-                    // Extraer solo las líneas de headers (generalmente las primeras 10-20 líneas)
-                    const lines = buffer.split(/\r?\n/);
-                    
-                    for (const line of lines) {
-                      const trimmed = line.trim();
-                      if (trimmed.length === 0) continue;
-                      // Ignorar metadata IMAP
-                      if (trimmed.startsWith('*') || trimmed.startsWith(')') || /^\d+$/.test(trimmed)) continue;
-                      
-                      // Buscar headers específicos
-                      const fromMatch = trimmed.match(/^From:\s*(.+)$/i);
-                      const toMatch = trimmed.match(/^To:\s*(.+)$/i);
-                      const subjectMatch = trimmed.match(/^Subject:\s*(.+)$/i);
-                      const dateMatch = trimmed.match(/^Date:\s*(.+)$/i);
-                      
-                      if (fromMatch) headers.from = fromMatch[1].trim();
-                      if (toMatch) headers.to = toMatch[1].trim();
-                      if (subjectMatch) headers.subject = subjectMatch[1].trim();
-                      if (dateMatch) headers.date = dateMatch[1].trim();
-                    }
-                  }
-                  // Solo guardar texto plano, ignorar HTML y base64
-                  else if (which === 'TEXT' && buffer.length < 50000) {
-                    // Extraer solo texto plano (antes del primer boundary MIME o HTML)
-                    const textEnd = buffer.indexOf('Content-Type: text/html');
-                    const mimeBoundary = buffer.indexOf('--===============');
-                    let cutPoint = textEnd > 0 ? textEnd : (mimeBoundary > 0 ? mimeBoundary : buffer.length);
-                    cutPoint = Math.min(cutPoint, 10000); // Máximo 10KB de texto
-                    textBuffer = buffer.substring(0, cutPoint).trim();
-                  }
+
+                fetch.on('message', (msg: any) => {
+                  const headers: any = {};
+                  let textBuffer = '';
+                  let isHeaderPart = true;
+
+                  msg.on('body', (stream: any, info: any) => {
+                    let buffer = '';
+                    stream.on('data', (chunk: Buffer) => {
+                      buffer += chunk.toString('utf8');
+                    });
+                    stream.once('end', () => {
+                      const which = (info.which || '').toUpperCase();
+
+                      // SOLO procesar headers - NO el cuerpo del mensaje
+                      if (which.includes('HEADER')) {
+                        // Extraer solo las líneas de headers (generalmente las primeras 10-20 líneas)
+                        const lines = buffer.split(/\r?\n/);
+
+                        for (const line of lines) {
+                          const trimmed = line.trim();
+                          if (trimmed.length === 0) continue;
+                          // Ignorar metadata IMAP
+                          if (
+                            trimmed.startsWith('*') ||
+                            trimmed.startsWith(')') ||
+                            /^\d+$/.test(trimmed)
+                          )
+                            continue;
+
+                          // Buscar headers específicos
+                          const fromMatch = trimmed.match(/^From:\s*(.+)$/i);
+                          const toMatch = trimmed.match(/^To:\s*(.+)$/i);
+                          const subjectMatch =
+                            trimmed.match(/^Subject:\s*(.+)$/i);
+                          const dateMatch = trimmed.match(/^Date:\s*(.+)$/i);
+
+                          if (fromMatch) headers.from = fromMatch[1].trim();
+                          if (toMatch) headers.to = toMatch[1].trim();
+                          if (subjectMatch)
+                            headers.subject = subjectMatch[1].trim();
+                          if (dateMatch) headers.date = dateMatch[1].trim();
+                        }
+                      }
+                      // Solo guardar texto plano, ignorar HTML y base64
+                      else if (which === 'TEXT' && buffer.length < 50000) {
+                        // Extraer solo texto plano (antes del primer boundary MIME o HTML)
+                        const textEnd = buffer.indexOf(
+                          'Content-Type: text/html',
+                        );
+                        const mimeBoundary =
+                          buffer.indexOf('--===============');
+                        let cutPoint =
+                          textEnd > 0
+                            ? textEnd
+                            : mimeBoundary > 0
+                              ? mimeBoundary
+                              : buffer.length;
+                        cutPoint = Math.min(cutPoint, 10000); // Máximo 10KB de texto
+                        textBuffer = buffer.substring(0, cutPoint).trim();
+                      }
+                    });
+                  });
+
+                  msg.once('end', () => {
+                    emails.push({
+                      id: `email_${Date.now()}_${emails.length}`,
+                      uid: 0,
+                      from: headers.from || 'Desconocido',
+                      to: headers.to || '',
+                      subject: headers.subject || 'Sin asunto',
+                      date: headers.date ? new Date(headers.date) : new Date(),
+                      text: textBuffer || 'Sin contenido',
+                      html: '',
+                      attachments: [],
+                      seen: true,
+                      flagged: false,
+                    });
+                  });
                 });
-              });
 
-              msg.once('end', () => {
-                emails.push({
-                  id: `email_${Date.now()}_${emails.length}`,
-                  uid: 0,
-                  from: headers.from || 'Desconocido',
-                  to: headers.to || '',
-                  subject: headers.subject || 'Sin asunto',
-                  date: headers.date ? new Date(headers.date) : new Date(),
-                  text: textBuffer || 'Sin contenido',
-                  html: '',
-                  attachments: [],
-                  seen: true,
-                  flagged: false,
+                fetch.once('error', (err: any) => {
+                  console.log('❌ [EmailService] Fetch error:', err.message);
+                  imapConnection.end();
+                  resolve({
+                    success: true,
+                    message: `Error obteniendo mensajes: ${err.message}`,
+                    data: { emails: [], total: 0 },
+                  });
                 });
-              });
-            });
 
-            fetch.once('error', (err: any) => {
-              console.log('❌ [EmailService] Fetch error:', err.message);
-              imapConnection.end();
-              resolve({
-                success: true,
-                message: `Error obteniendo mensajes: ${err.message}`,
-                data: { emails: [], total: 0 },
-              });
-            });
+                fetch.once('end', () => {
+                  imapConnection.end();
 
-            fetch.once('end', () => {
-              imapConnection.end();
+                  const page = getEmailsDto.page || 1;
+                  const limit = getEmailsDto.limit || 50;
+                  const start = (page - 1) * limit;
+                  const end = start + limit;
 
-              const page = getEmailsDto.page || 1;
-              const limit = getEmailsDto.limit || 50;
-              const start = (page - 1) * limit;
-              const end = start + limit;
-
-              resolve({
-                success: true,
-                data: {
-                  emails: emails.slice(start, end),
-                  total: emails.length,
-                  page,
-                  limit,
-                },
-              });
-            });
-          });
-        });
+                  resolve({
+                    success: true,
+                    data: {
+                      emails: emails.slice(start, end),
+                      total: emails.length,
+                      page,
+                      limit,
+                    },
+                  });
+                });
+              },
+            );
+          },
+        );
       });
 
       imapConnection.connect();
@@ -608,10 +713,7 @@ export class EmailService {
   // ==========================================
   // ENVIAR CORREO (SMTP)
   // ==========================================
-  async sendEmail(
-    usuarioId: string,
-    sendDto: SendEmailDto,
-  ): Promise<any> {
+  async sendEmail(usuarioId: string, sendDto: SendEmailDto): Promise<any> {
     const config = await this.emailConfigModel
       .findOne({
         usuario: new Types.ObjectId(usuarioId),
