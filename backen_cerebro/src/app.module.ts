@@ -12,6 +12,7 @@ import { UsuariosModule } from './Modules/Usuarios/usuarios.module';
 import { TicketITModule } from './Modules/TicketIT/ticket-it.module';
 import { ChatModule } from './Modules/Chat/chat.module';
 import { UploadsModule } from './Modules/Uploads/uploads.module';
+import { EmailModule } from './Modules/Email/email.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UploadsModule } from './Modules/Uploads/uploads.module';
     TicketITModule,
     ChatModule,
     UploadsModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

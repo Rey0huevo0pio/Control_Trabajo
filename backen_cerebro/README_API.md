@@ -28,7 +28,9 @@ backen_cerebro/
 ├── src/
 │   ├── Models/                 # Esquemas de Mongoose
 │   │   ├── T_Instalaciones/    # Modelo de instalaciones y áreas
-│   │   ├── Usuarios/           # Modelo de usuarios
+│   │   ├── Usuarios/           # Modelo de usuarios y email-config
+│   │   │   ├── usuario.schema.ts
+│   │   │   └── email-config.schema.ts
 │   │   ├── T_ticket_IT_STV/    # Modelo de tickets y estado
 │   │   └── T_Chat_STV/         # Modelo de chat (general, grupo, privado)
 │   │
@@ -39,10 +41,15 @@ backen_cerebro/
 │   │   ├── Usuarios/           # CRUD de usuarios
 │   │   ├── TicketIT/           # CRUD de tickets IT
 │   │   ├── Chat/               # CRUD de chat
-│   │   └── Uploads/            # Upload de archivos
+│   │   ├── Uploads/            # Upload de archivos
+│   │   └── Email/              # Configuración y gestión de correo (IMAP/SMTP)
 │   │
-│   ├── Controllers/            # Controladores (si hay globales)
-│   ├── DTOs/                   # Data Transfer Objects (si hay globales)
+│   ├── Controllers/            # Controladores
+│   │   ├── Usuarios/           # Auth y Users controllers
+│   │   └── Email/              # Email controller
+│   ├── DTOs/                   # Data Transfer Objects
+│   │   ├── usuario.dto.ts
+│   │   └── email.dto.ts
 │   ├── Guards/                 # Guards de autenticación/autorización
 │   │
 │   ├── app.module.ts           # Módulo principal
@@ -226,6 +233,49 @@ npm run start:prod
 | GET | `/uploads/usuario/:numeroControl` | Listar archivos por usuario |
 | GET | `/uploads/usuario/:numeroControl/fecha/:fecha` | Listar archivos por fecha |
 
+### 📧 Correo Electrónico (Email)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/email/config` | Crear configuración de correo |
+| GET | `/email/config` | Obtener configuración del usuario |
+| PATCH | `/email/config` | Actualizar configuración |
+| POST | `/email/config/test` | Probar conexión IMAP/SMTP |
+| POST | `/email/config/activate` | Activar configuración |
+| DELETE | `/email/config` | Eliminar configuración |
+| GET | `/email/messages` | Obtener correos (IMAP) |
+| POST | `/email/send` | Enviar correo (SMTP) |
+
+#### Ejemplo: Configurar Correo
+
+```json
+POST /api/email/config
+{
+  "email": "usuario@tudominio.com",
+  "displayName": "Nombre Completo",
+  "passwordEmail": "contraseña_encriptada",
+  "imapHost": "mail.tudominio.com",
+  "imapPort": 993,
+  "imapSecure": true,
+  "smtpHost": "mail.tudominio.com",
+  "smtpPort": 465,
+  "smtpSecure": true
+}
+```
+
+#### Ejemplo: Enviar Correo
+
+```json
+POST /api/email/send
+{
+  "to": "destinatario@email.com",
+  "subject": "Asunto del correo",
+  "html": "<p>Contenido HTML del correo</p>",
+  "cc": "copia@email.com",
+  "bcc": "copia_oculta@email.com"
+}
+```
+
 ## 📊 Modelos de Datos
 
 ### T_Instalaciones
@@ -350,23 +400,34 @@ npm run start:prod
 
 ```
 uploads/
-└── EMP-001/
-    ├── 2026-02-04/
-    │   ├── instalaciones/
-    │   │   ├── imagen_instalacion/
-    │   │   └── imagen_areas/
-    │   ├── chat/
-    │   │   ├── imagen_grupos/
-    │   │   │   └── nombre_grupo/
-    │   │   └── imagen_privados/
-    │   │       └── nombre_usuario/
-    │   ├── usuario/
-    │   │   └── imagen_perfil/
-    │   └── Tickets_IT/
-    │       ├── Tickets_evidencia_solucionado/
-    │       └── Tickets_plobrema_solucionar/
-    └── 2026-03-24/
-        └── (misma estructura)
+└── EMP-001/                    # Número de control del usuario
+    └── 2026/                   # Año
+        └── 2026-02/            # Año-Mes
+            └── 2026-02-04/     # Año-Mes-Día
+                ├── instalaciones/
+                │   ├── imagen_instalacion/
+                │   └── imagen_areas/
+                ├── chat/
+                │   ├── imagen_grupos/
+                │   │   └── nombre_grupo/
+                │   ├── imagen_privados/
+                │   │   └── nombre_usuario/
+                │   └── archivos/
+                ├── usuario/
+                │   └── imagen_perfil/
+                ├── Tickets_IT/
+                │   ├── evidencias/
+                │   ├── problemas/
+                │   └── adjuntos/
+                ├── archivero/
+                │   └── nombre_archivero_o_carpeta/
+                │       ├── documentos/
+                │       ├── imagenes/
+                │       ├── videos/
+                │       └── archivos/
+                └── noticias/
+                    ├── imagenes/
+                    └── adjuntos/
 ```
 
 ## 🔧 Comandos Disponibles

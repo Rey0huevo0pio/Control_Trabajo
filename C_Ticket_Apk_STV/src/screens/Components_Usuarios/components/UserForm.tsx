@@ -12,7 +12,7 @@ import {
 import { useResponsive } from '../../../components/useResponsive'
 import { Employee, UserRole, CreateUserDto, UpdateUserDto } from '../types'
 import { userService } from '../../../services/userService'
-import { UserRole as ServiceUserRole } from '../../../types'
+import { EmailConfigModal } from './modulo_correo'
 
 interface UserFormProps {
   mode: 'create' | 'edit'
@@ -25,6 +25,7 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
   const { isMobile } = useResponsive()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailModalVisible, setEmailModalVisible] = useState(false)
 
   const [formData, setFormData] = useState<any>({
     Control_Usuario: user?.Control_Usuario || '',
@@ -148,21 +149,28 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
             </Stack>
           </HStack>
 
-          {/* Email y Teléfono */}
-          <FormField label="Email" icon="mail-outline">
-            <Input
-              placeholder="correo@empresa.com"
-              value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              borderWidth={1}
-              borderColor="$border"
-              borderRadius={12}
-              height={50}
-              paddingHorizontal="$3"
+          {/* Email - Botón para abrir Modal */}
+          <Stack gap="$2">
+            <HStack gap="$2" align="center">
+              <Ionicons name="mail-outline" size={16} color="$color2" />
+              <Text variant="label" color="$color2">
+                Configurar Correo Electrónico
+              </Text>
+            </HStack>
+            <Button
+              title={formData.email ? `✉️ ${formData.email}` : '⚙️ Configurar Correo'}
+              icon={"mail-outline" as any}
+              onPress={() => setEmailModalVisible(true)}
+              variant={formData.email ? 'primary' : 'outline'}
+              size="lg"
+              fullWidth
             />
-          </FormField>
+            {formData.email && (
+              <Text variant="caption" color="$success" fontWeight="600">
+                ✅ Correo configurado
+              </Text>
+            )}
+          </Stack>
 
           <FormField label="Teléfono" icon="call-outline">
             <Input
@@ -286,6 +294,17 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
           </YStack>
         </YStack>
       </ScrollView>
+
+      {/* Modal de Configuración de Correo */}
+      <EmailConfigModal
+        visible={emailModalVisible}
+        onClose={() => setEmailModalVisible(false)}
+        userId={user?.id || ''}
+        userEmail={formData.email}
+        onSuccess={() => {
+          // El email se configuró exitosamente
+        }}
+      />
     </YStack>
   )
 }

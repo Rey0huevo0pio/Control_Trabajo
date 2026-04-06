@@ -13,7 +13,8 @@
       "Bash(netsh *)",
       "Bash(npm start)",
       "Bash(jq *)",
-      "Bash(lsusb)"
+      "Bash(lsusb)",
+      "Bash(npm install *)"
     ]
   },
   "$version": 3

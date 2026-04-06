@@ -43,6 +43,12 @@ export const API_CONFIG = {
 
     // Archivero
     ARCHIVERO: '/api/archivero',
+
+    // Email
+    EMAIL_CONFIG: '/api/email/config',
+    EMAIL_TEST: '/api/email/config/test',
+    EMAIL_MESSAGES: '/api/email/messages',
+    EMAIL_SEND: '/api/email/send',
   },
 };
 
