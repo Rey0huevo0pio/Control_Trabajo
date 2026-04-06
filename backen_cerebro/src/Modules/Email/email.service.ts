@@ -297,6 +297,37 @@ export class EmailService {
   }
 
   // ==========================================
+  // ACTIVAR CONFIGURACIÓN SIN PROBAR (Manual)
+  // ==========================================
+  async activateConfigForce(usuarioId: string): Promise<any> {
+    console.log('\n📧 [EmailService] activateConfigForce, ID:', usuarioId);
+    
+    const config = await this.emailConfigModel
+      .findOne({ usuario: new Types.ObjectId(usuarioId) })
+      .exec();
+
+    if (!config) {
+      throw new NotFoundException(
+        'No se encontró configuración de correo para este usuario',
+      );
+    }
+
+    // Activar sin probar conexión
+    config.status = EmailStatus.ACTIVE;
+    config.verified = true;
+    config.verifiedAt = new Date();
+    await config.save();
+
+    console.log('✅ [EmailService] Configuración activada manualmente');
+
+    return {
+      success: true,
+      message: 'Configuración activada manualmente',
+      data: this.sanitizeConfig(config),
+    };
+  }
+
+  // ==========================================
   // ACTIVAR CONFIGURACIÓN
   // ==========================================
   async activateConfig(usuarioId: string): Promise<any> {
@@ -351,53 +382,110 @@ export class EmailService {
     usuarioId: string,
     getEmailsDto: GetEmailsDto,
   ): Promise<any> {
+    console.log('\n📧 [EmailService] getEmails - userId:', usuarioId);
+    console.log('📧 [EmailService] getEmails - params:', getEmailsDto);
+    
     const config = await this.emailConfigModel
       .findOne({
         usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
       })
       .exec();
 
-    if (!config) {
-      throw new NotFoundException(
-        'No hay configuración de correo activa para este usuario',
-      );
+    console.log('📩 [EmailService] Config encontrada:', config ? '✅ SÍ' : '❌ NO');
+    if (config) {
+      console.log('📧 [EmailService] Email:', config.email);
+      console.log('📧 [EmailService] Status:', config.status);
+      console.log('📧 [EmailService] IMAP Host:', config.imapHost);
     }
 
-    return new Promise((resolve, reject) => {
+    if (!config) {
+      console.log('❌ [EmailService] No hay configuración de correo para este usuario');
+      return {
+        success: false,
+        message: 'No hay configuración de correo para este usuario',
+        data: { emails: [], total: 0 },
+      };
+    }
+
+    if (config.status !== EmailStatus.ACTIVE) {
+      console.log('⚠️ [EmailService] La configuración no está activa. Status:', config.status);
+      return {
+        success: false,
+        message: `La configuración de correo no está activa. Status: ${config.status}. Actívala primero.`,
+        data: { emails: [], total: 0 },
+      };
+    }
+
+    return new Promise((resolve) => {
+      console.log('📧 [EmailService] Intentando conectar a IMAP:', config.imapHost, ':', config.imapPort);
+      
       const imapConnection = new Imap({
         user: config.email,
         password: this.decryptPassword(config.passwordEmail),
         host: config.imapHost,
         port: config.imapPort,
         tls: config.imapSecure,
+        connTimeout: 5000, // 5 segundos de timeout
       });
 
       const emails: EmailMessage[] = [];
 
+      // Si hay timeout o error de conexión, devolver respuesta graceful
       imapConnection.once('error', (err: any) => {
-        reject(new Error(`IMAP Error: ${err.message}`));
+        console.log('⚠️ [EmailService] IMAP error:', err.message || err);
+        
+        // Siempre devolver respuesta graceful en lugar de error
+        resolve({
+          success: true,
+          message: `No se pudo conectar al servidor IMAP (${config.imapHost}:${config.imapPort}). ${err.message || 'Error de conexión'}`,
+          data: { 
+            emails: [], 
+            total: 0,
+            configStatus: config.status,
+            imapHost: config.imapHost,
+            imapPort: config.imapPort,
+            imapError: err.message || 'Unknown error',
+          },
+        });
       });
 
       imapConnection.once('ready', () => {
+        console.log('✅ [EmailService] Conectado a IMAP exitosamente');
+        
         imapConnection.openBox(getEmailsDto.folder || 'INBOX', true, (err: any, box: any) => {
           if (err) {
-            reject(err);
+            console.log('❌ [EmailService] Error abriendo carpeta:', err.message);
+            resolve({
+              success: true,
+              message: `Error abriendo carpeta: ${err.message}`,
+              data: { emails: [], total: 0 },
+            });
             return;
           }
+
+          console.log('📬 [EmailService] Carpeta abierta. Mensajes totales:', box.messages.total);
 
           const searchCriteria = getEmailsDto.unreadOnly ? ['UNSEEN'] : ['ALL'];
 
           imapConnection.search(searchCriteria, (err: any, results: number[]) => {
             if (err) {
-              reject(err);
+              console.log('❌ [EmailService] Error en búsqueda:', err.message);
+              imapConnection.end();
+              resolve({
+                success: true,
+                message: `Error en búsqueda: ${err.message}`,
+                data: { emails: [], total: 0 },
+              });
               return;
             }
+
+            console.log('📩 [EmailService] Mensajes encontrados:', results.length);
 
             if (results.length === 0) {
               imapConnection.end();
               resolve({
                 success: true,
+                message: 'No hay correos en esta carpeta',
                 data: { emails: [], total: 0 },
               });
               return;
@@ -439,7 +527,13 @@ export class EmailService {
             });
 
             fetch.once('error', (err: any) => {
-              reject(err);
+              console.log('❌ [EmailService] Fetch error:', err.message);
+              imapConnection.end();
+              resolve({
+                success: true,
+                message: `Error obteniendo mensajes: ${err.message}`,
+                data: { emails: [], total: 0 },
+              });
             });
 
             fetch.once('end', () => {

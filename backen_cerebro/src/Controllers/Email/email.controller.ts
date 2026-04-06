@@ -104,6 +104,16 @@ export class EmailController {
   }
 
   // ==========================================
+  // ACTIVAR CONFIGURACIÓN SIN PROBAR (Manual)
+  // ==========================================
+  @Post('config/activate-force')
+  @HttpCode(HttpStatus.OK)
+  async activateConfigForce(@Req() req: any) {
+    console.log('\n📧 [EmailController] POST config/activate-force');
+    return this.emailService.activateConfigForce(req.user.userId);
+  }
+
+  // ==========================================
   // ACTIVAR CONFIGURACIÓN
   // ==========================================
   @Post('config/activate')

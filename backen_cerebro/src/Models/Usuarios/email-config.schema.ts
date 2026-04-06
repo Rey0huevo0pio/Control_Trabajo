@@ -100,7 +100,6 @@ export class EmailConfig {
 
 export const EmailConfigSchema = SchemaFactory.createForClass(EmailConfig);
 
-// Índices
-EmailConfigSchema.index({ usuario: 1 }, { unique: true });
-EmailConfigSchema.index({ email: 1 }, { unique: true });
+// Índices - solo el de usuario, email ya tiene unique: true
+EmailConfigSchema.index({ usuario: 1 }, { unique: false });
 EmailConfigSchema.index({ status: 1 });
