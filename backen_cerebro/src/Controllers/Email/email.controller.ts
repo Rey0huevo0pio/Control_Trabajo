@@ -44,6 +44,14 @@ export class EmailController {
   }
 
   // ==========================================
+  // OBTENER CONFIGURACIÓN POR ID DE USUARIO (Admin)
+  // ==========================================
+  @Get('config/user/:userId')
+  getConfigByUser(@Req() req: any, @Param('userId') userId: string) {
+    return this.emailService.getConfigByUsuario(userId);
+  }
+
+  // ==========================================
   // ACTUALIZAR CONFIGURACIÓN
   // ==========================================
   @Patch('config')

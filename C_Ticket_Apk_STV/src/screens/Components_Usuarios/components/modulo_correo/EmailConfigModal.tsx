@@ -86,12 +86,12 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
         email: data.email,
         displayName: userFullName || data.email.split('@')[0] || 'Usuario',
         passwordEmail: data.passwordEmail,
-        imapHost: data.imapHost,
-        imapPort: parseInt(data.imapPort),
-        imapSecure: data.imapSecure,
-        smtpHost: data.smtpHost,
-        smtpPort: parseInt(data.smtpPort),
-        smtpSecure: data.smtpSecure,
+        imapHost: data.imapHost || 'mail.tudominio.com',
+        imapPort: parseInt(data.imapPort) || 993,
+        imapSecure: data.imapSecure !== undefined ? data.imapSecure : true,
+        smtpHost: data.smtpHost || 'mail.tudominio.com',
+        smtpPort: parseInt(data.smtpPort) || 465,
+        smtpSecure: data.smtpSecure !== undefined ? data.smtpSecure : true,
       }, { headers: { Authorization: `Bearer ${token}` } })
       setSuccess('✅ Configuración guardada correctamente')
       setTimeout(() => { onSuccess(); onClose() }, 1500)

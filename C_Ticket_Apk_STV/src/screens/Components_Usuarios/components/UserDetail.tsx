@@ -1,5 +1,5 @@
-import React from 'react'
-import { YStack, ScrollView, XStack } from 'tamagui'
+import React, { useState, useEffect } from 'react'
+import { YStack, ScrollView, XStack, Spinner } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
   Text,
@@ -10,6 +10,7 @@ import {
 } from '../../../components/design-system'
 import { useResponsive } from '../../../components/useResponsive'
 import { Employee, UserRole } from '../types'
+import { emailService, EmailConfig } from '../../../services/emailService'
 
 const roleLabels: Record<UserRole, string> = {
   admin: 'Administrador',
@@ -35,6 +36,29 @@ interface UserDetailProps {
 
 export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
   const { isMobile } = useResponsive()
+  const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null)
+  const [loadingEmail, setLoadingEmail] = useState(false)
+
+  // Cargar configuración de correo al montar el componente
+  useEffect(() => {
+    if (user?.id) {
+      loadEmailConfig()
+    }
+  }, [user?.id])
+
+  const loadEmailConfig = async () => {
+    try {
+      setLoadingEmail(true)
+      const config = await emailService.getEmailConfigByUserId(user.id)
+      if (config) {
+        setEmailConfig(config)
+      }
+    } catch (error) {
+      console.log('No hay correo configurado para este usuario')
+    } finally {
+      setLoadingEmail(false)
+    }
+  }
 
   return (
     <YStack gap={isMobile ? 16 : 20}>
@@ -148,12 +172,79 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
               isLast
             />
           )}
-          <InfoRow 
-            icon="id-card-outline" 
-            label="Control Usuario" 
-            value={user.Control_Usuario} 
-            isLast 
+          <InfoRow
+            icon="id-card-outline"
+            label="Control Usuario"
+            value={user.Control_Usuario}
+            isLast
           />
+        </YStack>
+      </Card>
+
+      {/* Configuración de Correo */}
+      <Card variant="grouped" padding={0} borderRadius={16} overflow="hidden">
+        <YStack backgroundColor="$backgroundSecondary">
+          <SectionHeader icon="mail" title="Configuración de Correo" />
+
+          {loadingEmail ? (
+            <YStack padding="$4" alignItems="center">
+              <Spinner size="small" color="$color2" />
+              <Text variant="caption" color="$color2" marginTop="$2">Cargando...</Text>
+            </YStack>
+          ) : emailConfig ? (
+            <YStack>
+              <InfoRow
+                icon="mail-outline"
+                label="Correo Configurado"
+                value={emailConfig.email}
+                isLast={!emailConfig.displayName && !emailConfig.imapHost}
+              />
+              {emailConfig.displayName && (
+                <InfoRow
+                  icon="person-outline"
+                  label="Nombre para Mostrar"
+                  value={emailConfig.displayName}
+                  isLast={!emailConfig.imapHost}
+                />
+              )}
+              {emailConfig.imapHost && (
+                <InfoRow
+                  icon="download-outline"
+                  label="Servidor IMAP"
+                  value={`${emailConfig.imapHost}:${emailConfig.imapPort}`}
+                  isLast={!emailConfig.smtpHost}
+                />
+              )}
+              {emailConfig.smtpHost && (
+                <InfoRow
+                  icon="upload-outline"
+                  label="Servidor SMTP"
+                  value={`${emailConfig.smtpHost}:${emailConfig.smtpPort}`}
+                  isLast
+                />
+              )}
+              <YStack padding="$3" backgroundColor="$successMuted">
+                <HStack gap="$2" alignItems="center">
+                  <Ionicons name="checkmark-circle" size={16} color="$success" />
+                  <Text variant="caption" color="$success" fontWeight="600">
+                    {emailConfig.status === 'active' ? 'Activo' : emailConfig.status === 'inactive' ? 'Inactivo' : 'Error'}
+                  </Text>
+                  {emailConfig.verified && (
+                    <Text variant="caption" color="$color3">
+                      • Verificado
+                    </Text>
+                  )}
+                </HStack>
+              </YStack>
+            </YStack>
+          ) : (
+            <YStack padding="$4" alignItems="center">
+              <Ionicons name="mail-unread" size={32} color="$color3" />
+              <Text variant="bodySmall" color="$color3" marginTop="$2" textAlign="center">
+                No hay correo configurado para este usuario
+              </Text>
+            </YStack>
+          )}
         </YStack>
       </Card>
 

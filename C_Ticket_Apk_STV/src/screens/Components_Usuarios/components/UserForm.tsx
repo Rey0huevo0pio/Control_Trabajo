@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { YStack, ScrollView, Input, XStack, Spinner } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import {
@@ -12,6 +12,7 @@ import {
 import { useResponsive } from '../../../components/useResponsive'
 import { Employee, UserRole, CreateUserDto, UpdateUserDto } from '../types'
 import { userService } from '../../../services/userService'
+import { emailService } from '../../../services/emailService'
 import { EmailConfigModal } from './modulo_correo'
 
 interface UserFormProps {
@@ -26,6 +27,30 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [emailModalVisible, setEmailModalVisible] = useState(false)
+  const [configuredEmail, setConfiguredEmail] = useState<string | null>(null)
+  const [loadingEmail, setLoadingEmail] = useState(false)
+
+  // Cargar correo configurado al abrir el formulario
+  useEffect(() => {
+    if (mode === 'edit' && user?.id) {
+      loadConfiguredEmail()
+    }
+  }, [mode, user?.id])
+
+  const loadConfiguredEmail = async () => {
+    try {
+      setLoadingEmail(true)
+      const config = await emailService.getEmailConfigByUserId(user!.id)
+      if (config && config.email) {
+        setConfiguredEmail(config.email)
+        setFormData((prev: any) => ({ ...prev, email: config.email }))
+      }
+    } catch (err) {
+      console.log('No hay correo configurado o error al cargar')
+    } finally {
+      setLoadingEmail(false)
+    }
+  }
 
   const [formData, setFormData] = useState<any>({
     Control_Usuario: user?.Control_Usuario || '',
@@ -154,21 +179,56 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
             <HStack gap="$2" align="center">
               <Ionicons name="mail-outline" size={16} color="$color2" />
               <Text variant="label" color="$color2">
-                Configurar Correo Electrónico
+                Correo Electrónico Configurado
               </Text>
             </HStack>
-            <Button
-              title={formData.email ? `✉️ ${formData.email}` : '⚙️ Configurar Correo'}
-              icon={"mail-outline" as any}
-              onPress={() => setEmailModalVisible(true)}
-              variant={formData.email ? 'primary' : 'outline'}
-              size="lg"
-              fullWidth
-            />
-            {formData.email && (
-              <Text variant="caption" color="$success" fontWeight="600">
-                ✅ Correo configurado
-              </Text>
+            
+            {loadingEmail ? (
+              <Card variant="outlined" padding="$3">
+                <HStack gap="$2" align="center">
+                  <Spinner size="small" color="$color2" />
+                  <Text variant="bodySmall" color="$color2">Cargando...</Text>
+                </HStack>
+              </Card>
+            ) : configuredEmail ? (
+              <Card variant="outlined" borderColor="$success" padding="$3">
+                <HStack gap="$3" align="center">
+                  <YStack
+                    width={40}
+                    height={40}
+                    borderRadius="$full"
+                    backgroundColor="$success"
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <Ionicons name="checkmark-circle" size={24} color="white" />
+                  </YStack>
+                  <Stack flex={1} gap="$1">
+                    <Text variant="bodySmall" fontWeight="600" color="$color">
+                      ✉️ {configuredEmail}
+                    </Text>
+                    <Text variant="caption" color="$color2">
+                      Toca para editar la configuración
+                    </Text>
+                  </Stack>
+                  <Button
+                    title="Editar"
+                    icon={"create-outline" as any}
+                    onPress={() => setEmailModalVisible(true)}
+                    variant="outline"
+                    size="sm"
+                  />
+                </HStack>
+              </Card>
+            ) : (
+              <Button
+                title="⚙️ Configurar Correo Electrónico"
+                icon={"mail-outline" as any}
+                onPress={() => setEmailModalVisible(true)}
+                variant="outline"
+                size="lg"
+                fullWidth
+              />
             )}
           </Stack>
 
@@ -300,9 +360,11 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
         visible={emailModalVisible}
         onClose={() => setEmailModalVisible(false)}
         userId={user?.id || ''}
-        userEmail={formData.email}
-        onSuccess={() => {
-          // El email se configuró exitosamente
+        userEmail={configuredEmail || user?.email || ''}
+        userFullName={`${user?.nombre} ${user?.apellido}`}
+        onSuccess={async () => {
+          // Recargar el correo configurado después de guardar
+          await loadConfiguredEmail()
         }}
       />
     </YStack>
