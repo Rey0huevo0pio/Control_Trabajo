@@ -103,7 +103,7 @@ export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }: UserList
   // ==========================================
   // TOGGLE ESTADO DEL USUARIO
   // ==========================================
-  const handleToggleActive = async (userId: string, e: any) => {
+  const handleToggleActive = async (userId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
       await userService.toggleUserActive(userId)
@@ -117,7 +117,7 @@ export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }: UserList
   // ==========================================
   // ELIMINAR USUARIO
   // ==========================================
-  const handleDelete = async (userId: string, e: any) => {
+  const handleDelete = async (userId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const confirmDelete = confirm('¿Estás seguro de eliminar este usuario?')
     if (!confirmDelete) return
@@ -266,7 +266,7 @@ export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }: UserList
                           paddingVertical={4}
                           borderRadius="$full"
                           marginLeft={8}
-                          onPress={(e) => handleToggleActive(user.id, e)}
+                          onPress={() => handleToggleActive(user.id, {} as React.MouseEvent)}
                         >
                           <Text
                             variant="caption"
@@ -318,7 +318,7 @@ export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }: UserList
                       />
                       <IconButton
                         icon="trash"
-                        onPress={(e) => handleDelete(user.id, e)}
+                        onPress={() => handleDelete(user.id, {} as React.MouseEvent)}
                         variant="ghost"
                         size={20}
                       />

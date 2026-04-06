@@ -12,7 +12,8 @@
       "Bash(mkdir *)",
       "Bash(netsh *)",
       "Bash(npm start)",
-      "Bash(jq *)"
+      "Bash(jq *)",
+      "Bash(lsusb)"
     ]
   },
   "$version": 3

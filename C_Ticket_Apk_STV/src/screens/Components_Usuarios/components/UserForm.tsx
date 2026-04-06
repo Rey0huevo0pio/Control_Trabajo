@@ -12,6 +12,7 @@ import {
 import { useResponsive } from '../../../components/useResponsive'
 import { Employee, UserRole, CreateUserDto, UpdateUserDto } from '../types'
 import { userService } from '../../../services/userService'
+import { UserRole as ServiceUserRole } from '../../../types'
 
 interface UserFormProps {
   mode: 'create' | 'edit'
@@ -64,9 +65,9 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
     try {
       setLoading(true)
       if (mode === 'create') {
-        await userService.createUser(formData as CreateUserDto)
+        await userService.createUser(formData as any)
       } else if (user) {
-        await userService.updateUser(user.id, formData as UpdateUserDto)
+        await userService.updateUser(user.id, formData as any)
       }
       onSave()
     } catch (err: any) {
@@ -267,7 +268,7 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
           <YStack gap="$3" paddingVertical="$4">
             <Button
               title={loading ? 'Guardando...' : (mode === 'create' ? 'Crear Usuario' : 'Guardar Cambios')}
-              icon={loading ? undefined : (mode === 'create' ? 'person-add' : 'save')}
+              icon={loading ? undefined : (mode === 'create' ? 'person' : 'create') as any}
               onPress={handleSave}
               disabled={loading}
               variant="primary"
@@ -276,7 +277,7 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
             />
             <Button
               title="Cancelar"
-              icon="close"
+              icon={"close" as any}
               onPress={onCancel}
               variant="outline"
               size="lg"

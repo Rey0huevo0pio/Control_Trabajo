@@ -99,11 +99,9 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
             <YStack
               backgroundColor={
-                user.estado === 'activo'
+                user.activo
                   ? '$successMuted'
-                  : user.estado === 'inactivo'
-                  ? '$backgroundTertiary'
-                  : '$errorMuted'
+                  : '$backgroundTertiary'
               }
               paddingHorizontal={12}
               paddingVertical={6}
@@ -112,15 +110,13 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
               <Text
                 variant="labelSmall"
                 color={
-                  user.estado === 'activo'
+                  user.activo
                     ? '$success'
-                    : user.estado === 'inactivo'
-                    ? '$color3'
-                    : '$error'
+                    : '$color3'
                 }
                 fontWeight="600"
               >
-                {user.estado === 'activo' ? '● Activo' : user.estado === 'inactivo' ? '● Inactivo' : '● Suspendido'}
+                {user.activo ? '● Activo' : '● Inactivo'}
               </Text>
             </YStack>
           </HStack>
@@ -138,18 +134,18 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="call" title="Información de Contacto" />
           
-          <InfoRow 
-            icon="mail-outline" 
-            label="Email" 
-            value={user.email} 
+          <InfoRow
+            icon="mail-outline"
+            label="Email"
+            value={user.email || 'No especificado'}
             isLast={!user.telefono}
           />
           {user.telefono && (
-            <InfoRow 
-              icon="call-outline" 
-              label="Teléfono" 
-              value={user.telefono} 
-              isLast 
+            <InfoRow
+              icon="call-outline"
+              label="Teléfono"
+              value={user.telefono}
+              isLast
             />
           )}
           <InfoRow 
@@ -166,25 +162,27 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
         <YStack backgroundColor="$backgroundSecondary">
           <SectionHeader icon="briefcase" title="Información Laboral" />
           
-          <InfoRow 
-            icon="business-outline" 
-            label="Departamento" 
-            value={user.departamento} 
-          />
-          <InfoRow 
-            icon="briefcase-outline" 
-            label="Puesto" 
-            value={user.puesto} 
+          <InfoRow
+            icon="business-outline"
+            label="Departamento"
+            value={user.departamento || 'No especificado'}
           />
           <InfoRow
-            icon="calendar-outline"
-            label="Fecha de Ingreso"
-            value={new Date(user.fecha_ingreso).toLocaleDateString('es-MX', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            icon="briefcase-outline"
+            label="Puesto"
+            value={user.puesto || 'No especificado'}
           />
+          {user.fechaIngreso && (
+            <InfoRow
+              icon="calendar-outline"
+              label="Fecha de Ingreso"
+              value={new Date(user.fechaIngreso).toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            />
+          )}
           {user.ultimoAcceso && (
             <InfoRow 
               icon="time-outline" 
