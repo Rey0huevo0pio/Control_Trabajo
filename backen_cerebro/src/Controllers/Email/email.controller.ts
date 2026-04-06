@@ -76,7 +76,7 @@ export class EmailController {
   // ==========================================
   @Get('configs')
   @UseGuards(JwtAuthGuard)
-  getAllConfigs(@Req() req: any) {
+  getAllConfigs() {
     console.log('\n📧 [EmailController] GET configs (todas)');
     return this.emailService.getAllConfigs();
   }
@@ -104,8 +104,8 @@ export class EmailController {
   @HttpCode(HttpStatus.OK)
   async activateConfigForce(@Req() req: any) {
     console.log('\n📧 [EmailController] POST config/activate-force');
-    const result = await this.emailService.activateConfigForce(req.user.userId);
-    return result;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return await this.emailService.activateConfigForce(req.user.userId);
   }
 
   // ==========================================
@@ -134,6 +134,32 @@ export class EmailController {
   @Get('messages')
   getEmails(@Req() req: any, @Query() getEmailsDto: GetEmailsDto) {
     return this.emailService.getEmails(req.user.userId, getEmailsDto);
+  }
+
+  // ==========================================
+  // OBTENER SOLO UIDs (para sync incremental)
+  // ==========================================
+  @Get('messages/uids')
+  getMessageUIDs(@Req() req: any, @Query('folder') folder?: string) {
+    console.log('\n📧 [EmailController] GET messages/uids');
+    return this.emailService.getMessageUIDs(req.user.userId, folder || 'INBOX');
+  }
+
+  // ==========================================
+  // OBTENER CORREOS POR UIDs (descarga selectiva)
+  // ==========================================
+  @Post('messages/by-uids')
+  @HttpCode(HttpStatus.OK)
+  getMessagesByUIDs(
+    @Req() req: any,
+    @Body() body: { folder?: string; uids: number[] },
+  ) {
+    console.log('\n📧 [EmailController] POST messages/by-uids');
+    return this.emailService.getMessagesByUIDs(
+      req.user.userId,
+      body.folder || 'INBOX',
+      body.uids,
+    );
   }
 
   // ==========================================

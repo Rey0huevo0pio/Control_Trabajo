@@ -8,8 +8,11 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { EmailStatus, SecurityType } from '../Models/Usuarios/email-config.schema';
+import { Transform } from 'class-transformer';
+import {
+  EmailStatus,
+  SecurityType,
+} from '../Models/Usuarios/email-config.schema';
 
 // ==========================================
 // DTO PARA CREAR CONFIGURACIÓN DE CORREO
@@ -215,14 +218,14 @@ export class GetEmailsDto {
   @IsNumber()
   @Min(1)
   @IsOptional()
-  @Transform(({ value }) => value ? parseInt(value, 10) : 1)
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 1))
   page?: number;
 
   @IsNumber()
   @Min(1)
   @Max(100)
   @IsOptional()
-  @Transform(({ value }) => value ? parseInt(value, 10) : 50)
+  @Transform(({ value }) => (value ? parseInt(value, 10) : 50))
   limit?: number;
 
   @IsString()

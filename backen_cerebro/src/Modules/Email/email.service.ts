@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const Imap = require('imap');
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
@@ -34,6 +35,7 @@ export interface EmailMessage {
   attachments: any[];
   seen: boolean;
   flagged: boolean;
+  folder?: string;
 }
 
 @Injectable()
@@ -153,7 +155,7 @@ export class EmailService {
       `📩 [EmailService] Encontradas ${configs.length} configuraciones`,
     );
     configs.forEach((c: any) => {
-      const usuario = c.usuario as any;
+      const usuario = c.usuario;
       console.log(
         `  - Usuario: ${usuario?.Control_Usuario || 'N/A'} | Email: ${c.email} | Status: ${c.status}`,
       );
@@ -587,7 +589,6 @@ export class EmailService {
                 fetch.on('message', (msg: any) => {
                   const headers: any = {};
                   let textBuffer = '';
-                  let isHeaderPart = true;
 
                   msg.on('body', (stream: any, info: any) => {
                     let buffer = '';
@@ -700,13 +701,209 @@ export class EmailService {
 
       imapConnection.connect();
 
-      // Actualizar última sincronización
-      this.emailConfigModel
+      // Actualizar última sincronización (void para evitar floating promise)
+      void this.emailConfigModel
         .findOneAndUpdate(
           { usuario: new Types.ObjectId(usuarioId) },
           { lastSync: new Date() },
         )
         .exec();
+    });
+  }
+
+  // ==========================================
+  // OBTENER SOLO UIDs DE UNA CARPETA
+  // ==========================================
+  async getMessageUIDs(usuarioId: string, folder: string): Promise<any> {
+    const config = await this.emailConfigModel
+      .findOne({ usuario: new Types.ObjectId(usuarioId) })
+      .exec();
+
+    if (!config || config.status !== EmailStatus.ACTIVE) {
+      return { success: true, data: { uids: [], total: 0 } };
+    }
+
+    return new Promise((resolve) => {
+      const imapConnection = new Imap({
+        user: config.email,
+        password: this.decryptPassword(config.passwordEmail),
+        host: config.imapHost,
+        port: config.imapPort,
+        tls: config.imapSecure,
+        connTimeout: 5000,
+      });
+
+      imapConnection.once('error', () => {
+        resolve({ success: true, data: { uids: [], total: 0 } });
+      });
+
+      imapConnection.once('ready', () => {
+        imapConnection.openBox(folder, true, (err: any) => {
+          if (err) {
+            imapConnection.end();
+            resolve({ success: true, data: { uids: [], total: 0 } });
+            return;
+          }
+
+          imapConnection.search(['ALL'], (err: any, results: number[]) => {
+            imapConnection.end();
+            if (err) {
+              resolve({ success: true, data: { uids: [], total: 0 } });
+              return;
+            }
+
+            console.log(
+              `📧 [EmailService] getMessageUIDs: ${results.length} UIDs en ${folder}`,
+            );
+            resolve({
+              success: true,
+              data: { uids: results, total: results.length },
+            });
+          });
+        });
+      });
+
+      imapConnection.connect();
+    });
+  }
+
+  // ==========================================
+  // OBTENER CORREOS POR UIDs ESPECÍFICOS
+  // ==========================================
+  async getMessagesByUIDs(
+    usuarioId: string,
+    folder: string,
+    uids: number[],
+  ): Promise<any> {
+    if (uids.length === 0) {
+      return { success: true, data: { emails: [], total: 0 } };
+    }
+
+    const config = await this.emailConfigModel
+      .findOne({ usuario: new Types.ObjectId(usuarioId) })
+      .exec();
+
+    if (!config || config.status !== EmailStatus.ACTIVE) {
+      return { success: true, data: { emails: [], total: 0 } };
+    }
+
+    return new Promise((resolve) => {
+      const imapConnection = new Imap({
+        user: config.email,
+        password: this.decryptPassword(config.passwordEmail),
+        host: config.imapHost,
+        port: config.imapPort,
+        tls: config.imapSecure,
+        connTimeout: 5000,
+      });
+
+      const emails: EmailMessage[] = [];
+
+      imapConnection.once('error', () => {
+        resolve({ success: true, data: { emails: [], total: 0 } });
+      });
+
+      imapConnection.once('ready', () => {
+        imapConnection.openBox(folder, true, (err: any) => {
+          if (err) {
+            imapConnection.end();
+            resolve({ success: true, data: { emails: [], total: 0 } });
+            return;
+          }
+
+          const fetch = imapConnection.fetch(uids, {
+            bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+            struct: true,
+          });
+
+          fetch.on('message', (msg: any) => {
+            const headers: any = {};
+            let textBuffer = '';
+
+            msg.on('body', (stream: any, info: any) => {
+              let buffer = '';
+              stream.on('data', (chunk: Buffer) => {
+                buffer += chunk.toString('utf8');
+              });
+              stream.once('end', () => {
+                const which = (info.which || '').toUpperCase();
+
+                if (which.includes('HEADER')) {
+                  const lines = buffer.split(/\r?\n/);
+                  for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (trimmed.length === 0) continue;
+                    if (
+                      trimmed.startsWith('IMAP') ||
+                      trimmed.startsWith('FETCH')
+                    )
+                      continue;
+
+                    const match = trimmed.match(/^(\w[\w-]*):\s*(.+)$/i);
+                    if (match) {
+                      const key = match[1].toLowerCase();
+                      const value = match[2];
+                      if (headers[key]) {
+                        headers[key] += ', ' + value;
+                      } else {
+                        headers[key] = value;
+                      }
+                    }
+                  }
+                } else if (which === 'TEXT' || which.includes('TEXT')) {
+                  textBuffer += buffer;
+                }
+              });
+            });
+
+            msg.on('attributes', (attrs: any) => {
+              const email: EmailMessage = {
+                uid: attrs.uid,
+                id: `msg_${attrs.uid}`,
+                from: headers.from || 'Desconocido',
+                to: headers.to || '',
+                subject: headers.subject || '',
+                date: headers.date || new Date().toISOString(),
+                text: '',
+                html: '',
+                attachments: [],
+                seen: attrs.flags.includes('\\Seen'),
+                flagged: attrs.flags.includes('\\Flagged'),
+                folder,
+              };
+
+              const cleanedText = textBuffer
+                .replace(/=\r?\n/g, '')
+                .replace(/=3D/g, '=')
+                .replace(/=0D=0A/g, '\n')
+                .replace(/=([0-9A-F]{2})/g, (_match: string, hex: string) =>
+                  String.fromCharCode(parseInt(hex, 16)),
+                )
+                .replace(/\r?\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+
+              email.text = cleanedText;
+              emails.push(email);
+            });
+          });
+
+          fetch.once('error', () => {
+            imapConnection.end();
+            resolve({ success: true, data: { emails: [], total: 0 } });
+          });
+
+          fetch.once('end', () => {
+            imapConnection.end();
+            resolve({
+              success: true,
+              data: { emails, total: emails.length },
+            });
+          });
+        });
+      });
+
+      imapConnection.connect();
     });
   }
 

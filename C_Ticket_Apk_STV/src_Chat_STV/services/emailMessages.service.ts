@@ -63,7 +63,7 @@ export interface SyncResult {
 // SERVICIO DE CORREO CON CACHÉ INTELIGENTE
 // ==========================================
 class EmailMessagesService {
-  // Obtener correos con caché inteligente
+  // Obtener correos con caché inteligente (sync incremental por UID)
   async getMessages(folder: string = 'INBOX', page: number = 1, limit: number = 50): Promise<{
     emails: EmailMessage[];
     total: number;
@@ -83,17 +83,16 @@ class EmailMessagesService {
         };
       }
 
-      // Verificar si hay caché y si necesita sincronización
+      // Verificar caché existente
       const cachedEmails = await emailCacheService.getCachedEmails(folder);
-      const needsFullSync = await emailCacheService.needsFullSync(folder);
 
-      // Si hay caché reciente y no necesita sync completo, devolver caché inmediatamente
-      if (cachedEmails.length > 0 && !needsFullSync) {
+      // Si hay caché, hacer sync incremental por UID
+      if (cachedEmails.length > 0) {
         console.log('📦 [EmailMessages] Usando caché local:', cachedEmails.length, 'correos');
-        
-        // Sincronizar en segundo plano solo si hay correos nuevos
-        this.syncInBackground(folder, token);
-        
+
+        // Sync en segundo plano: obtener UIDs del servidor
+        this.syncIncremental(folder, token, cachedEmails);
+
         return {
           emails: cachedEmails.slice(0, limit),
           total: cachedEmails.length,
@@ -102,53 +101,20 @@ class EmailMessagesService {
         };
       }
 
-      // Si no hay caché o necesita sync completo, cargar desde servidor
-      console.log('🌐 [EmailMessages] Cargando desde servidor...');
-      const response = await api.get(API_CONFIG.endpoints.EMAIL_MESSAGES, {
-        params: { folder, page, limit },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Primera vez: descarga completa desde servidor
+      console.log('🌐 [EmailMessages] Primera descarga desde servidor...');
+      const result = await this.fullDownload(folder, token, page, limit);
 
-      console.log('📩 [EmailMessages] Respuesta del servidor:', JSON.stringify(response.data, null, 2));
-      
-      // El backend puede devolver los datos en diferentes formatos
-      let emailsList: EmailMessage[] = [];
-      if (response.data.success && response.data.data?.emails) {
-        emailsList = response.data.data.emails;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        emailsList = response.data.data;
-      } else if (response.data.emails && Array.isArray(response.data.emails)) {
-        emailsList = response.data.emails;
-      } else if (Array.isArray(response.data)) {
-        emailsList = response.data;
-      }
-      
-      // Agregar folder a cada email
-      emailsList = emailsList.map(e => ({ ...e, folder }));
-      
-      console.log('📩 [EmailMessages] Correos encontrados:', emailsList.length);
-      
-      // Guardar en caché
-      if (emailsList.length > 0) {
-        await emailCacheService.saveEmails(emailsList, folder);
-        await emailCacheService.saveFolderState(folder, {
-          lastSync: new Date().toISOString(),
-          lastUID: emailsList.length > 0 ? emailsList[0].uid : 0,
-          totalEmails: emailsList.length,
-          syncedAt: new Date().toISOString(),
-        });
-      }
-      
       return {
-        emails: emailsList,
-        total: emailsList.length,
+        emails: result.emails,
+        total: result.total,
         fromCache: false,
-        message: response.data.message || 'Correos cargados desde servidor',
+        message: result.message,
       };
     } catch (error: any) {
       console.error('❌ [EmailMessages] Error getMessages:', error.response?.data || error.message);
-      
-      // Si falla el servidor, intentar usar caché
+
+      // Si falla el servidor, usar caché
       const cached = await emailCacheService.getCachedEmails(folder);
       if (cached.length > 0) {
         console.log('⚠️ [EmailMessages] Error de servidor, usando caché:', cached.length);
@@ -159,7 +125,7 @@ class EmailMessagesService {
           message: 'Error de conexión, mostrando caché local',
         };
       }
-      
+
       return {
         emails: [],
         total: 0,
@@ -169,16 +135,15 @@ class EmailMessagesService {
     }
   }
 
-  // Sincronización en segundo plano (solo correos nuevos)
-  private async syncInBackground(folder: string, token: string): Promise<void> {
+  // Descarga completa (primera vez)
+  private async fullDownload(folder: string, token: string, page: number, limit: number): Promise<{
+    emails: EmailMessage[];
+    total: number;
+    message: string;
+  }> {
     try {
-      const folderState = await emailCacheService.getFolderState(folder);
-      const lastUID = folderState?.lastUID || 0;
-
-      console.log('🔄 [EmailMessages] Sync en segundo plano, último UID:', lastUID);
-
       const response = await api.get(API_CONFIG.endpoints.EMAIL_MESSAGES, {
-        params: { folder, page: 1, limit: 50 },
+        params: { folder, page, limit },
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -189,29 +154,83 @@ class EmailMessagesService {
         emailsList = response.data.data;
       } else if (response.data.emails && Array.isArray(response.data.emails)) {
         emailsList = response.data.emails;
+      } else if (Array.isArray(response.data)) {
+        emailsList = response.data;
       }
 
-      // Agregar folder
       emailsList = emailsList.map(e => ({ ...e, folder }));
+      console.log('📩 [EmailMessages] Correos descargados:', emailsList.length);
 
-      // Verificar si hay correos nuevos (UID mayor al último sincronizado)
-      const newEmails = emailsList.filter(e => e.uid > lastUID);
-      
-      if (newEmails.length > 0) {
-        console.log('📬 [EmailMessages] Correos nuevos encontrados:', newEmails.length);
-        await emailCacheService.saveEmails(newEmails, folder);
+      if (emailsList.length > 0) {
+        await emailCacheService.saveEmails(emailsList, folder);
         await emailCacheService.saveFolderState(folder, {
           lastSync: new Date().toISOString(),
-          lastUID: emailsList.length > 0 ? emailsList[0].uid : lastUID,
+          lastUID: emailsList.length > 0 ? Math.max(...emailsList.map(e => e.uid)) : 0,
           totalEmails: emailsList.length,
           syncedAt: new Date().toISOString(),
         });
-      } else {
+      }
+
+      return {
+        emails: emailsList,
+        total: emailsList.length,
+        message: response.data.message || 'Correos cargados desde servidor',
+      };
+    } catch (error: any) {
+      console.error('❌ [EmailMessages] Error en fullDownload:', error);
+      return { emails: [], total: 0, message: 'Error en descarga completa' };
+    }
+  }
+
+  // Sync incremental por UID (solo correos nuevos)
+  private async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<void> {
+    try {
+      // Paso 1: Obtener UIDs del servidor
+      const uidsResponse = await api.get(`${API_CONFIG.endpoints.EMAIL_MESSAGES}/uids`, {
+        params: { folder },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const serverUIDs: number[] = uidsResponse.data.data?.uids || [];
+      console.log('🔄 [EmailMessages] UIDs del servidor:', serverUIDs.length);
+
+      if (serverUIDs.length === 0) return;
+
+      // Paso 2: Determinar UIDs que no tenemos en caché
+      const cachedUIDs = new Set(cachedEmails.map(e => e.uid));
+      const newUIDs = serverUIDs.filter(uid => !cachedUIDs.has(uid));
+
+      if (newUIDs.length === 0) {
         console.log('✅ [EmailMessages] No hay correos nuevos');
+        return;
+      }
+
+      console.log('📬 [EmailMessages] Correos nuevos por descargar:', newUIDs.length);
+
+      // Paso 3: Descargar solo los correos nuevos
+      const downloadResponse = await api.post(
+        `${API_CONFIG.endpoints.EMAIL_MESSAGES}/by-uids`,
+        { folder, uids: newUIDs },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      let newEmails: EmailMessage[] = [];
+      if (downloadResponse.data.success && downloadResponse.data.data?.emails) {
+        newEmails = downloadResponse.data.data.emails;
+      }
+
+      if (newEmails.length > 0) {
+        console.log('📩 [EmailMessages] Correos nuevos descargados:', newEmails.length);
+        await emailCacheService.saveEmails(newEmails, folder);
+        await emailCacheService.saveFolderState(folder, {
+          lastSync: new Date().toISOString(),
+          lastUID: Math.max(...serverUIDs),
+          totalEmails: cachedEmails.length + newEmails.length,
+          syncedAt: new Date().toISOString(),
+        });
       }
     } catch (error) {
-      console.log('⚠️ [EmailMessages] Error en sync de fondo:', error);
-      // No lanzar error, es solo sync en segundo plano
+      console.log('⚠️ [EmailMessages] Error en sync incremental:', error);
     }
   }
 
@@ -219,8 +238,9 @@ class EmailMessagesService {
   async forceSync(folder: string = 'INBOX'): Promise<SyncResult> {
     try {
       console.log('🔄 [EmailMessages] Forzando sincronización completa...');
+      await emailCacheService.clearCache();
       const result = await this.getMessages(folder, 1, 100);
-      
+
       return {
         success: true,
         newEmails: result.emails.length,

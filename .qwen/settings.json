@@ -21,7 +21,9 @@
       "Bash(timeout *)",
       "Bash(taskkill *)",
       "Bash(netstat *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "Bash(npm ls *)",
+      "Bash(node *)"
     ]
   },
   "$version": 3
