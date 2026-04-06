@@ -10,13 +10,13 @@ export interface CachedEmail {
   to: string;
   subject: string;
   date: string;
-  text: string;
-  html: string;
+  text: string;       // Preview corto (primeros 200 chars)
+  html: string;       // Vacío en caché, se descarga al abrir
   attachments: any[];
   seen: boolean;
   flagged: boolean;
   folder: string;
-  cachedAt?: string; // Hacer opcional para compatibilidad
+  cachedAt?: string;
 }
 
 export interface FolderSyncState {
@@ -35,8 +35,10 @@ export interface EmailCacheState {
 // ==========================================
 // CLAVE DE ALMACENAMIENTO
 // ==========================================
-const CACHE_KEY = '@email_cache_v1';
-const FOLDER_STATE_KEY = '@email_folder_state_v1';
+const CACHE_KEY = '@email_cache_v2'; // Incrementar versión para limpiar caché vieja
+const FOLDER_STATE_KEY = '@email_folder_state_v2';
+const MAX_CACHED_EMAILS = 50; // Reducido de 200 a 50
+const PREVIEW_LENGTH = 200; // Solo primeros 200 chars del texto
 
 // ==========================================
 // SERVICIO DE CACHÉ DE CORREOS
@@ -47,7 +49,7 @@ class EmailCacheService {
     try {
       const cacheJson = await AsyncStorage.getItem(CACHE_KEY);
       if (!cacheJson) return [];
-      
+
       const cache: EmailCacheState = JSON.parse(cacheJson);
       return cache.emails.filter(e => e.folder === folder) || [];
     } catch (error) {
@@ -56,7 +58,7 @@ class EmailCacheService {
     }
   }
 
-  // Guardar correos en caché
+  // Guardar correos en caché (solo metadata + preview corto)
   async saveEmails(emails: CachedEmail[], folder: string = 'INBOX'): Promise<void> {
     try {
       const cacheJson = await AsyncStorage.getItem(CACHE_KEY);
@@ -68,23 +70,32 @@ class EmailCacheService {
 
       // Eliminar correos antiguos de la misma carpeta y agregar los nuevos
       const otherEmails = cache.emails.filter(e => e.folder !== folder);
+
+      // Recortar contenido para ahorrar espacio: solo preview del texto
       const newEmails = emails.map(e => ({
         ...e,
         folder,
+        text: e.text ? e.text.substring(0, PREVIEW_LENGTH) : '',
+        html: '', // NO guardar HTML en caché
         cachedAt: new Date().toISOString(),
       }));
 
       cache.emails = [...newEmails, ...otherEmails];
-      
-      // Limitar caché a 200 correos totales para no llenar almacenamiento
-      if (cache.emails.length > 200) {
-        cache.emails = cache.emails.slice(0, 200);
+
+      // Limitar caché para no llenar AsyncStorage
+      if (cache.emails.length > MAX_CACHED_EMAILS) {
+        cache.emails = cache.emails.slice(0, MAX_CACHED_EMAILS);
       }
 
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
       console.log('✅ [EmailCache] Correos guardados en caché:', emails.length);
-    } catch (error) {
-      console.error('❌ [EmailCache] Error guardando caché:', error);
+    } catch (error: any) {
+      if (error.message?.includes('SQLITE_FULL')) {
+        console.warn('⚠️ [EmailCache] Almacenamiento lleno, limpiando caché automáticamente...');
+        await this.clearCache();
+      } else {
+        console.error('❌ [EmailCache] Error guardando caché:', error);
+      }
     }
   }
 
@@ -93,7 +104,7 @@ class EmailCacheService {
     try {
       const stateJson = await AsyncStorage.getItem(FOLDER_STATE_KEY);
       if (!stateJson) return null;
-      
+
       const states: Record<string, FolderSyncState> = JSON.parse(stateJson);
       return states[folder] || null;
     } catch (error) {
@@ -107,14 +118,13 @@ class EmailCacheService {
     try {
       const stateJson = await AsyncStorage.getItem(FOLDER_STATE_KEY);
       const states: Record<string, FolderSyncState> = stateJson ? JSON.parse(stateJson) : {};
-      
+
       states[folder] = {
         ...state,
         syncedAt: new Date().toISOString(),
       };
 
       await AsyncStorage.setItem(FOLDER_STATE_KEY, JSON.stringify(states));
-      console.log('✅ [EmailCache] Estado de carpeta guardado:', folder, state);
     } catch (error) {
       console.error('❌ [EmailCache] Error guardando estado de carpeta:', error);
     }
@@ -123,14 +133,13 @@ class EmailCacheService {
   // Verificar si se necesita sincronización completa
   async needsFullSync(folder: string = 'INBOX'): Promise<boolean> {
     const folderState = await this.getFolderState(folder);
-    
-    // Si no hay estado o es mayor a 24 horas, hacer sync completo
+
     if (!folderState || !folderState.syncedAt) return true;
-    
+
     const lastSync = new Date(folderState.syncedAt);
     const now = new Date();
     const hoursSinceSync = (now.getTime() - lastSync.getTime()) / (1000 * 60 * 60);
-    
+
     return hoursSinceSync > 24;
   }
 
@@ -150,10 +159,10 @@ class EmailCacheService {
     try {
       const cacheJson = await AsyncStorage.getItem(CACHE_KEY);
       if (!cacheJson) return { totalEmails: 0, folders: [], lastSync: null };
-      
+
       const cache: EmailCacheState = JSON.parse(cacheJson);
       const folders = [...new Set(cache.emails.map(e => e.folder))];
-      
+
       return {
         totalEmails: cache.emails.length,
         folders,

@@ -260,20 +260,32 @@ class EmailMessagesService {
     }
   }
 
-  // Obtener un correo específico
-  async getMessage(messageId: string, folder: string = 'INBOX'): Promise<EmailMessage | null> {
+  // Obtener un correo específico con contenido completo (para abrir)
+  async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
     try {
       const token = getAuthToken();
       if (!token) return null;
 
-      const response = await api.get(`${API_CONFIG.endpoints.EMAIL_MESSAGES}/${messageId}`, {
-        params: { folder },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post(
+        `${API_CONFIG.endpoints.EMAIL_MESSAGES}/by-uids`,
+        { folder, uids: [uid] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      return response.data.data || response.data;
+      let emails: EmailMessage[] = [];
+      if (response.data.success && response.data.data?.emails) {
+        emails = response.data.data.emails;
+      }
+
+      if (emails.length > 0) {
+        const fullEmail = emails[0];
+        fullEmail.folder = folder;
+        return fullEmail;
+      }
+
+      return null;
     } catch (error) {
-      console.error('❌ [EmailMessages] Error getMessage:', error);
+      console.error('❌ [EmailMessages] Error getFullMessage:', error);
       return null;
     }
   }

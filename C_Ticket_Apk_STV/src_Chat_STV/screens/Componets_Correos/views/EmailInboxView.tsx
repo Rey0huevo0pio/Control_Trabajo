@@ -34,6 +34,8 @@ export function EmailInboxView() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null)
+  const [fullEmailContent, setFullEmailContent] = useState<EmailMessage | null>(null)
+  const [loadingFullContent, setLoadingFullContent] = useState(false)
   const [fromCache, setFromCache] = useState(false)
 
   const loadEmails = async (forceRefresh: boolean = false) => {
@@ -65,6 +67,29 @@ export function EmailInboxView() {
   const onRefresh = () => {
     setRefreshing(true)
     loadEmails(true)
+  }
+
+  const openEmail = async (email: EmailMessage) => {
+    setSelectedEmail(email)
+    setFullEmailContent(null)
+    setLoadingFullContent(true)
+
+    try {
+      const fullContent = await emailMessagesService.getFullMessage(email.uid, email.folder)
+      if (fullContent) {
+        setFullEmailContent(fullContent)
+      }
+    } catch (err) {
+      console.error('❌ [EmailInboxView] Error loading full content:', err)
+    } finally {
+      setLoadingFullContent(false)
+    }
+  }
+
+  const closeEmail = () => {
+    setSelectedEmail(null)
+    setFullEmailContent(null)
+    setLoadingFullContent(false)
   }
 
   const formatDate = (date: string) => {
@@ -108,11 +133,13 @@ export function EmailInboxView() {
   }
 
   if (selectedEmail) {
+    const displayContent = fullEmailContent || selectedEmail
+
     return (
       <YStack flex={1}>
         <Card backgroundColor="$primary" padding="$4">
           <HStack justify="space-between">
-            <IconButton icon="arrow-back" onPress={() => setSelectedEmail(null)} variant="ghost" size={24} />
+            <IconButton icon="arrow-back" onPress={closeEmail} variant="ghost" size={24} />
             <HStack gap="$2">
               <IconButton icon={"reply-outline" as any} onPress={() => {}} variant="ghost" size={24} />
               <IconButton icon={"share-outline" as any} onPress={() => {}} variant="ghost" size={24} />
@@ -120,22 +147,29 @@ export function EmailInboxView() {
           </HStack>
         </Card>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack padding="$4" gap="$4">
-            <HStack gap="$3">
-              <YStack width={50} height={50} borderRadius="$full" backgroundColor="$primary" justifyContent="center" alignItems="center">
-                <Text color="white" fontWeight="700" fontSize={18}>{getInitials(selectedEmail.from)}</Text>
-              </YStack>
-              <Stack flex={1} gap="$1">
-                <Text variant="body" fontWeight="700" color="$color">{selectedEmail.from}</Text>
-                <Text variant="caption" color="$color3">{new Date(selectedEmail.date).toLocaleString()}</Text>
-              </Stack>
-            </HStack>
-
-            <Text variant="h5" fontWeight="700" color="$color">{selectedEmail.subject || 'Sin asunto'}</Text>
-            <Text variant="body" color="$color" lineHeight={24}>{selectedEmail.text || 'Sin contenido'}</Text>
+        {loadingFullContent ? (
+          <YStack flex={1} justifyContent="center" alignItems="center" padding="$5">
+            <Spinner size="large" color="$primary" />
+            <Text variant="body" color="$color2" marginTop="$3">Cargando correo...</Text>
           </YStack>
-        </ScrollView>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <YStack padding="$4" gap="$4">
+              <HStack gap="$3">
+                <YStack width={50} height={50} borderRadius="$full" backgroundColor="$primary" justifyContent="center" alignItems="center">
+                  <Text color="white" fontWeight="700" fontSize={18}>{getInitials(displayContent.from)}</Text>
+                </YStack>
+                <Stack flex={1} gap="$1">
+                  <Text variant="body" fontWeight="700" color="$color">{displayContent.from}</Text>
+                  <Text variant="caption" color="$color3">{new Date(displayContent.date).toLocaleString()}</Text>
+                </Stack>
+              </HStack>
+
+              <Text variant="h5" fontWeight="700" color="$color">{displayContent.subject || 'Sin asunto'}</Text>
+              <Text variant="body" color="$color" lineHeight={24}>{displayContent.text || 'Sin contenido'}</Text>
+            </YStack>
+          </ScrollView>
+        )}
       </YStack>
     )
   }
@@ -171,7 +205,7 @@ export function EmailInboxView() {
                 padding="$3"
                 borderBottomWidth={index < emails.length - 1 ? 1 : 0}
                 borderBottomColor="$border"
-                onPress={() => setSelectedEmail(email)}
+                onPress={() => openEmail(email)}
                 backgroundColor={!email.seen ? '$primaryMuted' : '$background'}
               >
                 <HStack gap="$3">
