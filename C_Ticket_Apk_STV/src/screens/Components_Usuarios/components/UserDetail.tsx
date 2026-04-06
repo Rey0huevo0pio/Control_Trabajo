@@ -174,7 +174,7 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
           <InfoRow
             icon="mail-outline"
             label="Email"
-            value={user.email || 'No especificado'}
+            value={emailConfig?.email || user.email || 'No especificado'}
             isLast={!user.telefono}
           />
           {user.telefono && (
