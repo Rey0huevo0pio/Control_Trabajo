@@ -14,7 +14,9 @@
       "Bash(npm start)",
       "Bash(jq *)",
       "Bash(lsusb)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(mv *)",
+      "Bash(git checkout *)"
     ]
   },
   "$version": 3
