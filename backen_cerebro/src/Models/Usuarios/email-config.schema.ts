@@ -28,35 +28,35 @@ export class EmailConfig {
   @Prop({ required: true, unique: true, lowercase: true })
   email: string;
 
-  // Nombre para mostrar
-  @Prop({ required: true })
+  // Nombre para mostrar - NO required, se genera automáticamente
+  @Prop({ type: String })
   displayName: string;
 
   // Credenciales (deberían estar encriptadas en producción)
   @Prop({ required: true })
   passwordEmail: string; // Encriptar con bcrypt o crypto
 
-  // Configuración IMAP (recepción)
-  @Prop({ default: 'mail.tudominio.com' })
+  // Configuración IMAP (recepción) - NO required para permitir defaults automáticos
+  @Prop({ type: String, default: 'mail.tudominio.com' })
   imapHost: string;
 
-  @Prop({ required: true, default: 993 })
+  @Prop({ type: Number, default: 993 })
   imapPort: number;
 
-  @Prop({ required: true, default: true })
+  @Prop({ type: Boolean, default: true })
   imapSecure: boolean;
 
   @Prop({ default: SecurityType.SSL_TLS })
   imapSecurity: SecurityType;
 
-  // Configuración SMTP (envío)
-  @Prop({ required: true })
+  // Configuración SMTP (envío) - NO required para permitir defaults automáticos
+  @Prop({ type: String, default: 'mail.tudominio.com' })
   smtpHost: string;
 
-  @Prop({ required: true, default: 465 })
+  @Prop({ type: Number, default: 465 })
   smtpPort: number;
 
-  @Prop({ required: true, default: true })
+  @Prop({ type: Boolean, default: true })
   smtpSecure: boolean;
 
   @Prop({ default: SecurityType.SSL_TLS })

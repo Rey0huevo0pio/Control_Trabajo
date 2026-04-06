@@ -105,13 +105,20 @@ export class EmailService {
       throw new ConflictException('El correo electrónico ya está registrado');
     }
 
-    // Crear configuración
+    // Crear configuración - SIN spread para evitar valores vacíos
     const config = new this.emailConfigModel({
-      ...createDto,
       usuario: new Types.ObjectId(usuarioId),
       email: createDto.email.toLowerCase(),
+      displayName: createDto.displayName || createDto.email.split('@')[0] || 'Usuario',
       passwordEmail: this.encryptPassword(createDto.passwordEmail),
       status: EmailStatus.INACTIVE,
+      // Usar valores por defecto si vienen vacíos
+      imapHost: createDto.imapHost && createDto.imapHost.trim() ? createDto.imapHost : 'mail.tudominio.com',
+      imapPort: createDto.imapPort || 993,
+      imapSecure: createDto.imapSecure !== undefined ? createDto.imapSecure : true,
+      smtpHost: createDto.smtpHost && createDto.smtpHost.trim() ? createDto.smtpHost : 'mail.tudominio.com',
+      smtpPort: createDto.smtpPort || 465,
+      smtpSecure: createDto.smtpSecure !== undefined ? createDto.smtpSecure : true,
     });
 
     await config.save();

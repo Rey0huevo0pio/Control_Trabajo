@@ -1,41 +1,99 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal, ScrollView, TouchableOpacity, View } from 'react-native'
 import { YStack, XStack, Input, Card, Text } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import { Button } from '../../../../components/design-system'
 import api, { API_CONFIG, getAuthToken } from '../../../../services/api'
 
-export function EmailConfigModal({ visible, onClose, userEmail, onSuccess }: any) {
+export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userFullName }: any) {
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [step, setStep] = useState<'basic' | 'advanced'>('basic')
-  const [data, setData] = useState({ email: userEmail || '', displayName: '', passwordEmail: '', imapHost: '', imapPort: '993', imapSecure: true, smtpHost: '', smtpPort: '465', smtpSecure: true })
+  
+  const [data, setData] = useState({
+    email: '',
+    passwordEmail: '',
+    imapHost: 'mail.tudominio.com',
+    imapPort: '993',
+    imapSecure: true,
+    smtpHost: 'mail.tudominio.com',
+    smtpPort: '465',
+    smtpSecure: true,
+  })
+
+  // Reset cuando se abre el modal
+  useEffect(() => {
+    if (visible) {
+      const domain = userEmail && userEmail.includes('@') ? userEmail.split('@')[1] : 'tudominio.com'
+      const defaultHost = `mail.${domain}`
+      
+      setData({
+        email: userEmail || '',
+        passwordEmail: '',
+        imapHost: defaultHost,
+        imapPort: '993',
+        imapSecure: true,
+        smtpHost: defaultHost,
+        smtpPort: '465',
+        smtpSecure: true,
+      })
+      setError(null)
+      setSuccess(null)
+      setStep('basic')
+    }
+  }, [visible, userEmail])
 
   const test = async () => {
     setError(null); setSuccess(null)
     if (!data.email || !data.passwordEmail) { setError('Email y contraseña requeridos'); return }
+    if (!data.imapHost || !data.smtpHost) { setError('Servidores IMAP/SMTP requeridos'); return }
     try {
       setTesting(true)
       const token = getAuthToken()
       if (!token) { setError('Sin sesión'); return }
-      const r = await api.post(API_CONFIG.endpoints.EMAIL_TEST, { ...data, imapPort: parseInt(data.imapPort), smtpPort: parseInt(data.smtpPort) }, { headers: { Authorization: `Bearer ${token}` } })
-      if (r.data.success) setSuccess('✅ Conexión OK')
-      else setError('❌ Error en conexión')
+      const r = await api.post(API_CONFIG.endpoints.EMAIL_TEST, {
+        email: data.email,
+        passwordEmail: data.passwordEmail,
+        imapHost: data.imapHost,
+        imapPort: parseInt(data.imapPort),
+        imapSecure: data.imapSecure,
+        smtpHost: data.smtpHost,
+        smtpPort: parseInt(data.smtpPort),
+        smtpSecure: data.smtpSecure,
+      }, { headers: { Authorization: `Bearer ${token}` } })
+      if (r.data.success) setSuccess('✅ Conexión exitosa a IMAP y SMTP')
+      else {
+        const errs = []
+        if (!r.data.data?.imap?.success) errs.push(`IMAP: ${r.data.data.imap?.error}`)
+        if (!r.data.data?.smtp?.success) errs.push(`SMTP: ${r.data.data.smtp?.error}`)
+        setError('❌ ' + errs.join(' | '))
+      }
     } catch (e: any) { setError(e.response?.data?.message || 'Error') }
     finally { setTesting(false) }
   }
 
   const save = async () => {
     setError(null); setSuccess(null)
-    if (!data.email || !data.passwordEmail || !data.displayName) { setError('Campos requeridos'); return }
+    if (!data.email || !data.passwordEmail) { setError('Email y contraseña requeridos'); return }
+    if (!data.imapHost || !data.smtpHost) { setError('Servidores IMAP/SMTP requeridos'); return }
     try {
       setLoading(true)
       const token = getAuthToken()
       if (!token) { setError('Sin sesión'); return }
-      await api.post(API_CONFIG.endpoints.EMAIL_CONFIG, { ...data, imapPort: parseInt(data.imapPort), smtpPort: parseInt(data.smtpPort) }, { headers: { Authorization: `Bearer ${token}` } })
-      setSuccess('✅ Guardado')
+      await api.post(API_CONFIG.endpoints.EMAIL_CONFIG, {
+        email: data.email,
+        displayName: userFullName || data.email.split('@')[0] || 'Usuario',
+        passwordEmail: data.passwordEmail,
+        imapHost: data.imapHost,
+        imapPort: parseInt(data.imapPort),
+        imapSecure: data.imapSecure,
+        smtpHost: data.smtpHost,
+        smtpPort: parseInt(data.smtpPort),
+        smtpSecure: data.smtpSecure,
+      }, { headers: { Authorization: `Bearer ${token}` } })
+      setSuccess('✅ Configuración guardada correctamente')
       setTimeout(() => { onSuccess(); onClose() }, 1500)
     } catch (e: any) { setError(e.response?.data?.message || 'Error') }
     finally { setLoading(false) }
@@ -58,50 +116,68 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess }: any
         <View style={{ maxHeight: '90%', backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
           <Card padding="$4">
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text fontSize={20} fontWeight="700">📧 Configurar Correo</Text>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="mail" size={24} color="$primary" />
+                  <Text fontSize={20} fontWeight="700">📧 Configurar Correo</Text>
+                </View>
+                {userFullName && <Text fontSize={13} color="$color2">Para: {userFullName}</Text>}
+              </View>
               <TouchableOpacity onPress={onClose}><Ionicons name="close-circle" size={24} color="$color" /></TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
               <YStack gap="$3">
-                {error && <Card backgroundColor="$errorMuted" padding="$3"><Text color="$error" fontWeight="600">⚠️ {error}</Text></Card>}
-                {success && <Card backgroundColor="$successMuted" padding="$3"><Text color="$success" fontWeight="600">{success}</Text></Card>}
+                {error && <Card backgroundColor="$errorMuted" borderColor="$error" borderWidth={1} padding="$3"><Text color="$error" fontWeight="600">⚠️ {error}</Text></Card>}
+                {success && <Card backgroundColor="$successMuted" borderColor="$success" borderWidth={1} padding="$3"><Text color="$success" fontWeight="600">{success}</Text></Card>}
+                
                 <XStack gap="$2">
                   <Button title="Básico" variant={step === 'basic' ? 'primary' : 'outline'} size="sm" flex={1} onPress={() => setStep('basic')} />
                   <Button title="Avanzado" variant={step === 'advanced' ? 'primary' : 'outline'} size="sm" flex={1} onPress={() => setStep('advanced')} />
                 </XStack>
+                
                 {step === 'basic' && (
                   <YStack gap="$3">
-                    <InputField label="Correo" icon="mail-outline" placeholder="usuario@dominio.com" value={data.email} onChangeText={(t: string) => setData({ ...data, email: t })} keyboardType="email-address" autoCapitalize="none" />
-                    <InputField label="Nombre" icon="person-outline" placeholder="Nombre Completo" value={data.displayName} onChangeText={(t: string) => setData({ ...data, displayName: t })} />
-                    <InputField label="Contraseña" icon="lock-closed-outline" placeholder="••••••••" value={data.passwordEmail} onChangeText={(t: string) => setData({ ...data, passwordEmail: t })} secureTextEntry />
+                    <InputField label="Correo Electrónico" icon="mail-outline" placeholder="usuario@dominio.com" value={data.email} onChangeText={(t: string) => setData({ ...data, email: t })} keyboardType="email-address" autoCapitalize="none" />
+                    <InputField label="Contraseña del Correo" icon="lock-closed-outline" placeholder="••••••••" value={data.passwordEmail} onChangeText={(t: string) => setData({ ...data, passwordEmail: t })} secureTextEntry />
+                    <Card backgroundColor="$primaryMuted" padding="$3">
+                      <Text fontSize={11} color="$primary" fontWeight="600">ℹ️ El nombre se tomará del usuario: {userFullName || 'No definido'}</Text>
+                    </Card>
                   </YStack>
                 )}
+                
                 {step === 'advanced' && (
                   <YStack gap="$3">
-                    <Text fontSize={18} fontWeight="700">IMAP (Recepción)</Text>
-                    <InputField label="Host" icon="server-outline" placeholder="mail.dominio.com" value={data.imapHost} onChangeText={(t: string) => setData({ ...data, imapHost: t })} />
+                    <Text fontSize={18} fontWeight="700">📥 IMAP (Recepción)</Text>
+                    <InputField label="Servidor IMAP" icon="server-outline" placeholder="mail.dominio.com" value={data.imapHost} onChangeText={(t: string) => setData({ ...data, imapHost: t })} />
                     <XStack gap="$3">
                       <YStack flex={1}><InputField label="Puerto" icon="key-outline" placeholder="993" value={data.imapPort} onChangeText={(t: string) => setData({ ...data, imapPort: t })} keyboardType="number-pad" /></YStack>
-                      <YStack flex={1} justifyContent="flex-end"><Button title={data.imapSecure ? '🔒 SSL' : '🔓'} onPress={() => setData({ ...data, imapSecure: !data.imapSecure })} variant={data.imapSecure ? 'success' : 'outline'} size="sm" /></YStack>
+                      <YStack flex={1} justifyContent="flex-end"><Button title={data.imapSecure ? '🔒 SSL' : '🔓 Sin SSL'} onPress={() => setData({ ...data, imapSecure: !data.imapSecure })} variant={data.imapSecure ? 'success' : 'outline'} size="sm" /></YStack>
                     </XStack>
-                    <Text fontSize={18} fontWeight="700">SMTP (Envío)</Text>
-                    <InputField label="Host" icon="server-outline" placeholder="mail.dominio.com" value={data.smtpHost} onChangeText={(t: string) => setData({ ...data, smtpHost: t })} />
+                    
+                    <Text fontSize={18} fontWeight="700" marginTop="$2">📤 SMTP (Envío)</Text>
+                    <InputField label="Servidor SMTP" icon="server-outline" placeholder="mail.dominio.com" value={data.smtpHost} onChangeText={(t: string) => setData({ ...data, smtpHost: t })} />
                     <XStack gap="$3">
                       <YStack flex={1}><InputField label="Puerto" icon="key-outline" placeholder="465" value={data.smtpPort} onChangeText={(t: string) => setData({ ...data, smtpPort: t })} keyboardType="number-pad" /></YStack>
-                      <YStack flex={1} justifyContent="flex-end"><Button title={data.smtpSecure ? '🔒 SSL' : '🔓'} onPress={() => setData({ ...data, smtpSecure: !data.smtpSecure })} variant={data.smtpSecure ? 'success' : 'outline'} size="sm" /></YStack>
+                      <YStack flex={1} justifyContent="flex-end"><Button title={data.smtpSecure ? '🔒 SSL' : '🔓 Sin SSL'} onPress={() => setData({ ...data, smtpSecure: !data.smtpSecure })} variant={data.smtpSecure ? 'success' : 'outline'} size="sm" /></YStack>
                     </XStack>
                   </YStack>
                 )}
-                <YStack gap="$3">
-                  <Button title={testing ? 'Probando...' : '🔧 Probar'} icon={"wifi-outline" as any} onPress={test} disabled={testing} variant="outline" size="lg" fullWidth />
-                  <Button title={loading ? 'Guardando...' : '💾 Guardar'} icon={"save-outline" as any} onPress={save} disabled={loading} variant="primary" size="lg" fullWidth />
+                
+                <YStack gap="$3" paddingTop="$2">
+                  <Button title={testing ? 'Probando...' : '🔧 Probar Conexión'} icon={"wifi-outline" as any} onPress={test} disabled={testing} variant="outline" size="lg" fullWidth />
+                  <Button title={loading ? 'Guardando...' : '💾 Guardar Configuración'} icon={"save-outline" as any} onPress={save} disabled={loading} variant="primary" size="lg" fullWidth />
                   <Button title="Cancelar" onPress={onClose} variant="ghost" size="lg" fullWidth />
                 </YStack>
+                
                 <Card backgroundColor="$background2" padding="$3">
                   <YStack gap="$1">
+                    <XStack gap="$2" alignItems="center">
+                      <Ionicons name="information-circle" size={16} color="$primary" />
+                      <Text fontSize={12} fontWeight="600" color="$color">Configuración típica de cPanel</Text>
+                    </XStack>
                     <Text fontSize={11} color="$color2">• Servidor: mail.tudominio.com</Text>
-                    <Text fontSize={11} color="$color2">• IMAP: 993 (SSL) o 143</Text>
-                    <Text fontSize={11} color="$color2">• SMTP: 465 (SSL) o 587</Text>
+                    <Text fontSize={11} color="$color2">• IMAP: 993 (SSL) o 143 (sin SSL)</Text>
+                    <Text fontSize={11} color="$color2">• SMTP: 465 (SSL) o 587 (TLS)</Text>
                   </YStack>
                 </Card>
               </YStack>
