@@ -131,12 +131,36 @@ export class EmailService {
   }
 
   // ==========================================
+  // OBTENER TODAS LAS CONFIGURACIONES (Debug)
+  // ==========================================
+  async getAllConfigs(): Promise<any[]> {
+    console.log('\n📧 [EmailService] getAllConfigs');
+    const configs = await this.emailConfigModel.find().populate('usuario', 'Control_Usuario nombre apellido').exec();
+    
+    console.log(`📩 [EmailService] Encontradas ${configs.length} configuraciones`);
+    configs.forEach((c: any) => {
+      const usuario = c.usuario as any;
+      console.log(`  - Usuario: ${usuario?.Control_Usuario || 'N/A'} | Email: ${c.email} | Status: ${c.status}`);
+    });
+    
+    return configs.map(c => this.sanitizeConfig(c));
+  }
+
+  // ==========================================
   // OBTENER CONFIGURACIÓN POR USUARIO
   // ==========================================
   async getConfigByUsuario(usuarioId: string): Promise<any> {
+    console.log('\n📧 [EmailService] getConfigByUsuario, ID:', usuarioId);
+    
     const config = await this.emailConfigModel
       .findOne({ usuario: new Types.ObjectId(usuarioId) })
       .exec();
+
+    console.log('📩 [EmailService] Config encontrada:', config ? '✅ SÍ' : '❌ NO');
+    if (config) {
+      console.log('📧 [EmailService] Email:', config.email);
+      console.log('📧 [EmailService] Status:', config.status);
+    }
 
     if (!config) {
       throw new NotFoundException(

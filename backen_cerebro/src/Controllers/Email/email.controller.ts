@@ -6,6 +6,7 @@ import {
   Patch,
   Delete,
   Query,
+  Param,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -27,7 +28,23 @@ export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
   // ==========================================
-  // CREAR CONFIGURACIÓN DE CORREO
+  // CREAR CONFIGURACIÓN PARA OTRO USUARIO (Admin)
+  // ==========================================
+  @Post('config/user/:userId')
+  @HttpCode(HttpStatus.CREATED)
+  createConfigForUser(
+    @Req() req: any,
+    @Param('userId') userId: string,
+    @Body() createDto: CreateEmailConfigDto,
+  ) {
+    console.log('\n📧 [EmailController] POST config/user/:userId');
+    console.log('🔑 Admin ID:', req.user.userId);
+    console.log('🎯 Target userId:', userId);
+    return this.emailService.createConfig(userId, createDto);
+  }
+
+  // ==========================================
+  // CREAR CONFIGURACIÓN DE CORREO (Usuario actual)
   // ==========================================
   @Post('config')
   @HttpCode(HttpStatus.CREATED)
@@ -48,7 +65,20 @@ export class EmailController {
   // ==========================================
   @Get('config/user/:userId')
   getConfigByUser(@Req() req: any, @Param('userId') userId: string) {
+    console.log('\n📧 [EmailController] GET config/user/:userId');
+    console.log('🔑 User ID from token:', req.user.userId);
+    console.log('🎯 Requested userId:', userId);
     return this.emailService.getConfigByUsuario(userId);
+  }
+
+  // ==========================================
+  // LISTAR TODAS LAS CONFIGURACIONES (Admin - Debug)
+  // ==========================================
+  @Get('configs')
+  @UseGuards(JwtAuthGuard)
+  getAllConfigs(@Req() req: any) {
+    console.log('\n📧 [EmailController] GET configs (todas)');
+    return this.emailService.getAllConfigs();
   }
 
   // ==========================================

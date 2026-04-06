@@ -47,6 +47,8 @@ export const API_CONFIG = {
     // Email
     EMAIL_CONFIG: '/api/email/config',
     EMAIL_CONFIG_BY_USER: (userId: string) => `/api/email/config/user/${userId}`,
+    EMAIL_CONFIG_FOR_USER: (userId: string) => `/api/email/config/user/${userId}`,
+    EMAIL_CONFIGS_ALL: '/api/email/configs',
     EMAIL_TEST: '/api/email/config/test',
     EMAIL_MESSAGES: '/api/email/messages',
     EMAIL_SEND: '/api/email/send',

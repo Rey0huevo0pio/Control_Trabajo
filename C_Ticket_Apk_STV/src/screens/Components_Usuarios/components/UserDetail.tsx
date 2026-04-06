@@ -48,13 +48,15 @@ export function UserDetail({ user, onEdit, onBack }: UserDetailProps) {
 
   const loadEmailConfig = async () => {
     try {
+      console.log('📧 [UserDetail] Cargando email config para userId:', user.id);
       setLoadingEmail(true)
       const config = await emailService.getEmailConfigByUserId(user.id)
+      console.log('📩 [UserDetail] Config obtenida:', config ? config.email : 'NULL')
       if (config) {
         setEmailConfig(config)
       }
     } catch (error) {
-      console.log('No hay correo configurado para este usuario')
+      console.log('❌ [UserDetail] Error cargando email config:', error)
     } finally {
       setLoadingEmail(false)
     }

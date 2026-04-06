@@ -18,6 +18,18 @@ export interface EmailConfig {
   verified: boolean;
 }
 
+export interface EmailConfigData {
+  email: string;
+  displayName: string;
+  passwordEmail: string;
+  imapHost: string;
+  imapPort: number;
+  imapSecure: boolean;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+}
+
 // ==========================================
 // SERVICIO DE CORREO
 // ==========================================
@@ -42,15 +54,26 @@ class EmailService {
   // Obtener configuración de correo por ID de usuario
   async getEmailConfigByUserId(userId: string): Promise<EmailConfig | null> {
     try {
+      console.log('📧 [EmailService] Obteniendo config para userId:', userId);
       const token = getAuthToken();
-      if (!token) return null;
+      console.log('🔑 [EmailService] Token:', token ? '✅ PRESENTE' : '❌ NULO');
+      
+      if (!token) {
+        console.log('❌ [EmailService] No hay token, retornando null');
+        return null;
+      }
 
-      const response = await api.get(API_CONFIG.endpoints.EMAIL_CONFIG_BY_USER(userId), {
+      const url = API_CONFIG.endpoints.EMAIL_CONFIG_BY_USER(userId);
+      console.log('🌐 [EmailService] URL:', url);
+
+      const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log('📩 [EmailService] Respuesta:', JSON.stringify(response.data, null, 2));
       return response.data.data;
-    } catch (error) {
+    } catch (error: any) {
+      console.log('❌ [EmailService] Error:', error.response?.data || error.message);
       return null;
     }
   }
@@ -63,6 +86,44 @@ class EmailService {
     await api.delete(API_CONFIG.endpoints.EMAIL_CONFIG_BY_USER(userId), {
       headers: { Authorization: `Bearer ${token}` },
     });
+  }
+
+  // Guardar configuración para OTRO usuario (Admin)
+  async saveConfigForUser(
+    targetUserId: string, 
+    configData: EmailConfigData
+  ): Promise<EmailConfig | null> {
+    try {
+      const token = getAuthToken();
+      if (!token) return null;
+
+      const response = await api.post(
+        API_CONFIG.endpoints.EMAIL_CONFIG_FOR_USER(targetUserId),
+        configData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      console.log('❌ [EmailService] Error guardando config para usuario:', error.response?.data);
+      throw error;
+    }
+  }
+
+  // Obtener TODAS las configuraciones (Debug)
+  async getAllConfigs(): Promise<EmailConfig[]> {
+    try {
+      const token = getAuthToken();
+      if (!token) return [];
+
+      const response = await api.get(API_CONFIG.endpoints.EMAIL_CONFIGS_ALL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data || [];
+    } catch (error) {
+      return [];
+    }
   }
 }
 

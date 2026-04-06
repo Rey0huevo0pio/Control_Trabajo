@@ -360,11 +360,14 @@ export function UserForm({ mode, user, onSave, onCancel }: UserFormProps) {
         visible={emailModalVisible}
         onClose={() => setEmailModalVisible(false)}
         userId={user?.id || ''}
+        targetUserId={user?.id}
         userEmail={configuredEmail || user?.email || ''}
         userFullName={`${user?.nombre} ${user?.apellido}`}
         onSuccess={async () => {
           // Recargar el correo configurado después de guardar
-          await loadConfiguredEmail()
+          if (user?.id) {
+            await loadConfiguredEmail()
+          }
         }}
       />
     </YStack>

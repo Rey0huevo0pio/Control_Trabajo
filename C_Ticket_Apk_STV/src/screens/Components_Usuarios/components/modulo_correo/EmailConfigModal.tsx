@@ -4,8 +4,9 @@ import { YStack, XStack, Input, Card, Text } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import { Button } from '../../../../components/design-system'
 import api, { API_CONFIG, getAuthToken } from '../../../../services/api'
+import { emailService } from '../../../../services/emailService'
 
-export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userFullName }: any) {
+export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userFullName, targetUserId }: any) {
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -13,12 +14,12 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
   const [step, setStep] = useState<'basic' | 'advanced'>('basic')
   
   const [data, setData] = useState({
-    email: '',
+    email: userEmail || '',
     passwordEmail: '',
-    imapHost: 'mail.tudominio.com',
+    imapHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com',
     imapPort: '993',
     imapSecure: true,
-    smtpHost: 'mail.tudominio.com',
+    smtpHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com',
     smtpPort: '465',
     smtpSecure: true,
   })
@@ -26,9 +27,7 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
   // Reset cuando se abre el modal
   useEffect(() => {
     if (visible) {
-      const domain = userEmail && userEmail.includes('@') ? userEmail.split('@')[1] : 'tudominio.com'
-      const defaultHost = `mail.${domain}`
-      
+      const defaultHost = userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com'
       setData({
         email: userEmail || '',
         passwordEmail: '',
@@ -80,19 +79,29 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
     if (!data.imapHost || !data.smtpHost) { setError('Servidores IMAP/SMTP requeridos'); return }
     try {
       setLoading(true)
-      const token = getAuthToken()
-      if (!token) { setError('Sin sesión'); return }
-      await api.post(API_CONFIG.endpoints.EMAIL_CONFIG, {
+      const configData = {
         email: data.email,
         displayName: userFullName || data.email.split('@')[0] || 'Usuario',
         passwordEmail: data.passwordEmail,
-        imapHost: data.imapHost || 'mail.tudominio.com',
-        imapPort: parseInt(data.imapPort) || 993,
-        imapSecure: data.imapSecure !== undefined ? data.imapSecure : true,
-        smtpHost: data.smtpHost || 'mail.tudominio.com',
-        smtpPort: parseInt(data.smtpPort) || 465,
-        smtpSecure: data.smtpSecure !== undefined ? data.smtpSecure : true,
-      }, { headers: { Authorization: `Bearer ${token}` } })
+        imapHost: data.imapHost,
+        imapPort: parseInt(data.imapPort),
+        imapSecure: data.imapSecure,
+        smtpHost: data.smtpHost,
+        smtpPort: parseInt(data.smtpPort),
+        smtpSecure: data.smtpSecure,
+      }
+
+      // Si hay targetUserId, guardar para ese usuario (Admin)
+      if (targetUserId) {
+        console.log('💾 [Modal] Guardando config para userId:', targetUserId)
+        await emailService.saveConfigForUser(targetUserId, configData)
+      } else {
+        console.log('💾 [Modal] Guardando config para usuario actual')
+        await api.post(API_CONFIG.endpoints.EMAIL_CONFIG, configData, {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        })
+      }
+      
       setSuccess('✅ Configuración guardada correctamente')
       setTimeout(() => { onSuccess(); onClose() }, 1500)
     } catch (e: any) { setError(e.response?.data?.message || 'Error') }
@@ -122,6 +131,7 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
                   <Text fontSize={20} fontWeight="700">📧 Configurar Correo</Text>
                 </View>
                 {userFullName && <Text fontSize={13} color="$color2">Para: {userFullName}</Text>}
+                {targetUserId && <Text fontSize={11} color="$primary">Asignando a otro usuario</Text>}
               </View>
               <TouchableOpacity onPress={onClose}><Ionicons name="close-circle" size={24} color="$color" /></TouchableOpacity>
             </View>
