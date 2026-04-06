@@ -497,78 +497,54 @@ export class EmailService {
             });
 
             fetch.on('message', (msg: any) => {
-              console.log('\n📨 [EmailService] === PROCESANDO MENSAJE ===');
               const headers: any = {};
               let textBuffer = '';
+              let isHeaderPart = true;
 
               msg.on('body', (stream: any, info: any) => {
-                console.log('📨 [EmailService] Body part info.which:', info.which);
                 let buffer = '';
                 stream.on('data', (chunk: Buffer) => {
                   buffer += chunk.toString('utf8');
                 });
                 stream.once('end', () => {
-                  console.log('📨 [EmailService] Buffer size:', buffer.length);
-                  console.log('📨 [EmailService] Buffer RAW (primeros 500 chars):');
-                  console.log('=== INICIO BUFFER ===');
-                  console.log(buffer.substring(0, 500));
-                  console.log('=== FIN BUFFER ===');
+                  const which = (info.which || '').toUpperCase();
                   
-                  // IMAP devuelve headers en formato:
-                  // From: Nombre <correo@dominio.com>
-                  // Subject: Asunto del correo
-                  // Date: Mon, 5 Apr 2026 10:00:00 -0600
-                  
-                  const lines = buffer.split(/\r?\n/);
-                  console.log('📨 [EmailService] Líneas encontradas:', lines.length);
-                  
-                  lines.forEach((line: string, idx: number) => {
-                    const trimmed = line.trim();
-                    // Ignorar metadata IMAP
-                    if (trimmed.startsWith('*') || trimmed.startsWith(')') || /^\d+$/.test(trimmed) || trimmed.includes('FETCH')) {
-                      return;
-                    }
+                  // SOLO procesar headers - NO el cuerpo del mensaje
+                  if (which.includes('HEADER')) {
+                    // Extraer solo las líneas de headers (generalmente las primeras 10-20 líneas)
+                    const lines = buffer.split(/\r?\n/);
                     
-                    console.log(`📨 [EmailService] Línea ${idx}: "${trimmed.substring(0, 120)}"`);
-                    
-                    // Buscar cada header individualmente
-                    const fromMatch = trimmed.match(/^From:\s*(.+)$/i);
-                    const toMatch = trimmed.match(/^To:\s*(.+)$/i);
-                    const subjectMatch = trimmed.match(/^Subject:\s*(.+)$/i);
-                    const dateMatch = trimmed.match(/^Date:\s*(.+)$/i);
-                    
-                    if (fromMatch) {
-                      headers.from = fromMatch[1].trim();
-                      console.log(`✅ FROM ENCONTRADO: "${headers.from}"`);
+                    for (const line of lines) {
+                      const trimmed = line.trim();
+                      if (trimmed.length === 0) continue;
+                      // Ignorar metadata IMAP
+                      if (trimmed.startsWith('*') || trimmed.startsWith(')') || /^\d+$/.test(trimmed)) continue;
+                      
+                      // Buscar headers específicos
+                      const fromMatch = trimmed.match(/^From:\s*(.+)$/i);
+                      const toMatch = trimmed.match(/^To:\s*(.+)$/i);
+                      const subjectMatch = trimmed.match(/^Subject:\s*(.+)$/i);
+                      const dateMatch = trimmed.match(/^Date:\s*(.+)$/i);
+                      
+                      if (fromMatch) headers.from = fromMatch[1].trim();
+                      if (toMatch) headers.to = toMatch[1].trim();
+                      if (subjectMatch) headers.subject = subjectMatch[1].trim();
+                      if (dateMatch) headers.date = dateMatch[1].trim();
                     }
-                    if (toMatch) {
-                      headers.to = toMatch[1].trim();
-                      console.log(`✅ TO ENCONTRADO: "${headers.to}"`);
-                    }
-                    if (subjectMatch) {
-                      headers.subject = subjectMatch[1].trim();
-                      console.log(`✅ SUBJECT ENCONTRADO: "${headers.subject}"`);
-                    }
-                    if (dateMatch) {
-                      headers.date = dateMatch[1].trim();
-                      console.log(`✅ DATE ENCONTRADO: "${headers.date}"`);
-                    }
-                  });
-                  
-                  // Si no encontramos headers, es texto
-                  if (Object.keys(headers).length === 0 && buffer.length > 10) {
-                    console.log('📨 [EmailService] Esto es TEXTO, no headers');
-                    textBuffer = buffer;
+                  }
+                  // Solo guardar texto plano, ignorar HTML y base64
+                  else if (which === 'TEXT' && buffer.length < 50000) {
+                    // Extraer solo texto plano (antes del primer boundary MIME o HTML)
+                    const textEnd = buffer.indexOf('Content-Type: text/html');
+                    const mimeBoundary = buffer.indexOf('--===============');
+                    let cutPoint = textEnd > 0 ? textEnd : (mimeBoundary > 0 ? mimeBoundary : buffer.length);
+                    cutPoint = Math.min(cutPoint, 10000); // Máximo 10KB de texto
+                    textBuffer = buffer.substring(0, cutPoint).trim();
                   }
                 });
               });
 
               msg.once('end', () => {
-                console.log('\n📨 [EmailService] === FIN MENSAJE ===');
-                console.log('📨 [EmailService] Headers finales:', JSON.stringify(headers, null, 2));
-                console.log('📨 [EmailService] from:', headers.from);
-                console.log('📨 [EmailService] subject:', headers.subject);
-                
                 emails.push({
                   id: `email_${Date.now()}_${emails.length}`,
                   uid: 0,
@@ -576,13 +552,12 @@ export class EmailService {
                   to: headers.to || '',
                   subject: headers.subject || 'Sin asunto',
                   date: headers.date ? new Date(headers.date) : new Date(),
-                  text: textBuffer || '',
+                  text: textBuffer || 'Sin contenido',
                   html: '',
                   attachments: [],
                   seen: true,
                   flagged: false,
                 });
-                console.log('📨 [EmailService] Email agregado:', emails[emails.length-1].from, '/', emails[emails.length-1].subject);
               });
             });
 
