@@ -37,7 +37,7 @@ export class EmailConfig {
   passwordEmail: string; // Encriptar con bcrypt o crypto
 
   // Configuración IMAP (recepción) - NO required para permitir defaults automáticos
-  @Prop({ type: String, default: 'mail.tudominio.com' })
+  @Prop({ type: String, default: 'bh8966.banahosting.com' })
   imapHost: string;
 
   @Prop({ type: Number, default: 993 })
@@ -50,7 +50,7 @@ export class EmailConfig {
   imapSecurity: SecurityType;
 
   // Configuración SMTP (envío) - NO required para permitir defaults automáticos
-  @Prop({ type: String, default: 'mail.tudominio.com' })
+  @Prop({ type: String, default: 'bh8966.banahosting.com' })
   smtpHost: string;
 
   @Prop({ type: Number, default: 465 })

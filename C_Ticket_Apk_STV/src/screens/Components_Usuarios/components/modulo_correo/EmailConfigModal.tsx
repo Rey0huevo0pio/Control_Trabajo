@@ -16,10 +16,10 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
   const [data, setData] = useState({
     email: userEmail || '',
     passwordEmail: '',
-    imapHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com',
+    imapHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'bh8966.banahosting.com',
     imapPort: '993',
     imapSecure: true,
-    smtpHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com',
+    smtpHost: userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'bh8966.banahosting.com',
     smtpPort: '465',
     smtpSecure: true,
   })
@@ -27,7 +27,7 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
   // Reset cuando se abre el modal
   useEffect(() => {
     if (visible) {
-      const defaultHost = userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'mail.tudominio.com'
+      const defaultHost = userEmail && userEmail.includes('@') ? `mail.${userEmail.split('@')[1]}` : 'bh8966.banahosting.com'
       setData({
         email: userEmail || '',
         passwordEmail: '',
@@ -185,7 +185,7 @@ export function EmailConfigModal({ visible, onClose, userEmail, onSuccess, userF
                       <Ionicons name="information-circle" size={16} color="$primary" />
                       <Text fontSize={12} fontWeight="600" color="$color">Configuración típica de cPanel</Text>
                     </XStack>
-                    <Text fontSize={11} color="$color2">• Servidor: mail.tudominio.com</Text>
+                    <Text fontSize={11} color="$color2">• Servidor: bh8966.banahosting.com</Text>
                     <Text fontSize={11} color="$color2">• IMAP: 993 (SSL) o 143 (sin SSL)</Text>
                     <Text fontSize={11} color="$color2">• SMTP: 465 (SSL) o 587 (TLS)</Text>
                   </YStack>

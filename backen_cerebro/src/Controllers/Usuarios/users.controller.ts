@@ -44,15 +44,13 @@ export class UsersController {
   // OBTENER TODOS LOS USUARIOS (con filtros)
   // ==========================================
   @Get()
-  @Roles(
-    RolUsuario.IT,
-    RolUsuario.RH,
-    RolUsuario.ADMIN,
-    RolUsuario.SUPERVISOR,
-  )
+  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
   findAll(@Query() searchDto: SearchUsuariosDto, @Req() req: any) {
     console.log('\n📥 [UsersController] GET /api/users');
-    console.log('🔑 Authorization header:', req.headers['authorization'] ? '✅ PRESENTE' : '❌ AUSENTE');
+    console.log(
+      '🔑 Authorization header:',
+      req.headers['authorization'] ? '✅ PRESENTE' : '❌ AUSENTE',
+    );
     console.log('🔍 Filtros:', searchDto);
     return this.usersService.findAll(searchDto);
   }
@@ -79,12 +77,7 @@ export class UsersController {
   // OBTENER USUARIO POR ID
   // ==========================================
   @Get(':id')
-  @Roles(
-    RolUsuario.IT,
-    RolUsuario.RH,
-    RolUsuario.ADMIN,
-    RolUsuario.SUPERVISOR,
-  )
+  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -94,10 +87,7 @@ export class UsersController {
   // ==========================================
   @Patch(':id')
   @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
-  update(
-    @Param('id') id: string,
-    @Body() updateUsuarioDto: UpdateUsuarioDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     return this.usersService.update(id, updateUsuarioDto);
   }
 

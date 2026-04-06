@@ -85,10 +85,7 @@ export class EmailController {
   // ACTUALIZAR CONFIGURACIÓN
   // ==========================================
   @Patch('config')
-  updateConfig(
-    @Req() req: any,
-    @Body() updateDto: UpdateEmailConfigDto,
-  ) {
+  updateConfig(@Req() req: any, @Body() updateDto: UpdateEmailConfigDto) {
     return this.emailService.updateConfig(req.user.userId, updateDto);
   }
 
@@ -96,10 +93,7 @@ export class EmailController {
   // PROBAR CONEXIÓN
   // ==========================================
   @Post('config/test')
-  testConnection(
-    @Req() req: any,
-    @Body() testDto: TestEmailConnectionDto,
-  ) {
+  testConnection(@Req() req: any, @Body() testDto: TestEmailConnectionDto) {
     return this.emailService.testConnection(req.user.userId, testDto);
   }
 
@@ -110,7 +104,8 @@ export class EmailController {
   @HttpCode(HttpStatus.OK)
   async activateConfigForce(@Req() req: any) {
     console.log('\n📧 [EmailController] POST config/activate-force');
-    return this.emailService.activateConfigForce(req.user.userId);
+    const result = await this.emailService.activateConfigForce(req.user.userId);
+    return result;
   }
 
   // ==========================================

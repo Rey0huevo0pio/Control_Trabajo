@@ -2,9 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import * as express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Servir archivos estáticos de uploads
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // Prefijo global para la API
   app.setGlobalPrefix('api');

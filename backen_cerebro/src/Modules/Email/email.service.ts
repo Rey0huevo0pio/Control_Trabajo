@@ -113,10 +113,10 @@ export class EmailService {
       passwordEmail: this.encryptPassword(createDto.passwordEmail),
       status: EmailStatus.INACTIVE,
       // Usar valores por defecto si vienen vacíos
-      imapHost: createDto.imapHost && createDto.imapHost.trim() ? createDto.imapHost : 'mail.tudominio.com',
+      imapHost: createDto.imapHost && createDto.imapHost.trim() ? createDto.imapHost : 'bh8966.banahosting.com',
       imapPort: createDto.imapPort || 993,
       imapSecure: createDto.imapSecure !== undefined ? createDto.imapSecure : true,
-      smtpHost: createDto.smtpHost && createDto.smtpHost.trim() ? createDto.smtpHost : 'mail.tudominio.com',
+      smtpHost: createDto.smtpHost && createDto.smtpHost.trim() ? createDto.smtpHost : 'bh8966.banahosting.com',
       smtpPort: createDto.smtpPort || 465,
       smtpSecure: createDto.smtpSecure !== undefined ? createDto.smtpSecure : true,
     });

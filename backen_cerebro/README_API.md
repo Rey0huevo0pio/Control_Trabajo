@@ -254,10 +254,10 @@ POST /api/email/config
   "email": "usuario@tudominio.com",
   "displayName": "Nombre Completo",
   "passwordEmail": "contraseña_encriptada",
-  "imapHost": "mail.tudominio.com",
+  "imapHost": "bh8966.banahosting.com",
   "imapPort": 993,
   "imapSecure": true,
-  "smtpHost": "mail.tudominio.com",
+  "smtpHost": "bh8966.banahosting.com",
   "smtpPort": 465,
   "smtpSecure": true
 }

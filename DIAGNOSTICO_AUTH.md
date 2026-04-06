@@ -43,7 +43,7 @@ El endpoint `/api/users` requiere **autenticación JWT**. El error 401 significa
 **Prueba de Login:**
 ```bash
 # Abre una terminal y prueba el login:
-curl -X POST http://192.168.100.29:3000/api/auth/login \
+curl -X POST http://192.168.190.194:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"Control_Usuario":"TU_USUARIO","password":"TU_PASSWORD"}'
 ```
@@ -74,7 +74,7 @@ curl -X POST http://192.168.100.29:3000/api/auth/login \
 ### Paso 2: Crea un usuario de prueba (si no tienes ninguno)
 
 ```bash
-curl -X POST http://192.168.100.29:3000/api/auth/register \
+curl -X POST http://192.168.190.194:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "Control_Usuario": "USR001",
@@ -176,7 +176,7 @@ npx expo start
 TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 # Luego prueba el endpoint
-curl -X GET http://192.168.100.29:3000/api/users \
+curl -X GET http://192.168.190.194:3000/api/users \
   -H "Authorization: Bearer $TOKEN"
 ```
 
