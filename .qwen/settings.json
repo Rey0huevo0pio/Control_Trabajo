@@ -16,7 +16,8 @@
       "Bash(lsusb)",
       "Bash(npm install *)",
       "Bash(mv *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(grep *)"
     ]
   },
   "$version": 3
