@@ -3,6 +3,9 @@
 > **Punto de entrada a toda la documentación del proyecto**
 > 
 > **Cómo usar este índice:** Lee el archivo que necesites según tu tarea
+> 
+> **⚡ IMPORTANTE:** Este cerebro se **autoactualiza** después de cada cambio en el código.
+> Si detectas algo no documentado, el asistente lo documentará automáticamente.
 
 ---
 
@@ -14,10 +17,88 @@
 | [📂 BACKEND_INDEX.md](./BACKEND_INDEX.md) | **Mapa detallado del backend** | Cuando busques un archivo específico del backend o necesites saber qué hace cada módulo |
 | [📱 FRONTEND_INDEX.md](./FRONTEND_INDEX.md) | **Mapa detallado del frontend** | Cuando busques un componente, screen o servicio del frontend |
 | [🔗 IMPORTS_GUIDE.md](./IMPORTS_GUIDE.md) | **Guía de imports y dependencias** | Cuando necesites saber cómo importar algo o crear un nuevo módulo |
+| [⚙️ CONTEXT.md](./CONTEXT.md) | **Contexto persistente** | Se carga automáticamente en cada sesión |
+| [🔌 ENDPOINTS.md](./ENDPOINTS.md) | **Todos los endpoints de la API** | Cuando necesites saber qué hace cada endpoint, qué DTO usa, qué response da |
+| [🔄 FLUJOS.md](./FUJOS.md) | **Flujos de negocio completos** | Cuando necesites entender paso a paso cómo funciona cada caso de uso |
+| [🎯 DECISIONES.md](./DECISIONES.md) | **Decisiones técnicas y por qué** | Cuando necesites entender por qué se eligió cada tecnología, patrón o enfoque |
+
+---
+
+## 🔄 SISTEMA DE AUTOACTUALIZACIÓN
+
+### ¿Qué es?
+El cerebro del proyecto **se actualiza automáticamente** después de cada cambio en el código. No necesitas pedirlo - el asistente detectará cambios y actualizará la documentación.
+
+### ¿Qué se actualiza automáticamente?
+- ✅ Nuevos módulos, endpoints, schemas (backend)
+- ✅ Nuevas pantallas, componentes, servicios (frontend)
+- ✅ Cambios en roles y permisos
+- ✅ Nuevas rutas de navegación
+- ✅ Cambios en la arquitectura
+- ✅ Código no documentado
+
+### Skill de Autoactualización
+**Ubicación:** `.qwen/skills/doc-auto-update.md`
+
+Este skill define el proceso de:
+1. Detectar cambios con `git diff`
+2. Analizar qué cambió (nuevos archivos, modificaciones, eliminaciones)
+3. Actualizar la documentación correspondiente
+4. Documentar código no documentado
+5. Verificar que todo esté actualizado
+
+### Cuándo se ejecuta
+- ✅ Después de implementar cualquier cambio en código
+- ✅ Antes de hacer commit
+- ✅ Cuando dices "actualizar docs" o "sync docs"
+- ✅ Cuando se detecta código no documentado
+
+### Comentarios en el Código
+Todos los archivos clave tienen **comentarios explicativos** que incluyen:
+- 📝 Qué hace el archivo
+- 🔗 Conexiones con otros archivos (rutas relativas)
+- 📍 Endpoints que genera (backend)
+- 🔄 Flujos de datos
+- 🛠️ Cómo modificarlo
+
+**Formato de comentarios:**
+```typescript
+/**
+ * ============================================================================
+ * 🚀 NOMBRE_ARCHIVO - Descripción corta
+ * ============================================================================
+ * 
+ * QUÉ HACE ESTE ARCHIVO:
+ * - Función principal
+ * - Responsabilidades
+ * 
+ * CONEXIONES:
+ * - Archivo relacionado: ruta/relativa (qué hace)
+ * 
+ * PARA MODIFICAR:
+ * - Instrucciones específicas
+ * 
+ * ============================================================================
+ */
+```
 
 ---
 
 ## 🚀 GUÍA RÁPIDA POR TAREAS
+
+### Quiero agregar un nuevo módulo al frontend
+
+1. Lee: [FRONTEND_INDEX.md](./FRONTEND_INDEX.md) → Sección "ARQUITECTURA MULTI-MÓDULO"
+2. Crea carpeta: `src_NuevoModulo/`
+3. Estructura: `index.ts`, `navigation/`, `screens/`, `types/`
+4. Importa en `src/navigation/AppNavigator.tsx`
+
+### Quiero agregar pantalla a módulo existente
+
+1. Lee: [FRONTEND_INDEX.md](./FRONTEND_INDEX.md) → Módulo correspondiente
+2. Ve a: `src_[NombreModulo]/screens/`
+3. Crea `NuevaScreen.tsx`
+4. Agrega ruta en `src_[NombreModulo]/navigation/[Modulo]Navigator.tsx`
 
 ### Quiero agregar un nuevo módulo al backend
 

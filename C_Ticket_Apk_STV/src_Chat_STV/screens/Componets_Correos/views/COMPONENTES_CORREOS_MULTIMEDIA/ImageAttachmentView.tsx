@@ -32,7 +32,7 @@ export function ImageAttachmentView({
         alignItems="center"
       >
         {loading ? (
-          <Spinner size="large" color="$primary" />
+          <Spinner size="large" color="#007AFF" />
         ) : (
           <>
             <Text fontSize={40}>🖼️</Text>

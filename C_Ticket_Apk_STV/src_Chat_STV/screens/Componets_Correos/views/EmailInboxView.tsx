@@ -78,10 +78,22 @@ export function EmailInboxView() {
     setLoadingFullContent(true);
 
     try {
+      console.log("📧 [EmailInboxView] Abriendo email UID:", email.uid);
+      
       const fullContent = await emailMessagesService.getFullMessage(
         email.uid,
         email.folder,
       );
+      
+      console.log("📧 [EmailInboxView] FullContent recibido:", {
+        hasHtml: !!fullContent?.html,
+        htmlLength: fullContent?.html?.length || 0,
+        hasText: !!fullContent?.text,
+        textLength: fullContent?.text?.length || 0,
+        attachmentsCount: fullContent?.attachments?.length || 0,
+        attachments: fullContent?.attachments?.map(a => ({ fileName: a.fileName, contentType: a.contentType }))
+      });
+      
       if (fullContent) {
         setFullEmailContent(fullContent);
       }
@@ -122,7 +134,7 @@ export function EmailInboxView() {
   if (loading) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center" padding="$5">
-        <Spinner size="large" color="$primary" />
+        <Spinner size="large" color="#007AFF" />
         <Text variant="body" color="$color2" marginTop="$3">
           Cargando correos...
         </Text>

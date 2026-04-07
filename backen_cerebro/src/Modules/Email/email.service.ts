@@ -7,7 +7,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const Imap = require('imap');
+const Imap = require('imap').default || require('imap');
+import { simpleParser } from 'mailparser';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import {
@@ -582,8 +583,9 @@ export class EmailService {
                 }
 
                 const fetch = imapConnection.fetch(results, {
-                  bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+                  bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT', '1'],
                   struct: true,
+                  envelope: true,
                 });
 
                 fetch.on('message', (msg: any) => {
@@ -768,7 +770,7 @@ export class EmailService {
   }
 
   // ==========================================
-  // OBTENER CORREOS POR UIDs ESPECÍFICOS
+  // OBTENER CORREOS POR UIDs ESPECÍFICOS (CON HTML Y ADJUNTOS)
   // ==========================================
   async getMessagesByUIDs(
     usuarioId: string,
@@ -794,92 +796,84 @@ export class EmailService {
         host: config.imapHost,
         port: config.imapPort,
         tls: config.imapSecure,
-        connTimeout: 5000,
+        connTimeout: 30000,
       });
 
       const emails: EmailMessage[] = [];
 
-      imapConnection.once('error', () => {
+      imapConnection.once('error', (err) => {
+        console.log('❌ [EmailService] IMAP error:', err.message);
         resolve({ success: true, data: { emails: [], total: 0 } });
       });
 
       imapConnection.once('ready', () => {
-        imapConnection.openBox(folder, true, (err: any) => {
+        imapConnection.openBox(folder, true, async (err: any) => {
           if (err) {
+            console.log('❌ [EmailService] Error opening box:', err.message);
             imapConnection.end();
             resolve({ success: true, data: { emails: [], total: 0 } });
             return;
           }
 
+          console.log(
+            `📧 [EmailService] Fetching ${uids.length} messages with mailparser...`,
+          );
+
           const fetch = imapConnection.fetch(uids, {
-            bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+            bodies: '',
             struct: true,
+            envelope: true,
           });
 
-          fetch.on('message', (msg: any) => {
+          fetch.on('message', async (msg: any) => {
             const headers: any = {};
-            let textBuffer = '';
+            let fullBody = Buffer.alloc(0);
+            const attachments: any[] = [];
 
-            msg.on('body', (stream: any, info: any) => {
-              let buffer = '';
-              stream.on('data', (chunk: Buffer) => {
-                buffer += chunk.toString('utf8');
-              });
-              stream.once('end', () => {
-                const which = (info.which || '').toUpperCase();
+            msg.on('body', async (stream: any) => {
+              try {
+                const parsed = await simpleParser(stream);
 
-                if (which.includes('HEADER')) {
-                  const lines = buffer.split(/\r?\n/);
-                  for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (trimmed.length === 0) continue;
-                    if (
-                      trimmed.startsWith('IMAP') ||
-                      trimmed.startsWith('FETCH')
-                    )
-                      continue;
+                headers.from = parsed.from?.text || '';
+                headers.to = parsed.to?.text || '';
+                headers.subject = parsed.subject || '';
+                headers.date = parsed.date?.toISOString() || new Date().toISOString();
 
-                    const match = trimmed.match(/^(\w[\w-]*):\s*(.+)$/i);
-                    if (match) {
-                      const key = match[1].toLowerCase();
-                      const value = match[2];
-                      if (headers[key]) {
-                        headers[key] += ', ' + value;
-                      } else {
-                        headers[key] = value;
-                      }
-                    }
-                  }
-                } else if (which === 'TEXT' || which.includes('TEXT')) {
-                  textBuffer += buffer;
+                if (parsed.html) {
+                  fullBody = Buffer.from(parsed.html);
+                } else if (parsed.text) {
+                  fullBody = Buffer.from(parsed.text);
                 }
-              });
+
+                if (parsed.attachments && parsed.attachments.length > 0) {
+                  for (const att of parsed.attachments) {
+                    attachments.push({
+                      fileName: att.filename,
+                      contentType: att.contentType,
+                      size: att.size,
+                      content: att.content,
+                    });
+                  }
+                }
+              } catch (parseErr) {
+                console.log('❌ [EmailService] Parse error:', parseErr);
+              }
             });
 
             msg.on('attributes', (attrs: any) => {
-              // Extraer metadata de adjuntos de la estructura del mensaje
-              const attachments: any[] = [];
-              if (attrs.struct && Array.isArray(attrs.struct)) {
-                attrs.struct.forEach((part: any) => {
-                  const type = (part.type || '').toLowerCase();
-                  if (
-                    type.startsWith('image') ||
-                    type.startsWith('video') ||
-                    type.startsWith('audio') ||
-                    type.includes('pdf') ||
-                    type.includes('application')
-                  ) {
-                    attachments.push({
-                      fileName:
-                        (part.params && part.params.name) ||
-                        `attachment.${type.split('/').pop() || 'bin'}`,
-                      contentType: type,
-                      size: part.size || 0,
-                      encoding: part.encoding || '',
-                      partId: part.partId || attachments.length,
-                    });
-                  }
-                });
+              let htmlContent = '';
+              let textContent = '';
+
+              if (fullBody) {
+                const bodyStr = fullBody.toString('utf8');
+                if (
+                  bodyStr.includes('<html') ||
+                  bodyStr.includes('<!DOCTYPE html>')
+                ) {
+                  htmlContent = bodyStr;
+                } else {
+                  textContent = bodyStr;
+                }
               }
 
               const email: EmailMessage = {
@@ -889,36 +883,31 @@ export class EmailService {
                 to: headers.to || '',
                 subject: headers.subject || '',
                 date: headers.date || new Date().toISOString(),
-                text: '',
-                html: '',
+                text: textContent,
+                html: htmlContent,
                 attachments,
                 seen: attrs.flags.includes('\\Seen'),
                 flagged: attrs.flags.includes('\\Flagged'),
                 folder,
               };
 
-              const cleanedText = textBuffer
-                .replace(/=\r?\n/g, '')
-                .replace(/=3D/g, '=')
-                .replace(/=0D=0A/g, '\n')
-                .replace(/=([0-9A-F]{2})/g, (_match: string, hex: string) =>
-                  String.fromCharCode(parseInt(hex, 16)),
-                )
-                .replace(/\r?\n/g, '\n')
-                .replace(/\n{3,}/g, '\n\n')
-                .trim();
-
-              email.text = cleanedText;
+              console.log(
+                `📧 [EmailService] Email parsed UID:${attrs.uid} - html: ${htmlContent.length > 0}, text: ${textContent.length}, attachments: ${attachments.length}`,
+              );
               emails.push(email);
             });
           });
 
-          fetch.once('error', () => {
+          fetch.once('error', (err: any) => {
+            console.log('❌ [EmailService] Fetch error:', err.message);
             imapConnection.end();
             resolve({ success: true, data: { emails: [], total: 0 } });
           });
 
           fetch.once('end', () => {
+            console.log(
+              `📧 [EmailService] Completed. ${emails.length} emails parsed`,
+            );
             imapConnection.end();
             resolve({
               success: true,
@@ -930,6 +919,43 @@ export class EmailService {
 
       imapConnection.connect();
     });
+  }
+
+  // ==========================================
+  // EXTRAER ADJUNTOS DE LA ESTRUCTURA MIME
+  // ==========================================
+  private extractAttachments(parts: any[], attachments: any[]): void {
+    for (const part of parts) {
+      if (part.disposition && part.disposition.toLowerCase() === 'attachment') {
+        attachments.push({
+          fileName: part.params?.name || `attachment_${attachments.length}`,
+          contentType: part.type || 'application/octet-stream',
+          size: part.size || 0,
+          encoding: part.encoding || '',
+          partId: part.partID || part.partId || attachments.length,
+        });
+      }
+
+      if (part.part && Array.isArray(part)) {
+        this.extractAttachments(part, attachments);
+      }
+    }
+  }
+
+  // ==========================================
+  // DECODIFICAR QUOTED-PRINTABLE
+  // ==========================================
+  private decodeQuotedPrintable(input: string): string {
+    return input
+      .replace(/=\r?\n/g, '')
+      .replace(/=3D/g, '=')
+      .replace(/=0D=0A/g, '\r\n')
+      .replace(/=([0-9A-F]{2})/g, (_match: string, hex: string) =>
+        String.fromCharCode(parseInt(hex, 16)),
+      )
+      .replace(/\r?\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   // ==========================================

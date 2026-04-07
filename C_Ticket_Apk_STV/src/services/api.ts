@@ -6,7 +6,7 @@ import axios from 'axios';
 
 // URL base de tu backend (IP de tu computadora en la red local)
 const BASE_URL = __DEV__
-  ? 'http://192.168.190.1:3000'  // Tu IP local
+  ? 'http://192.168.190.9:3000'  // Tu IP local
   : 'https://tu-dominio.com';      // Producción
 
 export const API_CONFIG = {

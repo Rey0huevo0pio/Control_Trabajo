@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { YStack, ScrollView, Spinner } from "tamagui";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -31,6 +31,18 @@ export function EmailContentViewer({
   onBack,
   loading = false,
 }: EmailContentViewerProps) {
+  useEffect(() => {
+    console.log("📧 [EmailContentViewer] Received email:", {
+      hasHtml: !!email?.html,
+      htmlLength: email?.html?.length || 0,
+      htmlPreview: email?.html?.substring(0, 200),
+      hasText: !!email?.text,
+      textLength: email?.text?.length || 0,
+      attachmentsCount: email?.attachments?.length || 0,
+      attachments: email?.attachments?.map(a => ({ fileName: a.fileName, contentType: a.contentType }))
+    });
+  }, [email]);
+
   const getInitials = (from: string) => {
     if (!from) return "?";
     const parts = from.split(" ").filter((p) => !p.includes("<"));
@@ -41,7 +53,7 @@ export function EmailContentViewer({
   if (loading) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center" padding="$5">
-        <Spinner size="large" color="$primary" />
+        <Spinner size="large" color="#007AFF" />
         <Text variant="body" color="$color2" marginTop="$3">
           Cargando correo...
         </Text>

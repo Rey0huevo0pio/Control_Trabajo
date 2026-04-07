@@ -160,36 +160,114 @@ app.use('/uploads', express.static('uploads')); // Archivos estáticos
 - **HTTP Client:** Axios
 - **Lenguaje:** TypeScript
 
-### Estructura de Carpetas
+### 🏗️ ARQUITECTURA MULTI-MÓDULO
+
+El frontend está organizado en **módulos independientes** que se conectan al `src` principal (padre).
 
 ```
-C_Ticket_Apk_STV/src/
-├── components/          # Componentes reutilizables
-├── screens/             # 🖼️ PANTALLAS
-│   ├── P_Auth/          # Autenticación (Login, Register)
-│   ├── P_Principal/     # Pantallas principales
-│   ├── Components_Usuarios/  # Componentes de usuarios
-│   └── index.ts         # Export central
-├── navigation/          # Configuración de navegación
-├── store/               # Zustand stores (auth, etc.)
-├── services/            # Llamadas a API (axios)
-├── modules/             # [Vacío - Para futuros módulos]
-├── hooks/               # Custom hooks (usePermissions, etc.)
-├── constants/           # Constantes (API_URL, roles, colores)
-├── types/               # TypeScript interfaces/types
-├── utils/               # Funciones utilitarias
-└── lib/                 # Configuraciones (tamagui)
+C_Ticket_Apk_STV/
+├── src/                           # 🎯 MÓDULO PRINCIPAL (PADRE)
+│   ├── components/                # Componentes reutilizables globales
+│   ├── screens/                   # Pantallas principales
+│   │   ├── P_Auth/                # Autenticación (Login, Register)
+│   │   ├── P_Principal/           # Pantallas principales (Home)
+│   │   ├── Components_Usuarios/   # Gestión de usuarios
+│   │   └── index.ts               # Export central
+│   ├── navigation/                # Navegación principal
+│   │   └── AppNavigator.tsx       # ⭐ Conecta TODOS los módulos
+│   ├── store/                     # Zustand stores (auth, etc.)
+│   ├── services/                  # Llamadas a API (axios)
+│   ├── hooks/                     # Custom hooks
+│   ├── constants/                 # Constantes globales
+│   ├── types/                     # TypeScript types globales
+│   ├── utils/                     # Funciones utilitarias
+│   └── lib/                       # Configuraciones (tamagui)
+│
+├── src_Archivero_STV/             # 📁 MÓDULO ARCHIVERO (Gestión documental)
+│   ├── index.ts                   # Export del módulo
+│   ├── navigation/
+│   │   └── ArchiveroNavigator.tsx # Navegación interna del módulo
+│   ├── screens/                   # 7 screens del módulo
+│   │   ├── ArchiveroHomeScreen.tsx
+│   │   ├── ArchiveroDetalleScreen.tsx
+│   │   ├── CarpetaDetalleScreen.tsx
+│   │   ├── CrearArchiveroScreen.tsx
+│   │   ├── GestionarMiembrosScreen.tsx
+│   │   ├── EscanearDocumentoScreen.tsx
+│   │   └── index.ts
+│   └── types/                     # Types específicos del módulo
+│
+├── src_Chat_STV/                  # 💬 MÓDULO CHAT (Chat + Email + Noticias)
+│   ├── index.ts                   # Export del módulo
+│   ├── navigation/
+│   │   └── ChatNavigator.tsx      # Navegación interna del módulo
+│   ├── screens/                   # 8 screens del módulo
+│   │   ├── ChatHomeScreen.tsx
+│   │   ├── PrivateChatsScreen.tsx
+│   │   ├── GroupChatsScreen.tsx
+│   │   ├── EmployeeDirectoryScreen.tsx
+│   │   ├── NewsBoardScreen.tsx
+│   │   ├── ChatSearchScreen.tsx
+│   │   ├── Componets_Correos/     # Componentes de email
+│   │   └── index.ts
+│   ├── services/                  # Servicios de email
+│   │   ├── emailCache.service.ts
+│   │   └── emailMessages.service.ts
+│   └── types/                     # Types específicos del módulo
+│
+├── src_Instalaciones_STV/         # 🏢 MÓDULO INSTALACIONES
+│   ├── navigation/
+│   │   └── InstalacionNavigator.tsx # Navegación interna del módulo
+│   ├── screens/                   # 4 screens del módulo
+│   │   ├── InstalacionesHomeScreen.tsx
+│   │   ├── RegistroInstalacionScreen.tsx
+│   │   ├── DetalleInstalacionScreen.tsx
+│   │   ├── RegistroAreaScreen.tsx
+│   │   └── index.ts
+│   ├── components/                # Componentes específicos
+│   ├── module/                    # Configuración del módulo
+│   │   └── index.ts
+│   ├── lib/                       # Configuraciones específicas
+│   └── types/                     # Types específicos del módulo
+│
+├── src_P_Ticket_IT/               # 🎫 MÓDULO TICKETS IT
+│   ├── index.ts                   # Export del módulo
+│   ├── navigation/
+│   │   └── TicketNavigator.tsx    # Navegación interna del módulo
+│   ├── screens/
+│   │   ├── TicketHomeScreen.tsx
+│   │   └── index.ts
+│   ├── module/                    # Submódulos
+│   │   ├── P_Chat_IT-Usuarios/    # Chat IT-Usuarios
+│   │   ├── P_Registro_Solicitudo/ # Registro de solicitudes
+│   │   ├── P_Registro_Usuario/    # Registro usuarios
+│   │   └── P_Solicitudes_R_S/     # Solicitudes R/S
+│   ├── lib/                       # Configuraciones
+│   └── types/                     # Types específicos del módulo
+│
+└── src_Archivero_STV/             # (ver arriba)
 ```
 
-### Otros módulos frontend
+### 🔗 CONEXIÓN ENTRE MÓDULOS
 
-| Carpeta | Descripción |
-|---------|-------------|
-| `src/` | App principal - C Ticket APK STV |
-| `src_Archivero_STV/` | Módulo de gestión documental |
-| `src_Chat_STV/` | Módulo de chat empresarial |
-| `src_Instalaciones_STV/` | Módulo de instalaciones |
-| `src_P_Ticket_IT/` | Módulo de tickets IT |
+**Flujo de navegación:**
+```
+App.tsx
+  └─ AppNavigator (src/navigation/)
+      ├─ Login (src/screens/P_Auth/)
+      └─ Home (src/screens/P_Principal/)
+          ├─→ InstalacionesHome (src_Instalaciones_STV/)
+          ├─→ TicketsHome (src_P_Ticket_IT/)
+          ├─→ ChatHome (src_Chat_STV/)
+          ├─→ ArchiveroHome (src_Archivero_STV/)
+          └─→ UserManagement (src/screens/Components_Usuarios/)
+```
+
+**Cómo se conectan:**
+1. `AppNavigator.tsx` importa los Navigators de cada módulo
+2. Cada módulo tiene su propio Navigator interno
+3. El `src` principal comparte: store, services, constants, types
+4. Los módulos específicos tienen sus propios types y componentes
 
 ### Configuración de API
 
@@ -197,6 +275,16 @@ C_Ticket_Apk_STV/src/
 // src/constants/index.ts
 export const API_URL = 'http://192.168.1.100:3000' // Configurar IP del backend
 ```
+
+### Otros módulos frontend
+
+| Carpeta | Descripción | Screens | Navegación |
+|---------|-------------|---------|------------|
+| `src/` | App principal - Auth, Home, Users | 2+ | AppNavigator |
+| `src_Archivero_STV/` | Gestión documental | 7 | ArchiveroNavigator |
+| `src_Chat_STV/` | Chat + Email + Noticias | 8 | ChatNavigator |
+| `src_Instalaciones_STV/` | Gestión de instalaciones | 4 | InstalacionNavigator |
+| `src_P_Ticket_IT/` | Tickets IT + Solicitudes | 1+ | TicketNavigator |
 
 ---
 

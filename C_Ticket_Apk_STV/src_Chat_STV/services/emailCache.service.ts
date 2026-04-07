@@ -62,7 +62,7 @@ class EmailCacheService {
     }
   }
 
-  // Guardar correos en caché (solo metadata + preview corto)
+  // Guardar correos en caché (incluyendo contenido HTML completo)
   async saveEmails(
     emails: CachedEmail[],
     folder: string = "INBOX",
@@ -77,22 +77,18 @@ class EmailCacheService {
             lastFullSync: null,
           };
 
-      // Eliminar correos antiguos de la misma carpeta y agregar los nuevos
       const otherEmails = cache.emails.filter((e) => e.folder !== folder);
 
-      // Solo guardar preview muy corto
       const newEmails = emails.map((e) => ({
         ...e,
         folder,
         text: e.text ? e.text.substring(0, PREVIEW_LENGTH) : "",
-        html: "",
         cachedAt: new Date().toISOString(),
       }));
 
       cache.emails = [...newEmails, ...otherEmails];
 
       if (cache.emails.length > MAX_CACHED_EMAILS) {
-        // Limpiar también los contenidos completos de los eliminados
         const removedEmails = cache.emails.slice(MAX_CACHED_EMAILS);
         for (const email of removedEmails) {
           await AsyncStorage.removeItem(fullEmailKey(email.uid, email.folder));
@@ -101,6 +97,13 @@ class EmailCacheService {
       }
 
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+
+      for (const email of emails) {
+        if (email.html && email.html.length > 0) {
+          await this.saveFullEmail(email, folder);
+        }
+      }
+
       console.log("✅ [EmailCache] Correos guardados en caché:", emails.length);
     } catch (error: any) {
       if (

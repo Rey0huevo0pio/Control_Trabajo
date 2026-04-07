@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { YStack } from "tamagui";
-import { Text, Spinner } from "../../../../../src/components/design-system";
+import { Text } from "../../../../../src/components/design-system";
+import { WebView } from "react-native-webview";
 
 interface HtmlEmailRendererProps {
   html: string;
@@ -8,7 +9,17 @@ interface HtmlEmailRendererProps {
 }
 
 export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
-  // Si no hay HTML, mostrar texto plano
+  useEffect(() => {
+    console.log("📄 [HtmlEmailRenderer] Received props:", {
+      hasHtml: !!html,
+      htmlLength: html?.length || 0,
+      htmlPreview: html?.substring(0, 100),
+      hasText: !!text,
+      textLength: text?.length || 0,
+      textPreview: text?.substring(0, 100)
+    });
+  }, [html, text]);
+
   if (!html || html.trim() === "") {
     if (text) {
       return (
@@ -28,24 +39,54 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
     );
   }
 
-  // Para web: usar un iframe o div dangerouslySetInnerHTML
-  // Para React Native: necesitamos WebView
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-size: 14px;
+          line-height: 1.5;
+          color: #333;
+          padding: 0;
+          margin: 0;
+          background-color: transparent;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        a {
+          color: #007AFF;
+        }
+        table {
+          max-width: 100%;
+        }
+        * {
+          box-sizing: border-box;
+        }
+      </style>
+    </head>
+    <body>${html}</body>
+    </html>
+  `;
+
   return (
-    <YStack padding="$2">
-      <Text variant="caption" color="$color3" marginBottom="$2">
-        📄 Contenido HTML disponible
-      </Text>
-      <YStack
-        padding="$3"
-        backgroundColor="$backgroundSecondary"
-        borderRadius="$md"
-        minHeight={80}
-        justifyContent="center"
-      >
-        <Text variant="body" color="$color2" textAlign="center">
-          HTML no renderizable en modo texto
-        </Text>
-      </YStack>
+    <YStack padding="$2" minHeight={200}>
+      <WebView
+        originWhitelist={['*']}
+        source={{ html: htmlContent }}
+        style={{ flex: 1, minHeight: 200, backgroundColor: 'transparent' }}
+        scrollEnabled={true}
+        showsVerticalScrollIndicator={false}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        startInLoadingState={false}
+        containerStyle={{ backgroundColor: 'transparent' }}
+        nestedScrollEnabled={true}
+      />
     </YStack>
   );
 }
