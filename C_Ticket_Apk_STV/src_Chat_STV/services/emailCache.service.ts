@@ -37,8 +37,9 @@ export interface EmailCacheState {
 // ==========================================
 const CACHE_KEY = "@email_cache_v3";
 const FOLDER_STATE_KEY = "@email_folder_state_v3";
-const MAX_CACHED_EMAILS = 50;
-const PREVIEW_LENGTH = 100; // Muy corto para la lista
+const MAX_CACHED_EMAILS = 30;  // Reducido de 50 a 30 para evitar overflow
+const PREVIEW_LENGTH = 80;  // Reducido de 100 a 80
+const MAX_HTML_IN_LIST = 0;  // ✅ NUNCA guardar HTML en la lista (solo en full email)
 
 // Clave para contenido completo de un email individual
 const fullEmailKey = (uid: number, folder: string) =>
@@ -92,21 +93,50 @@ class EmailCacheService {
 
       const otherEmails = cache.emails.filter((e) => e.folder !== folder);
 
+      // ✅ LIMITAR tamaño de datos para evitar overflow
       const newEmails = emails.map((e) => ({
         ...e,
         folder,
+        // Preview corto
         text: e.text ? e.text.substring(0, PREVIEW_LENGTH) : "",
+        // ✅ NUNCA guardar HTML en la lista (solo metadata)
+        html: "",
+        // ✅ Limitar adjuntos a solo metadata básica
+        attachments: (e.attachments || []).slice(0, 5).map(att => ({
+          fileName: att.fileName || att.filename || "archivo",
+          contentType: att.contentType || att.mimeType || "",
+          size: att.size || 0,
+          // ✅ NO guardar contenido base64
+          content: undefined,
+          thumbnail: undefined,
+        })),
         cachedAt: new Date().toISOString(),
       }));
 
       cache.emails = [...newEmails, ...otherEmails];
 
+      // ✅ LIMITAR a MAX_CACHED_EMAILS (30) y limpiar full emails removidos
       if (cache.emails.length > MAX_CACHED_EMAILS) {
         const removedEmails = cache.emails.slice(MAX_CACHED_EMAILS);
         for (const email of removedEmails) {
           await AsyncStorage.removeItem(fullEmailKey(email.uid, email.folder));
         }
         cache.emails = cache.emails.slice(0, MAX_CACHED_EMAILS);
+      }
+
+      // ✅ VERIFICAR tamaño antes de guardar (evitar Row too big)
+      const cacheSize = JSON.stringify(cache).length;
+      const MAX_CACHE_SIZE = 2 * 1024 * 1024;  // 2MB máximo
+      
+      if (cacheSize > MAX_CACHE_SIZE) {
+        console.warn(`⚠️ [EmailCache] Caché demasiado grande (${cacheSize} bytes), limpiando...`);
+        // Remover emails más viejos hasta estar bajo el límite
+        while (cache.emails.length > 10 && JSON.stringify(cache).length > MAX_CACHE_SIZE) {
+          const removed = cache.emails.pop();
+          if (removed) {
+            await AsyncStorage.removeItem(fullEmailKey(removed.uid, removed.folder));
+          }
+        }
       }
 
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
@@ -190,14 +220,41 @@ class EmailCacheService {
 
       // Guardar contenido completo en clave separada (evita Row too big)
       const key = fullEmailKey(email.uid, folder);
-      await AsyncStorage.setItem(
-        key,
-        JSON.stringify({
-          ...email,
-          folder,
-          cachedAt: new Date().toISOString(),
-        }),
-      );
+      
+      // ✅ LIMITAR HTML a 100KB para email completo (evitar overflow)
+      const MAX_FULL_HTML = 100 * 1024;  // 100KB
+      const limitedEmail = {
+        ...email,
+        folder,
+        html: email.html && email.html.length > MAX_FULL_HTML 
+          ? email.html.substring(0, MAX_FULL_HTML) + '...[truncado]' 
+          : email.html,
+        // ✅ Limitar adjuntos a metadata solamente
+        attachments: (email.attachments || []).slice(0, 10).map(att => ({
+          fileName: att.fileName || att.filename || "archivo",
+          contentType: att.contentType || att.mimeType || "",
+          size: att.size || 0,
+          isImage: att.isImage || false,
+          isPDF: att.isPDF || false,
+          thumbnail: att.thumbnail ? att.thumbnail.substring(0, 500) : undefined,
+          // ✅ NO guardar contenido base64 completo
+          content: undefined,
+        })),
+        cachedAt: new Date().toISOString(),
+      };
+      
+      // ✅ Verificar tamaño antes de guardar
+      const emailSize = JSON.stringify(limitedEmail).length;
+      const MAX_EMAIL_SIZE = 500 * 1024;  // 500KB máximo por email
+      
+      if (emailSize > MAX_EMAIL_SIZE) {
+        console.warn(`⚠️ [EmailCache] Email demasiado grande (${emailSize} bytes), guardando solo metadata`);
+        // Guardar solo metadata sin HTML
+        limitedEmail.html = "";
+        limitedEmail.text = limitedEmail.text.substring(0, 200);
+      }
+      
+      await AsyncStorage.setItem(key, JSON.stringify(limitedEmail));
 
       console.log(
         "✅ [EmailCache] Correo completo guardado (UID:",
