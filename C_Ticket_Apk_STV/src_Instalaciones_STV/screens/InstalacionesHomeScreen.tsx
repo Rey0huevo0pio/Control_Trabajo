@@ -27,7 +27,7 @@ export function InstalacionesHomeScreen({ navigation }: Props) {
   const [instalaciones, setInstalaciones] = useState<Instalacion[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const { isMobile } = useResponsive()
+  const { isMobile, safeSpacing } = useResponsive()
   const mainNavigation = useNavigation<any>()
 
   const loadInstalaciones = async () => {
@@ -110,7 +110,7 @@ export function InstalacionesHomeScreen({ navigation }: Props) {
       <YStack
         backgroundColor="$primary"
         paddingHorizontal={isMobile ? '$5' : '$6'}
-        paddingTop="$5"
+        paddingTop={isMobile ? safeSpacing.top + 12 : 24}
         paddingBottom="$4"
         gap="$3"
       >

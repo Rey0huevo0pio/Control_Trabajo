@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { instalacionApi } from '../lib'
 import type { CreateInstalacionDto } from '@/types'
@@ -22,6 +23,7 @@ interface Props {
 
 export function RegistroInstalacionForm({ onSuccess, onCancel }: Props) {
   const { user } = useAuthStore()
+  const insets = useSafeAreaInsets()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<CreateInstalacionDto>({
     nombre_instalacion: '',
@@ -94,7 +96,14 @@ export function RegistroInstalacionForm({ onSuccess, onCancel }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingTop: insets.top + 16,
+        paddingBottom: insets.bottom + 40,
+      }}
+    >
       <Text style={styles.title}>Registrar Instalación</Text>
 
       {/* Nombre de la instalación */}

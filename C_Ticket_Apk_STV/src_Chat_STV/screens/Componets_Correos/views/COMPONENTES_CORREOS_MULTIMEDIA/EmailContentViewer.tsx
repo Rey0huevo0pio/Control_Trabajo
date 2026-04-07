@@ -34,7 +34,7 @@ export function EmailContentViewer({
   loading = false,
 }: EmailContentViewerProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const { isMobile } = useResponsive();
+  const { isMobile, safeSpacing } = useResponsive();
 
   useEffect(() => {
     console.log("📧 [EmailContentViewer] Received email:", {
@@ -126,8 +126,14 @@ export function EmailContentViewer({
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      {/* Header tipo Gmail */}
-      <Card backgroundColor="$background" padding="$3" borderBottomWidth={1} borderColor="$border">
+      {/* Header tipo Gmail con safe area */}
+      <Card 
+        backgroundColor="$background" 
+        padding="$3" 
+        paddingTop={isMobile ? safeSpacing.top + 12 : 16}
+        borderBottomWidth={1} 
+        borderColor="$border"
+      >
         <XStack justifyContent="space-between" alignItems="center">
           <IconButton
             icon="arrow-back"

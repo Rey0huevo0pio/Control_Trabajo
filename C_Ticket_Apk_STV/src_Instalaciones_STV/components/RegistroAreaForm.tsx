@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { instalacionApi } from '../lib'
 import type { CreateAreaInstalacionDto } from '@/types'
@@ -28,6 +29,7 @@ export function RegistroAreaForm({
   onCancel,
 }: Props) {
   const { user } = useAuthStore()
+  const insets = useSafeAreaInsets()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<CreateAreaInstalacionDto>({
     nombre_area: '',
@@ -68,7 +70,14 @@ export function RegistroAreaForm({
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingTop: insets.top + 16,
+        paddingBottom: insets.bottom + 40,
+      }}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Registrar Nueva Área</Text>
         <View style={styles.instalacionInfo}>

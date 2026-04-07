@@ -8,6 +8,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { InstalacionCard } from '../components'
@@ -29,6 +30,7 @@ interface Props {
 
 export function DetalleInstalacionScreen({ navigation, route }: Props) {
   const { instalacionId } = route.params
+  const insets = useSafeAreaInsets()
   const [instalacion, setInstalacion] = useState<Instalacion | null>(null)
   const [areas, setAreas] = useState<AreaInstalacion[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,7 +84,14 @@ export function DetalleInstalacionScreen({ navigation, route }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom + 40,
+      }}
+    >
       {/* Foto de portada */}
       <View style={styles.headerImage}>
         {instalacion.foto ? (

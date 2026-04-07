@@ -21,7 +21,7 @@ type UserView = 'list' | 'roles' | 'create' | 'edit' | 'detail'
 
 export default function UserManagementScreen() {
   const navigation = useNavigation<any>()
-  const { isMobile, padding } = useResponsive()
+  const { isMobile, padding, safeSpacing } = useResponsive()
   const [currentView, setCurrentView] = useState<UserView>('list')
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null)
 
@@ -92,7 +92,7 @@ export default function UserManagementScreen() {
         <YStack
           backgroundColor="$secondary"
           paddingHorizontal={isMobile ? 20 : 28}
-          paddingTop={isMobile ? 56 : 64}
+          paddingTop={isMobile ? safeSpacing.top + 12 : 64}
           paddingBottom={isMobile ? 24 : 28}
           gap={isMobile ? 12 : 16}
         >
