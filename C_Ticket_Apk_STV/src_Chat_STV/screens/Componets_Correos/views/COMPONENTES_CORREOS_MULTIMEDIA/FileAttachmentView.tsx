@@ -87,8 +87,8 @@ export function FileAttachmentView({
               color="$color"
               numberOfLines={5}
               lineHeight={20}
-              fontFamily="monospace"
               fontSize={12}
+              style={{ fontFamily: "monospace" }}
             >
               {content.length > 400 
                 ? content.substring(0, 400) + "..." 
