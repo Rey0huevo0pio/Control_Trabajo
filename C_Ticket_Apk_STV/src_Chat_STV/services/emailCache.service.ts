@@ -55,7 +55,20 @@ class EmailCacheService {
       if (!cacheJson) return [];
 
       const cache: EmailCacheState = JSON.parse(cacheJson);
-      return cache.emails.filter((e) => e.folder === folder) || [];
+      const emails = cache.emails.filter((e) => e.folder === folder) || [];
+      
+      // LIMPIEZA AUTOMÁTICA: Eliminar emails con UID:0 (datos viejos corruptos)
+      const validEmails = emails.filter(e => e.uid > 0);
+      if (validEmails.length !== emails.length) {
+        const removedCount = emails.length - validEmails.length;
+        console.log(`🗑️ [EmailCache] Eliminando ${removedCount} emails corruptos (UID:0)`);
+        
+        // Guardar solo emails válidos
+        cache.emails = [...validEmails, ...cache.emails.filter(e => e.folder !== folder)];
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      }
+      
+      return validEmails;
     } catch (error) {
       console.error("❌ [EmailCache] Error obteniendo caché:", error);
       return [];

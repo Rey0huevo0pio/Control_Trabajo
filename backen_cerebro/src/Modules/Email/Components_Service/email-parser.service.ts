@@ -158,7 +158,49 @@ export class EmailParserService {
       return email;
     } catch (error) {
       console.error('❌ [EmailParser] Error parsing email from stream:', error);
+      
+      // Retornar email vacía en caso de error
+      return {
+        uid,
+        id: `msg_${uid}`,
+        from: 'Desconocido',
+        to: '',
+        subject: 'Error al procesar',
+        date: new Date(),
+        text: 'Error al procesar el correo electrónico',
+        html: '',
+        attachments: [],
+        seen: true,
+        flagged: false,
+        folder,
+      };
+    }
+  }
 
+  // ==========================================
+  // PARSEAR EMAIL DESDE BUFFER (NUEVO MÉTODO)
+  // ==========================================
+  async parseEmailFromBuffer(
+    buffer: Buffer,
+    uid: number,
+    folder: string,
+    attrs?: any,
+  ): Promise<ParsedEmail> {
+    try {
+      // Parsear el buffer con simpleParser
+      const parsed = await simpleParser(buffer);
+
+      // Construir el objeto de email
+      const email = this.buildEmailObject(parsed, uid, folder, attrs);
+
+      console.log(
+        `📧 [EmailParser] Email parsed UID:${uid} - html: ${email.html.length > 0}, text: ${email.text.length}, attachments: ${email.attachments.length}`,
+      );
+
+      return email;
+    } catch (error) {
+      console.error('❌ [EmailParser] Error parsing email from buffer:', error);
+      
       // Retornar email vacía en caso de error
       return {
         uid,

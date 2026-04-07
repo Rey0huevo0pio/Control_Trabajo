@@ -141,36 +141,80 @@ export class EmailFetcherService {
             envelope: true,
           });
 
-          fetch.on('message', async (msg: any) => {
-            let parsedEmail: ParsedEmail | null = null;
+          // Procesar cada mensaje con async/await
+          const messagePromises: Promise<EmailMessage | null>[] = [];
 
-            msg.on('body', async (stream: any) => {
-              try {
-                // Parsear email con mailparser
-                parsedEmail = await this.parserService.parseEmailFromStream(
-                  stream,
-                  0, // UID se obtiene de attributes
-                  folder,
-                );
-              } catch (parseErr) {
-                console.log('❌ [EmailFetcher] Parse error:', parseErr);
-              }
-            });
+          fetch.on('message', (msg: any) => {
+            messagePromises.push(
+              new Promise((resolveMsg) => {
+                let uid = 0;
+                let attrs: any = null;
+                const chunks: Buffer[] = [];
+                let attrsReceived = false;
+                let bodyReceived = false;
 
-            msg.on('attributes', (attrs: any) => {
-              if (parsedEmail) {
-                // Actualizar UID correcto
-                parsedEmail.uid = attrs.uid;
-                parsedEmail.id = `msg_${attrs.uid}`;
-                parsedEmail.seen = attrs.flags.includes('\\Seen');
-                parsedEmail.flagged = attrs.flags.includes('\\Flagged');
-                parsedEmail.folder = folder;
+                // Obtener atributos
+                msg.once('attributes', (msgAttrs: any) => {
+                  uid = msgAttrs.uid;
+                  attrs = msgAttrs;
+                  attrsReceived = true;
+                  
+                  // Si ya tenemos body, procesar
+                  if (bodyReceived && chunks.length > 0) {
+                    processEmail();
+                  }
+                });
 
-                emails.push(parsedEmail as EmailMessage);
-              }
+                // Recolectar body
+                msg.on('body', (stream: any) => {
+                  stream.on('data', (chunk: Buffer) => {
+                    chunks.push(chunk);
+                  });
+                  
+                  stream.once('end', () => {
+                    bodyReceived = true;
+                    
+                    // Si ya tenemos attributes, procesar
+                    if (attrsReceived && chunks.length > 0) {
+                      processEmail();
+                    }
+                  });
+                });
 
-              processedCount++;
-            });
+                // Función para procesar el email
+                const processEmail = async () => {
+                  try {
+                    const fullBuffer = Buffer.concat(chunks);
+                    const parsedEmail = await this.parserService.parseEmailFromBuffer(
+                      fullBuffer,
+                      uid,
+                      folder,
+                      attrs,
+                    );
+                    resolveMsg(parsedEmail);
+                  } catch (err) {
+                    console.log('❌ [EmailFetcher] Process error:', err);
+                    resolveMsg(null);
+                  }
+                };
+
+                // Timeout de seguridad (5 segundos)
+                setTimeout(() => {
+                  if (chunks.length > 0 && !attrsReceived) {
+                    // Si tenemos chunks pero no attributes, intentar parsear sin UID
+                    console.log(`⚠️ [EmailFetcher] Timeout for message, parsing without UID`);
+                    bodyReceived = true;
+                    if (chunks.length > 0) {
+                      processEmail();
+                    } else {
+                      resolveMsg(null);
+                    }
+                  } else if (!bodyReceived && !attrsReceived) {
+                    resolveMsg(null);
+                  }
+                }, 5000);
+              })
+            );
           });
 
           fetch.once('error', (err: any) => {
@@ -179,16 +223,61 @@ export class EmailFetcherService {
             resolve([]);
           });
 
-          fetch.once('end', () => {
+          fetch.once('end', async () => {
             console.log(
-              `📧 [EmailFetcher] Completed. ${emails.length} emails parsed`,
+              `📧 [EmailFetcher] Waiting for ${messagePromises.length} messages to be processed...`,
+            );
+            
+            // Esperar a que todos los mensajes se procesen
+            const results = await Promise.all(messagePromises);
+            
+            // Filtrar resultados válidos y LIMITAR tamaño de HTML
+            const validEmails = results
+              .filter((email): email is EmailMessage => email !== null)
+              .map((email) => {
+                // Limitar HTML a 50KB para la lista (evitar OutOfMemory)
+                const MAX_HTML_LENGTH = 50000;
+                if (email.html && email.html.length > MAX_HTML_LENGTH) {
+                  console.log(
+                    `⚠️ [EmailFetcher] Truncating HTML for UID:${email.uid} from ${email.html.length} to ${MAX_HTML_LENGTH}`,
+                  );
+                  email.html = email.html.substring(0, MAX_HTML_LENGTH) + '...[contenido truncado para vista de lista. Abrir email para ver completo]';
+                }
+                
+                // Limitar text a 500 caracteres
+                const MAX_TEXT_LENGTH = 500;
+                if (email.text && email.text.length > MAX_TEXT_LENGTH) {
+                  email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
+                }
+                
+                // NO enviar contenido de adjuntos en la lista (solo metadata)
+                if (email.attachments && email.attachments.length > 0) {
+                  email.attachments = email.attachments.map((att: any) => ({
+                    fileName: att.fileName || att.filename || 'archivo',
+                    contentType: att.contentType || 'application/octet-stream',
+                    size: att.size || 0,
+                    isImage: att.isImage || false,
+                    isPDF: att.isPDF || false,
+                    thumbnail: att.thumbnail ? att.thumbnail.substring(0, 200) : undefined,  // Truncar thumbnail
+                    // NO incluir 'content' que es el archivo completo en base64
+                  }));
+                }
+                
+                return email;
+              });
+            
+            // ✅ ORDENAR POR FECHA DESCENDENTE (más reciente primero)
+            validEmails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            console.log(
+              `📧 [EmailFetcher] Completed. ${validEmails.length} emails parsed out of ${messagePromises.length}`,
             );
             imapConnection.end();
 
             // Guardar en caché
-            this.cacheService.cacheMessages(usuarioId, folder, emails);
+            this.cacheService.cacheMessages(usuarioId, folder, validEmails);
 
-            resolve(emails);
+            resolve(validEmails);
           });
         });
       });
@@ -270,6 +359,12 @@ export class EmailFetcherService {
               fetch.on('message', (msg: any) => {
                 const headers: any = {};
                 let textBuffer = '';
+                let uid = 0;
+
+                // Obtener UID y otros atributos del mensaje
+                msg.on('attributes', (attrs: any) => {
+                  uid = attrs.uid || 0;
+                });
 
                 msg.on('body', (stream: any, info: any) => {
                   let buffer = '';
@@ -314,8 +409,8 @@ export class EmailFetcherService {
 
                 msg.once('end', () => {
                   emails.push({
-                    id: `email_${Date.now()}_${emails.length}`,
-                    uid: 0,
+                    id: `email_${uid}_${Date.now()}`,
+                    uid: uid,  // ✅ UID CORRECTO del servidor IMAP
                     from: headers.from || 'Desconocido',
                     to: headers.to || '',
                     subject: headers.subject || 'Sin asunto',
@@ -337,6 +432,13 @@ export class EmailFetcherService {
 
               fetch.once('end', () => {
                 imapConnection.end();
+
+                // ✅ ORDENAR POR FECHA DESCENDENTE (más reciente primero)
+                emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                console.log(
+                  `📧 [EmailFetcher] Legacy completed. ${emails.length} emails parsed, sorted by date (newest first)`,
+                );
 
                 const start = (page - 1) * limit;
                 const end = start + limit;
