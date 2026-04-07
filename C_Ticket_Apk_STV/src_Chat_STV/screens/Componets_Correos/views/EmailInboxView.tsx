@@ -280,9 +280,67 @@ export function EmailInboxView() {
                       {email.subject || "Sin asunto"}
                     </Text>
 
-                    <Text variant="caption" color="$color3" numberOfLines={2}>
-                      {email.text?.substring(0, 100) || ""}
-                    </Text>
+                    {/* Preview: extraer de text o HTML, más íconos de adjuntos */}
+                    <HStack gap="$2" alignItems="center">
+                      {/* Íconos de adjuntos si existen */}
+                      {email.attachments && email.attachments.length > 0 && (
+                        <HStack gap="$1">
+                          {email.attachments.slice(0, 3).map((att: any, idx: number) => {
+                            const contentType = (att.contentType || '').toLowerCase();
+                            let icon = 'attach';
+                            if (contentType.startsWith('image')) icon = 'image';
+                            else if (contentType.includes('pdf')) icon = 'document';
+                            else if (contentType.includes('excel') || contentType.includes('spreadsheet')) icon = 'grid';
+                            else if (contentType.includes('zip')) icon = 'archive';
+                            
+                            return (
+                              <Ionicons 
+                                key={idx} 
+                                name={icon as any} 
+                                size={14} 
+                                color="$color3" 
+                              />
+                            );
+                          })}
+                          {email.attachments.length > 3 && (
+                            <Text variant="caption" color="$color3">
+                              +{email.attachments.length - 3}
+                            </Text>
+                          )}
+                        </HStack>
+                      )}
+                      
+                      {/* Preview de texto */}
+                      <Text 
+                        variant="caption" 
+                        color="$color3" 
+                        numberOfLines={2}
+                        flex={1}
+                      >
+                        {(() => {
+                          // Primero intentar texto
+                          if (email.text && email.text.length > 0 && email.text !== 'Sin contenido') {
+                            return email.text.substring(0, 120);
+                          }
+                          // Si no, extraer de HTML
+                          if (email.html && email.html.length > 0) {
+                            // Eliminar tags HTML y obtener texto plano
+                            const textFromHtml = email.html
+                              .replace(/<[^>]*>/g, ' ')  // Eliminar tags
+                              .replace(/&nbsp;/g, ' ')
+                              .replace(/&amp;/g, '&')
+                              .replace(/&lt;/g, '<')
+                              .replace(/&gt;/g, '>')
+                              .replace(/\s+/g, ' ')
+                              .trim();
+                            if (textFromHtml.length > 0) {
+                              return textFromHtml.substring(0, 120);
+                            }
+                          }
+                          return '';
+                        })()}
+                      </Text>
+                    </HStack>
                   </Stack>
 
                   {!email.seen && (

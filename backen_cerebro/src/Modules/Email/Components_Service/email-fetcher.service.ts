@@ -351,8 +351,8 @@ export class EmailFetcherService {
               }
 
               const fetch = imapConnection.fetch(results, {
-                bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT', '1'],
-                struct: true,
+                bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],  // Incluir TEXT para preview
+                struct: false,
                 envelope: true,
               });
 
@@ -360,6 +360,7 @@ export class EmailFetcherService {
                 const headers: any = {};
                 let textBuffer = '';
                 let uid = 0;
+                let bodyReceived = false;
 
                 // Obtener UID y otros atributos del mensaje
                 msg.on('attributes', (attrs: any) => {
@@ -399,10 +400,15 @@ export class EmailFetcherService {
                           headers.subject = subjectMatch[1].trim();
                         if (dateMatch) headers.date = dateMatch[1].trim();
                       }
-                    } else if (which === 'TEXT' && buffer.length < 50000) {
-                      textBuffer = this.parserService.extractTextFromBuffer(
-                        Buffer.from(buffer),
-                      );
+                    } else if (which === 'TEXT' && !bodyReceived) {
+                      bodyReceived = true;
+                      // Extraer solo preview de texto (primeros 200 chars)
+                      const textEnd = buffer.indexOf('Content-Type: text/html');
+                      const cutPoint = textEnd > 0 ? textEnd : buffer.length;
+                      const previewLength = Math.min(cutPoint, 300);  // Limitar a 300 chars
+                      textBuffer = buffer.substring(0, previewLength).trim();
+                      // Eliminar caracteres de control
+                      textBuffer = textBuffer.replace(/[\x00-\x1F\x7F-\x9F]/g, '').trim();
                     }
                   });
                 });
@@ -415,7 +421,7 @@ export class EmailFetcherService {
                     to: headers.to || '',
                     subject: headers.subject || 'Sin asunto',
                     date: headers.date ? new Date(headers.date) : new Date(),
-                    text: textBuffer || 'Sin contenido',
+                    text: textBuffer || '',  // Preview del texto (vacío si no hay)
                     html: '',
                     attachments: [],
                     seen: true,
