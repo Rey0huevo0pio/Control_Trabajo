@@ -20,7 +20,7 @@
 
 ### 1. Login (obtener token)
 ```bash
-curl -X POST http://192.168.190.194:3000/api/auth/login \
+curl -X POST http://192.168.190.1:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"Control_Usuario":"2026","password":"12345678"}'
 ```
@@ -29,19 +29,19 @@ curl -X POST http://192.168.190.194:3000/api/auth/login \
 ```bash
 TOKEN="tu_token_aqui"
 
-curl -X GET http://192.168.190.194:3000/api/email/config \
+curl -X GET http://192.168.190.1:3000/api/email/config \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 3. Obtener correos de la bandeja
 ```bash
-curl -X GET "http://192.168.190.194:3000/api/email/messages?folder=INBOX&page=1&limit=10" \
+curl -X GET "http://192.168.190.1:3000/api/email/messages?folder=INBOX&page=1&limit=10" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 4. Enviar un correo
 ```bash
-curl -X POST http://192.168.190.194:3000/api/email/send \
+curl -X POST http://192.168.190.1:3000/api/email/send \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -54,7 +54,7 @@ curl -X POST http://192.168.190.194:3000/api/email/send \
 
 ### 5. Probar conexión IMAP/SMTP
 ```bash
-curl -X POST http://192.168.190.194:3000/api/email/config/test \
+curl -X POST http://192.168.190.1:3000/api/email/config/test \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{

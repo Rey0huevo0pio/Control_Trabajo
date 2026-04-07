@@ -1,5 +1,9 @@
-import api, { API_CONFIG, getAuthToken } from '../../src/services/api';
-import { emailCacheService, CachedEmail, FolderSyncState } from './emailCache.service';
+import api, { API_CONFIG, getAuthToken } from "../../src/services/api";
+import {
+  emailCacheService,
+  CachedEmail,
+  FolderSyncState,
+} from "./emailCache.service";
 
 // ==========================================
 // INTERFACES
@@ -46,7 +50,7 @@ export interface EmailConfig {
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
-  status: 'active' | 'inactive' | 'error' | 'syncing';
+  status: "active" | "inactive" | "error" | "syncing";
   lastSync: string | null;
   verified: boolean;
 }
@@ -64,7 +68,11 @@ export interface SyncResult {
 // ==========================================
 class EmailMessagesService {
   // Obtener correos con caché inteligente (sync incremental por UID)
-  async getMessages(folder: string = 'INBOX', page: number = 1, limit: number = 50): Promise<{
+  async getMessages(
+    folder: string = "INBOX",
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<{
     emails: EmailMessage[];
     total: number;
     fromCache: boolean;
@@ -73,13 +81,13 @@ class EmailMessagesService {
     try {
       const token = getAuthToken();
       if (!token) {
-        console.log('⚠️ [EmailMessages] Sin token, usando caché local');
+        console.log("⚠️ [EmailMessages] Sin token, usando caché local");
         const cached = await emailCacheService.getCachedEmails(folder);
         return {
           emails: cached,
           total: cached.length,
           fromCache: true,
-          message: 'Usando caché local (sin sesión)',
+          message: "Usando caché local (sin sesión)",
         };
       }
 
@@ -88,7 +96,11 @@ class EmailMessagesService {
 
       // Si hay caché, hacer sync incremental por UID
       if (cachedEmails.length > 0) {
-        console.log('📦 [EmailMessages] Usando caché local:', cachedEmails.length, 'correos');
+        console.log(
+          "📦 [EmailMessages] Usando caché local:",
+          cachedEmails.length,
+          "correos",
+        );
 
         // Sync en segundo plano: obtener UIDs del servidor
         this.syncIncremental(folder, token, cachedEmails);
@@ -97,12 +109,12 @@ class EmailMessagesService {
           emails: cachedEmails.slice(0, limit),
           total: cachedEmails.length,
           fromCache: true,
-          message: 'Cargado desde caché local',
+          message: "Cargado desde caché local",
         };
       }
 
       // Primera vez: descarga completa desde servidor
-      console.log('🌐 [EmailMessages] Primera descarga desde servidor...');
+      console.log("🌐 [EmailMessages] Primera descarga desde servidor...");
       const result = await this.fullDownload(folder, token, page, limit);
 
       return {
@@ -112,17 +124,23 @@ class EmailMessagesService {
         message: result.message,
       };
     } catch (error: any) {
-      console.error('❌ [EmailMessages] Error getMessages:', error.response?.data || error.message);
+      console.error(
+        "❌ [EmailMessages] Error getMessages:",
+        error.response?.data || error.message,
+      );
 
       // Si falla el servidor, usar caché
       const cached = await emailCacheService.getCachedEmails(folder);
       if (cached.length > 0) {
-        console.log('⚠️ [EmailMessages] Error de servidor, usando caché:', cached.length);
+        console.log(
+          "⚠️ [EmailMessages] Error de servidor, usando caché:",
+          cached.length,
+        );
         return {
           emails: cached,
           total: cached.length,
           fromCache: true,
-          message: 'Error de conexión, mostrando caché local',
+          message: "Error de conexión, mostrando caché local",
         };
       }
 
@@ -130,13 +148,18 @@ class EmailMessagesService {
         emails: [],
         total: 0,
         fromCache: false,
-        message: error.response?.data?.message || 'Error al cargar correos',
+        message: error.response?.data?.message || "Error al cargar correos",
       };
     }
   }
 
   // Descarga completa (primera vez)
-  private async fullDownload(folder: string, token: string, page: number, limit: number): Promise<{
+  private async fullDownload(
+    folder: string,
+    token: string,
+    page: number,
+    limit: number,
+  ): Promise<{
     emails: EmailMessage[];
     total: number;
     message: string;
@@ -158,14 +181,17 @@ class EmailMessagesService {
         emailsList = response.data;
       }
 
-      emailsList = emailsList.map(e => ({ ...e, folder }));
-      console.log('📩 [EmailMessages] Correos descargados:', emailsList.length);
+      emailsList = emailsList.map((e) => ({ ...e, folder }));
+      console.log("📩 [EmailMessages] Correos descargados:", emailsList.length);
 
       if (emailsList.length > 0) {
         await emailCacheService.saveEmails(emailsList, folder);
         await emailCacheService.saveFolderState(folder, {
           lastSync: new Date().toISOString(),
-          lastUID: emailsList.length > 0 ? Math.max(...emailsList.map(e => e.uid)) : 0,
+          lastUID:
+            emailsList.length > 0
+              ? Math.max(...emailsList.map((e) => e.uid))
+              : 0,
           totalEmails: emailsList.length,
           syncedAt: new Date().toISOString(),
         });
@@ -174,44 +200,54 @@ class EmailMessagesService {
       return {
         emails: emailsList,
         total: emailsList.length,
-        message: response.data.message || 'Correos cargados desde servidor',
+        message: response.data.message || "Correos cargados desde servidor",
       };
     } catch (error: any) {
-      console.error('❌ [EmailMessages] Error en fullDownload:', error);
-      return { emails: [], total: 0, message: 'Error en descarga completa' };
+      console.error("❌ [EmailMessages] Error en fullDownload:", error);
+      return { emails: [], total: 0, message: "Error en descarga completa" };
     }
   }
 
   // Sync incremental por UID (solo correos nuevos)
-  private async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<void> {
+  private async syncIncremental(
+    folder: string,
+    token: string,
+    cachedEmails: EmailMessage[],
+  ): Promise<void> {
     try {
       // Paso 1: Obtener UIDs del servidor
-      const uidsResponse = await api.get(`${API_CONFIG.endpoints.EMAIL_MESSAGES}/uids`, {
-        params: { folder },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const uidsResponse = await api.get(
+        `${API_CONFIG.endpoints.EMAIL_MESSAGES}/uids`,
+        {
+          params: { folder },
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       const serverUIDs: number[] = uidsResponse.data.data?.uids || [];
-      console.log('🔄 [EmailMessages] UIDs del servidor:', serverUIDs.length);
+      console.log("🔄 [EmailMessages] UIDs del servidor:", serverUIDs.length);
 
       if (serverUIDs.length === 0) return;
 
       // Paso 2: Determinar UIDs que no tenemos en caché
-      const cachedUIDs = new Set(cachedEmails.map(e => e.uid));
-      const newUIDs = serverUIDs.filter(uid => !cachedUIDs.has(uid));
+      const cachedUIDs = new Set(cachedEmails.map((e) => e.uid));
+      const newUIDs = serverUIDs.filter((uid) => !cachedUIDs.has(uid));
 
       if (newUIDs.length === 0) {
-        console.log('✅ [EmailMessages] No hay correos nuevos');
+        console.log("✅ [EmailMessages] No hay correos nuevos");
         return;
       }
 
-      console.log('📬 [EmailMessages] Correos nuevos por descargar:', newUIDs.length);
+      console.log(
+        "📬 [EmailMessages] Correos nuevos por descargar:",
+        newUIDs.length,
+      );
 
       // Paso 3: Descargar solo los correos nuevos
       const downloadResponse = await api.post(
         `${API_CONFIG.endpoints.EMAIL_MESSAGES}/by-uids`,
         { folder, uids: newUIDs },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       let newEmails: EmailMessage[] = [];
@@ -220,7 +256,10 @@ class EmailMessagesService {
       }
 
       if (newEmails.length > 0) {
-        console.log('📩 [EmailMessages] Correos nuevos descargados:', newEmails.length);
+        console.log(
+          "📩 [EmailMessages] Correos nuevos descargados:",
+          newEmails.length,
+        );
         await emailCacheService.saveEmails(newEmails, folder);
         await emailCacheService.saveFolderState(folder, {
           lastSync: new Date().toISOString(),
@@ -230,14 +269,14 @@ class EmailMessagesService {
         });
       }
     } catch (error) {
-      console.log('⚠️ [EmailMessages] Error en sync incremental:', error);
+      console.log("⚠️ [EmailMessages] Error en sync incremental:", error);
     }
   }
 
   // Forzar sincronización completa
-  async forceSync(folder: string = 'INBOX'): Promise<SyncResult> {
+  async forceSync(folder: string = "INBOX"): Promise<SyncResult> {
     try {
-      console.log('🔄 [EmailMessages] Forzando sincronización completa...');
+      console.log("🔄 [EmailMessages] Forzando sincronización completa...");
       await emailCacheService.clearCache();
       const result = await this.getMessages(folder, 1, 100);
 
@@ -249,40 +288,47 @@ class EmailMessagesService {
         fromCache: result.fromCache,
       };
     } catch (error: any) {
-      console.error('❌ [EmailMessages] Error en forceSync:', error);
+      console.error("❌ [EmailMessages] Error en forceSync:", error);
       return {
         success: false,
         newEmails: 0,
         totalEmails: 0,
-        message: error.message || 'Error al sincronizar',
+        message: error.message || "Error al sincronizar",
         fromCache: false,
       };
     }
   }
 
   // Obtener un correo específico con contenido completo (para abrir)
-  async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
+  async getFullMessage(
+    uid: number,
+    folder: string = "INBOX",
+  ): Promise<EmailMessage | null> {
     try {
-      // Verificar si ya está en caché con contenido completo
-      const hasFull = await emailCacheService.hasFullContent(uid, folder);
-      if (hasFull) {
-        const cached = await emailCacheService.getCachedEmails(folder);
-        const fullEmail = cached.find(e => e.uid === uid);
-        if (fullEmail) {
-          console.log('📦 [EmailMessages] Contenido completo ya en caché (UID:', uid, ')');
-          return fullEmail;
-        }
+      // Verificar si ya está en caché con contenido completo (clave separada)
+      const cachedFull = await emailCacheService.getFullEmail(uid, folder);
+      if (cachedFull) {
+        console.log(
+          "📦 [EmailMessages] Contenido completo ya en caché (UID:",
+          uid,
+          ")",
+        );
+        return cachedFull;
       }
 
       // Descargar del servidor
-      console.log('🌐 [EmailMessages] Descargando contenido completo (UID:', uid, ')');
+      console.log(
+        "🌐 [EmailMessages] Descargando contenido completo (UID:",
+        uid,
+        ")",
+      );
       const token = getAuthToken();
       if (!token) return null;
 
       const response = await api.post(
         `${API_CONFIG.endpoints.EMAIL_MESSAGES}/by-uids`,
         { folder, uids: [uid] },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       let emails: EmailMessage[] = [];
@@ -294,7 +340,7 @@ class EmailMessagesService {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
 
-        // Guardar contenido completo en caché
+        // Guardar contenido completo en clave separada
         await emailCacheService.saveFullEmail(fullEmail, folder);
 
         return fullEmail;
@@ -302,13 +348,16 @@ class EmailMessagesService {
 
       return null;
     } catch (error) {
-      console.error('❌ [EmailMessages] Error getFullMessage:', error);
+      console.error("❌ [EmailMessages] Error getFullMessage:", error);
       return null;
     }
   }
 
   // Marcar correo como leído
-  async markAsRead(messageId: string, folder: string = 'INBOX'): Promise<boolean> {
+  async markAsRead(
+    messageId: string,
+    folder: string = "INBOX",
+  ): Promise<boolean> {
     try {
       const token = getAuthToken();
       if (!token) return false;
@@ -316,25 +365,28 @@ class EmailMessagesService {
       await api.post(
         `${API_CONFIG.endpoints.EMAIL_MESSAGES}/${messageId}/read`,
         { folder },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       // Actualizar caché local
       const cached = await emailCacheService.getCachedEmails(folder);
-      const updated = cached.map(e => 
-        e.id === messageId ? { ...e, seen: true } : e
+      const updated = cached.map((e) =>
+        e.id === messageId ? { ...e, seen: true } : e,
       );
       await emailCacheService.saveEmails(updated, folder);
 
       return true;
     } catch (error) {
-      console.error('❌ [EmailMessages] Error markAsRead:', error);
+      console.error("❌ [EmailMessages] Error markAsRead:", error);
       return false;
     }
   }
 
   // Eliminar correo
-  async deleteMessage(messageId: string, folder: string = 'INBOX'): Promise<boolean> {
+  async deleteMessage(
+    messageId: string,
+    folder: string = "INBOX",
+  ): Promise<boolean> {
     try {
       const token = getAuthToken();
       if (!token) return false;
@@ -346,33 +398,38 @@ class EmailMessagesService {
 
       // Eliminar de caché local
       const cached = await emailCacheService.getCachedEmails(folder);
-      const filtered = cached.filter(e => e.id !== messageId);
+      const filtered = cached.filter((e) => e.id !== messageId);
       await emailCacheService.saveEmails(filtered, folder);
 
       return true;
     } catch (error) {
-      console.error('❌ [EmailMessages] Error deleteMessage:', error);
+      console.error("❌ [EmailMessages] Error deleteMessage:", error);
       return false;
     }
   }
 
   // Enviar correo
-  async sendEmail(data: SendEmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  async sendEmail(
+    data: SendEmailData,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const token = getAuthToken();
-      if (!token) return { success: false, error: 'No hay sesión' };
+      if (!token) return { success: false, error: "No hay sesión" };
 
       const response = await api.post(API_CONFIG.endpoints.EMAIL_SEND, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('📤 [EmailMessages] sendEmail response:', response.data);
+      console.log("📤 [EmailMessages] sendEmail response:", response.data);
       return response.data;
     } catch (error: any) {
-      console.error('❌ [EmailMessages] Error sendEmail:', error.response?.data || error.message);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al enviar correo' 
+      console.error(
+        "❌ [EmailMessages] Error sendEmail:",
+        error.response?.data || error.message,
+      );
+      return {
+        success: false,
+        error: error.response?.data?.message || "Error al enviar correo",
       };
     }
   }
@@ -383,19 +440,25 @@ class EmailMessagesService {
       const token = getAuthToken();
       if (!token) return [];
 
-      const response = await api.get(`${API_CONFIG.endpoints.EMAIL_MESSAGES}/folders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(
+        `${API_CONFIG.endpoints.EMAIL_MESSAGES}/folders`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       return response.data.data || response.data || [];
     } catch (error) {
-      console.error('❌ [EmailMessages] Error getFolders:', error);
+      console.error("❌ [EmailMessages] Error getFolders:", error);
       return [];
     }
   }
 
   // Buscar correos
-  async searchMessages(query: string, folder: string = 'INBOX'): Promise<EmailMessage[]> {
+  async searchMessages(
+    query: string,
+    folder: string = "INBOX",
+  ): Promise<EmailMessage[]> {
     try {
       const token = getAuthToken();
       if (!token) return [];
@@ -414,7 +477,7 @@ class EmailMessagesService {
 
       return emails;
     } catch (error) {
-      console.error('❌ [EmailMessages] Error searchMessages:', error);
+      console.error("❌ [EmailMessages] Error searchMessages:", error);
       return [];
     }
   }
@@ -425,7 +488,11 @@ class EmailMessagesService {
   }
 
   // Obtener estadísticas de caché
-  async getCacheStats(): Promise<{ totalEmails: number; folders: string[]; lastSync: string | null }> {
+  async getCacheStats(): Promise<{
+    totalEmails: number;
+    folders: string[];
+    lastSync: string | null;
+  }> {
     return await emailCacheService.getCacheStats();
   }
 }
