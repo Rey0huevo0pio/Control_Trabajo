@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Image } from 'react-native'
 import { YStack, XStack, Text, Card, Button } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
+import { useResponsive } from '../../src/components/useResponsive'
 import type { Instalacion } from '@/types'
 
 interface Props {
@@ -17,23 +18,25 @@ export function InstalacionCard({
   onCreateArea,
   showCreateArea = false,
 }: Props) {
+  const { isMobile } = useResponsive()
+
   return (
     <Card
       backgroundColor="$background"
-      borderRadius={16}
+      borderRadius="$lg"
       padding={0}
       overflow="hidden"
       borderColor="$borderColor"
       borderWidth={1}
       shadowColor="$shadowColor"
       shadowOpacity={0.08}
-      shadowRadius={6}
+      shadowRadius={8}
       onPress={onPress}
-      pressStyle={{ opacity: 0.9 }}
+      pressStyle={{ opacity: 0.9, scale: 0.98 }}
     >
       <YStack>
         {/* Foto de la instalación */}
-        <YStack position="relative" height={140} backgroundColor="$background3">
+        <YStack position="relative" height={isMobile ? 140 : 160} backgroundColor="$background3">
           {instalacion.foto ? (
             <Image
               source={{ uri: instalacion.foto }}
@@ -46,54 +49,109 @@ export function InstalacionCard({
               alignItems="center"
               backgroundColor="$background2"
             >
-              <Ionicons name="business-outline" size={48} color="$color4" />
+              <YStack
+                width={64}
+                height={64}
+                borderRadius="$full"
+                backgroundColor="$background3"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons name="business-outline" size={32} color="$color4" />
+              </YStack>
             </YStack>
           )}
           {/* Badge de activo/inactivo */}
           <XStack
             position="absolute"
-            top="$2"
-            right="$2"
+            top="$3"
+            right="$3"
             backgroundColor={instalacion.activa ? '$success' : '$color4'}
             paddingHorizontal="$3"
-            paddingVertical="$1"
-            borderRadius={10}
+            paddingVertical="$1.5"
+            borderRadius="$full"
+            shadowColor="$shadowColor"
+            shadowOpacity={0.2}
+            shadowRadius={4}
           >
-            <Text color="white" fontSize="$2" fontWeight="600">
-              {instalacion.activa ? 'Activa' : 'Inactiva'}
-            </Text>
+            <XStack alignItems="center" gap="$1.5">
+              <Ionicons 
+                name={instalacion.activa ? "checkmark-circle" : "close-circle"} 
+                size={14} 
+                color="white" 
+              />
+              <Text color="white" fontSize="$2" fontWeight="700">
+                {instalacion.activa ? 'Activa' : 'Inactiva'}
+              </Text>
+            </XStack>
           </XStack>
         </YStack>
 
         {/* Contenido de la tarjeta */}
-        <YStack padding="$4" gap="$2">
-          <Text fontSize="$5" fontWeight="700" color="$color" numberOfLines={2}>
+        <YStack padding="$4" gap="$3">
+          <Text fontSize={isMobile ? '$5' : '$6'} fontWeight="700" color="$color" numberOfLines={2}>
             {instalacion.nombre_instalacion}
           </Text>
 
-          <XStack gap="$2" alignItems="center">
-            <Ionicons name="location-outline" size={16} color="$color2" />
-            <Text fontSize="$3" color="$color2" flex={1} numberOfLines={1}>
-              {instalacion.ubicacion?.direccion || 'Sin ubicación'}
-            </Text>
-          </XStack>
+          <YStack gap="$2">
+            <XStack gap="$2" alignItems="center">
+              <YStack
+                width={32}
+                height={32}
+                borderRadius="$md"
+                backgroundColor="$background2"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons name="location" size={16} color="$primary" />
+              </YStack>
+              <YStack flex={1}>
+                <Text fontSize="$2" color="$color2" fontWeight="600" numberOfLines={1}>
+                  Ubicación
+                </Text>
+                <Text fontSize="$3" color="$color" numberOfLines={1}>
+                  {instalacion.ubicacion?.direccion || 'Sin ubicación'}
+                </Text>
+              </YStack>
+            </XStack>
 
-          <XStack gap="$2" alignItems="center">
-            <Ionicons name="shield-outline" size={16} color="$color2" />
-            <Text fontSize="$3" color="$color2" flex={1} numberOfLines={1}>
-              {instalacion.responsable || 'Sin responsable'}
-            </Text>
-          </XStack>
+            <XStack gap="$2" alignItems="center">
+              <YStack
+                width={32}
+                height={32}
+                borderRadius="$md"
+                backgroundColor="$background2"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Ionicons name="person" size={16} color="$primary" />
+              </YStack>
+              <YStack flex={1}>
+                <Text fontSize="$2" color="$color2" fontWeight="600" numberOfLines={1}>
+                  Responsable
+                </Text>
+                <Text fontSize="$3" color="$color" numberOfLines={1}>
+                  {instalacion.responsable || 'Sin responsable'}
+                </Text>
+              </YStack>
+            </XStack>
+          </YStack>
 
           {instalacion.descripcion && (
-            <Text fontSize="$3" color="$color3" numberOfLines={2} marginTop="$1">
-              {instalacion.descripcion}
-            </Text>
+            <YStack 
+              backgroundColor="$background2" 
+              padding="$3" 
+              borderRadius="$md"
+            >
+              <Text fontSize="$3" color="$color2" numberOfLines={2} lineHeight={20}>
+                {instalacion.descripcion}
+              </Text>
+            </YStack>
           )}
 
-          <XStack gap="$1" alignItems="center" paddingTop="$3" borderTopWidth={1} borderTopColor="$background3">
-            <Ionicons name="person-circle-outline" size={14} color="$color4" />
-            <Text fontSize="$1" color="$color4">
+          <XStack gap="$2" alignItems="center" paddingTop="$2" borderTopWidth={1} borderTopColor="$background3">
+            <Ionicons name="person-circle" size={16} color="$color3" />
+            <Text fontSize="$2" color="$color3" fontWeight="500">
               {instalacion.nombre_registrador}
             </Text>
           </XStack>
@@ -104,16 +162,16 @@ export function InstalacionCard({
           <YStack padding="$4" paddingTop={0}>
             <Button
               onPress={onCreateArea}
-              backgroundColor="$background2"
-              borderRadius={10}
+              backgroundColor="$primaryMuted"
+              borderRadius="$md"
               borderWidth={1}
               borderColor="$primary"
-              borderStyle="dashed"
-              pressStyle={{ opacity: 0.8 }}
+              height={44}
+              pressStyle={{ backgroundColor: '$primary', scale: 0.98 }}
             >
               <XStack alignItems="center" gap="$2">
-                <Ionicons name="add-circle-outline" size={18} color="$primary" />
-                <Text color="$primary" fontSize="$3" fontWeight="600">
+                <Ionicons name="add-circle-outline" size={20} color="$primary" />
+                <Text color="$primary" fontSize="$3" fontWeight="700">
                   Crear Área
                 </Text>
               </XStack>
