@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Dimensions, Share } from "react-native";
+import { Share } from "react-native";
 import { YStack, ScrollView, Spinner, XStack } from "tamagui";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -8,6 +8,7 @@ import {
   Stack,
   HStack,
   IconButton,
+  useResponsive,
 } from "../../../../../src/components/design-system";
 import { HtmlEmailRenderer } from "./HtmlEmailRenderer";
 import { AttachmentPreview } from "./AttachmentPreview";
@@ -33,8 +34,7 @@ export function EmailContentViewer({
   loading = false,
 }: EmailContentViewerProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const screenWidth = Dimensions.get("window").width;
-  const isMobile = screenWidth < 768;
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     console.log("📧 [EmailContentViewer] Received email:", {

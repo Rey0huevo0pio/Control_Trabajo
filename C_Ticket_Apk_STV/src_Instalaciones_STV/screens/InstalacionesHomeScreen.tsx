@@ -10,7 +10,7 @@ import {
 } from 'tamagui'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
-import { useWindowDimensions } from 'react-native'
+import { useResponsive } from '../../src/components/useResponsive'
 import { InstalacionCard } from '../components'
 import { instalacionApi } from '../lib'
 import type { Instalacion } from '@/types'
@@ -27,8 +27,7 @@ export function InstalacionesHomeScreen({ navigation }: Props) {
   const [instalaciones, setInstalaciones] = useState<Instalacion[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const { width } = useWindowDimensions()
-  const isMobile = width < 480
+  const { isMobile } = useResponsive()
 
   const loadInstalaciones = async () => {
     try {

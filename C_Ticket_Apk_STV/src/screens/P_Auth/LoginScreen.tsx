@@ -3,7 +3,7 @@ import { YStack, XStack, Input, Text, Button, Spinner } from 'tamagui'
 import { useAuthStore } from '../../store'
 import { authApi } from '../../services'
 import { LoginRequest } from '../../types'
-import { useWindowDimensions } from 'react-native'
+import { useResponsive } from '../../components/useResponsive'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types'
 
@@ -17,10 +17,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [controlUsuario, setControlUsuario] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { width } = useWindowDimensions()
+  const { isMobile, buttonSizes } = useResponsive()
 
   const { login, setLoading, isLoading } = useAuthStore()
-  const isMobile = width < 480
 
   const handleLogin = async () => {
     setError('')
@@ -178,7 +177,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Button
           onPress={handleLogin}
           backgroundColor="$primary"
-          paddingVertical={isMobile ? '$3.5' : '$3'}
+          paddingVertical="$3"
           paddingHorizontal="$4"
           disabled={isLoading}
           borderRadius={12}
@@ -188,16 +187,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           shadowRadius={8}
           justifyContent="center"
           alignItems="center"
-          minHeight={isMobile ? 58 : 50}
+          minHeight={buttonSizes.minHeight}
           width="100%"
         >
           {isLoading ? (
             <XStack gap="$2" alignItems="center" justifyContent="center">
               <Spinner color="white" size="small" />
-              <Text 
-                color="white" 
-                fontWeight="700" 
-                fontSize={isMobile ? '$4' : '$4'}
+              <Text
+                color="white"
+                fontWeight="700"
+                fontSize="$4"
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
@@ -205,10 +204,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               </Text>
             </XStack>
           ) : (
-            <Text 
-              color="white" 
-              fontWeight="700" 
-              fontSize={isMobile ? '$4' : '$4'}
+            <Text
+              color="white"
+              fontWeight="700"
+              fontSize="$4"
               numberOfLines={1}
               adjustsFontSizeToFit
             >

@@ -5,6 +5,7 @@ import { IconButton } from './Button'
 import { useResponsive } from '../useResponsive'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 interface HeaderProps {
   title: string
@@ -20,6 +21,7 @@ interface HeaderProps {
   }
   variant?: 'default' | 'primary' | 'large'
   onBack?: () => void
+  useSafeArea?: boolean
 }
 
 export function Header({
@@ -30,15 +32,20 @@ export function Header({
   avatar,
   variant = 'default',
   onBack,
+  useSafeArea = true,
 }: HeaderProps) {
   const navigation = useNavigation<any>()
   const { isMobile } = useResponsive()
+  const insets = useSafeAreaInsets()
 
   const isPrimary = variant === 'primary'
   const isLarge = variant === 'large'
   const textColor = isPrimary ? 'white' : '$color'
   const subtitleColor = isPrimary ? 'rgba(255,255,255,0.8)' : '$color2'
   const bgColor = isPrimary ? '$primary' : '$backgroundSecondary'
+  
+  // Safe area padding for notch devices
+  const paddingTop = useSafeArea && isMobile ? insets.top + 12 : 12
 
   // Large header (iOS large title style)
   if (isLarge) {
@@ -46,7 +53,7 @@ export function Header({
       <YStack
         backgroundColor={bgColor}
         paddingHorizontal={isMobile ? '$5' : '$6'}
-        paddingTop="$5"
+        paddingTop={paddingTop}
         paddingBottom="$4"
         gap="$2"
       >
@@ -110,17 +117,18 @@ export function Header({
     )
   }
 
-  // Standard iOS header
+  // Standard iOS header - optimized for mobile with better text wrapping
   return (
     <YStack
       backgroundColor={bgColor}
       paddingHorizontal={isMobile ? '$5' : '$6'}
       paddingVertical="$4"
+      paddingTop={paddingTop}
       paddingBottom="$3"
     >
-      <XStack alignItems="center" justifyContent="space-between">
-        <YStack flex={1} gap="$1">
-          <XStack alignItems="center" gap="$2">
+      <XStack alignItems="center" justifyContent="space-between" gap="$3">
+        <YStack flex={1} gap="$1" flexShrink={1}>
+          <XStack alignItems="center" gap="$2" flexWrap="wrap">
             {showBackButton && (
               <IconButton
                 icon="chevron-back"
@@ -133,6 +141,7 @@ export function Header({
               variant={isMobile ? 'title2' : 'title1'}
               color={textColor}
               fontWeight="700"
+              numberOfLines={2}
             >
               {title}
             </Text>
@@ -142,13 +151,14 @@ export function Header({
               variant="bodySmall"
               color={subtitleColor}
               marginLeft={showBackButton ? '$9' : '$0'}
+              numberOfLines={1}
             >
               {subtitle}
             </Text>
           )}
         </YStack>
 
-        <XStack alignItems="center" gap="$2">
+        <XStack alignItems="center" gap="$2" flexShrink={0}>
           {rightAction && (
             <IconButton
               icon={rightAction.icon}

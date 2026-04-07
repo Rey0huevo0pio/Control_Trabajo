@@ -11,3 +11,6 @@ export type { CardVariant } from './Card'
 export { Stack, HStack, ScreenLayout, ScreenSection } from './Layout'
 
 export { Header } from './Header'
+
+// Responsive hook
+export { useResponsive } from '../useResponsive'

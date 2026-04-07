@@ -1,7 +1,6 @@
 import React from 'react'
 import { YStack, XStack, Avatar } from 'tamagui'
 import { useNavigation } from '@react-navigation/native'
-import { useWindowDimensions } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../store'
 import { ROLE_PERMISSIONS } from '../../constants'
@@ -19,8 +18,7 @@ import { useResponsive } from '../../components/useResponsive'
 export default function HomeScreen() {
   const navigation = useNavigation<any>()
   const { user, logout, hasRole } = useAuthStore()
-  const { width } = useWindowDimensions()
-  const { isMobile } = useResponsive()
+  const { isMobile, spacing, buttonSizes } = useResponsive()
 
   const permissions = user ? ROLE_PERMISSIONS[user.rol] : null
 
@@ -72,7 +70,7 @@ export default function HomeScreen() {
   return (
     <ScreenLayout>
       {/* Header profesional */}
-      <Card variant="default" backgroundColor="$primary" padding={isMobile ? '$5' : '$6'} overflow="hidden" position="relative">
+      <Card variant="default" backgroundColor="$primary" padding={isMobile ? '$5' : '$6'} overflow="hidden" position="relative" borderRadius="$xl">
         <YStack position="absolute" right={-20} top={-30} opacity={0.15}>
           <Ionicons name="grid" size={180} color="white" />
         </YStack>
@@ -115,7 +113,7 @@ export default function HomeScreen() {
               <Text variant="bodySmall" color="$color2">
                 {user?.Control_Usuario || '---'}
               </Text>
-              <XStack backgroundColor="$primary" paddingHorizontal="$3" paddingVertical="$2" borderRadius={8}>
+              <XStack backgroundColor="$primary" paddingHorizontal="$3" paddingVertical="$2" borderRadius="$md">
                 <Text variant="caption" color="white" fontWeight="600" textTransform="uppercase">
                   {user?.rol || 'Guest'}
                 </Text>
@@ -148,9 +146,9 @@ export default function HomeScreen() {
             <HStack gap="$3">
               <YStack
                 backgroundColor="$primary"
-                width={isMobile ? 50 : 60}
-                height={isMobile ? 50 : 60}
-                borderRadius={14}
+                width={isMobile ? '$6' : '$7'}
+                height={isMobile ? '$6' : '$7'}
+                borderRadius="$md"
                 justifyContent="center"
                 alignItems="center"
               >
@@ -179,9 +177,9 @@ export default function HomeScreen() {
             <HStack gap="$3">
               <YStack
                 backgroundColor="$success"
-                width={isMobile ? 50 : 60}
-                height={isMobile ? 50 : 60}
-                borderRadius={14}
+                width={isMobile ? '$6' : '$7'}
+                height={isMobile ? '$6' : '$7'}
+                borderRadius="$md"
                 justifyContent="center"
                 alignItems="center"
               >
@@ -210,9 +208,9 @@ export default function HomeScreen() {
             <HStack gap="$3">
               <YStack
                 backgroundColor="$secondary"
-                width={isMobile ? 50 : 60}
-                height={isMobile ? 50 : 60}
-                borderRadius={14}
+                width={isMobile ? '$6' : '$7'}
+                height={isMobile ? '$6' : '$7'}
+                borderRadius="$md"
                 justifyContent="center"
                 alignItems="center"
               >
@@ -242,9 +240,9 @@ export default function HomeScreen() {
               <HStack gap="$3">
                 <YStack
                   backgroundColor="$secondary"
-                  width={isMobile ? 50 : 60}
-                  height={isMobile ? 50 : 60}
-                  borderRadius={14}
+                  width={isMobile ? '$6' : '$7'}
+                  height={isMobile ? '$6' : '$7'}
+                  borderRadius="$md"
                   justifyContent="center"
                   alignItems="center"
                 >
@@ -275,9 +273,9 @@ export default function HomeScreen() {
               <HStack gap="$3">
                 <YStack
                   backgroundColor="$warning"
-                  width={isMobile ? 50 : 60}
-                  height={isMobile ? 50 : 60}
-                  borderRadius={14}
+                  width={isMobile ? '$6' : '$7'}
+                  height={isMobile ? '$6' : '$7'}
+                  borderRadius="$md"
                   justifyContent="center"
                   alignItems="center"
                 >
@@ -337,7 +335,7 @@ function PermissionChip({ label, active }: { label: string; active: boolean }) {
       backgroundColor={active ? '$successMuted' : '$errorMuted'}
       paddingHorizontal="$3"
       paddingVertical="$2"
-      borderRadius={10}
+      borderRadius="$sm"
       borderWidth={1}
       borderColor={active ? '$success' : '$error'}
     >

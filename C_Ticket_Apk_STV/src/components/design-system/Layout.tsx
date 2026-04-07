@@ -1,6 +1,8 @@
 import React from 'react'
 import { YStack, XStack, ScrollView, type YStackProps, type XStackProps } from 'tamagui'
 import { useResponsive } from '../useResponsive'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { KeyboardAvoidingView, Platform } from 'react-native'
 
 // iOS-style vertical stack with accessible spacing
 export function Stack({
@@ -43,6 +45,8 @@ interface ScreenLayoutProps {
   headerTitle?: string
   scrollable?: boolean
   backgroundColor?: string
+  useSafeArea?: boolean
+  avoidKeyboard?: boolean
 }
 
 export function ScreenLayout({
@@ -50,22 +54,40 @@ export function ScreenLayout({
   padding,
   scrollable = true,
   backgroundColor = '$background',
+  useSafeArea = true,
+  avoidKeyboard = true,
 }: ScreenLayoutProps) {
-  const { isMobile } = useResponsive()
-  // Generous padding for accessibility
-  const paddingHorizontal = padding || (isMobile ? '$5' : '$8')
+  const { isMobile, padding: paddingConfig } = useResponsive()
+  const insets = useSafeAreaInsets()
+  
+  // Generous padding for accessibility with safe area support
+  const paddingHorizontal = padding || paddingConfig.screenHorizontal
+  const paddingTop = useSafeArea 
+    ? (isMobile ? insets.top + 12 : 16) // Below status bar on mobile
+    : paddingConfig.section
 
   const content = (
     <YStack
       flex={1}
       backgroundColor={backgroundColor}
       paddingHorizontal={paddingHorizontal}
-      paddingVertical="$5"
+      paddingTop={paddingTop}
+      paddingBottom={useSafeArea ? insets.bottom + 16 : 16}
       gap="$5"
     >
       {children}
     </YStack>
   )
+
+  const wrappedContent = avoidKeyboard ? (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={isMobile ? 0 : 0}
+    >
+      {content}
+    </KeyboardAvoidingView>
+  ) : content
 
   if (scrollable) {
     return (
@@ -73,14 +95,19 @@ export function ScreenLayout({
         flex={1}
         backgroundColor={backgroundColor}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ 
+          paddingBottom: useSafeArea ? insets.bottom + 24 : 40,
+          flexGrow: 1,
+        }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
-        {content}
+        {wrappedContent}
       </ScrollView>
     )
   }
 
-  return content
+  return wrappedContent
 }
 
 // iOS-style screen section with clear visual hierarchy
