@@ -1,4 +1,5 @@
 import React from "react";
+import { Dimensions } from "react-native";
 import { YStack } from "tamagui";
 import { Text, Card } from "../../../../../src/components/design-system";
 
@@ -6,12 +7,14 @@ interface FileAttachmentViewProps {
   fileName: string;
   size: number;
   mimeType: string;
+  content?: string;
 }
 
 export function FileAttachmentView({
   fileName,
   size,
   mimeType,
+  content,
 }: FileAttachmentViewProps) {
   const sizeKB = (size / 1024).toFixed(1);
   const sizeMB = (size / 1024 / 1024).toFixed(2);
@@ -39,22 +42,73 @@ export function FileAttachmentView({
   return (
     <Card
       variant="outlined"
-      padding="$3"
-      backgroundColor="$backgroundSecondary"
+      padding="$4"
+      backgroundColor="$backgroundTertiary"
+      borderRadius={12}
     >
-      <YStack gap="$2" alignItems="center">
-        <Text fontSize={40}>{getIcon()}</Text>
-        <Text
-          variant="bodySmall"
-          fontWeight="600"
-          color="$color"
-          numberOfLines={1}
+      <YStack gap="$3">
+        {/* Header del archivo */}
+        <YStack
+          backgroundColor="$backgroundSecondary"
+          padding="$3"
+          borderRadius={8}
+          alignItems="center"
         >
-          {fileName}
-        </Text>
-        <Text variant="caption" color="$color3">
-          {getExtension()} • {displaySize}
-        </Text>
+          <Text fontSize={40}>{getIcon()}</Text>
+          <Text
+            variant="body"
+            fontWeight="600"
+            color="$color"
+            numberOfLines={1}
+            marginTop="$2"
+            textAlign="center"
+          >
+            {fileName}
+          </Text>
+          <Text variant="caption" color="$color3">
+            {getExtension()} • {displaySize}
+          </Text>
+        </YStack>
+
+        {/* Preview si hay contenido (archivos de texto) */}
+        {content && mimeType.includes("text") ? (
+          <YStack
+            backgroundColor="white"
+            borderRadius={8}
+            padding="$3"
+            maxHeight={150}
+            overflow="hidden"
+          >
+            <Text variant="caption" color="$color3" marginBottom="$2">
+              📋 Vista previa:
+            </Text>
+            <Text
+              variant="bodySmall"
+              color="$color"
+              numberOfLines={5}
+              lineHeight={20}
+              fontFamily="monospace"
+              fontSize={12}
+            >
+              {content.length > 400 
+                ? content.substring(0, 400) + "..." 
+                : content}
+            </Text>
+          </YStack>
+        ) : (
+          <YStack
+            backgroundColor="white"
+            borderRadius={8}
+            padding="$4"
+            alignItems="center"
+          >
+            <Text variant="caption" color="$color3" textAlign="center">
+              📎 {mimeType.includes("zip") || mimeType.includes("rar") 
+                ? "Archivo comprimido - descarga para extraer" 
+                : "Descarga para ver el contenido"}
+            </Text>
+          </YStack>
+        )}
       </YStack>
     </Card>
   );
