@@ -85,7 +85,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
         {attachments.length > 2 && (
           <XStack
             backgroundColor="$background2"
-            borderRadius="$2"
+            borderRadius={8}
             padding="$1"
             gap="$1"
           >
@@ -94,7 +94,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
               justifyContent="center"
               alignItems="center"
               padding="$2"
-              borderRadius="$1"
+              borderRadius={6}
               backgroundColor={viewMode === "grid" ? "$background" : "transparent"}
               shadowColor={viewMode === "grid" ? "rgba(0,0,0,0.1)" : "transparent"}
               shadowOffset={{ width: 0, height: 1 }}
@@ -113,7 +113,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
               justifyContent="center"
               alignItems="center"
               padding="$2"
-              borderRadius="$1"
+              borderRadius={6}
               backgroundColor={viewMode === "list" ? "$background" : "transparent"}
               shadowColor={viewMode === "list" ? "rgba(0,0,0,0.1)" : "transparent"}
               shadowOffset={{ width: 0, height: 1 }}
@@ -147,7 +147,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
                   key={idx}
                   width={160}
                   backgroundColor="$background2"
-                  borderRadius="$3"
+                  borderRadius={12}
                   overflow="hidden"
                   shadowColor="rgba(0,0,0,0.1)"
                   shadowOffset={{ width: 0, height: 2 }}
@@ -167,7 +167,6 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
                         size={size}
                         content={att.content}
                         mimeType={mimeType}
-                        thumbnail={att.thumbnail}
                       />
                     ) : (
                       <Ionicons
@@ -211,7 +210,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
               <XStack
                 key={idx}
                 backgroundColor="$background2"
-                borderRadius="$3"
+                borderRadius={12}
                 padding="$3"
                 gap="$3"
                 alignItems="center"
@@ -224,7 +223,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
                 <YStack
                   width={48}
                   height={48}
-                  borderRadius="$2"
+                  borderRadius={8}
                   backgroundColor="$background3"
                   justifyContent="center"
                   alignItems="center"

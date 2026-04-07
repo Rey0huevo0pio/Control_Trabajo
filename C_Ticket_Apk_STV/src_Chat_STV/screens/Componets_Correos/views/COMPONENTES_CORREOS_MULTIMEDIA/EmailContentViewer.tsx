@@ -112,7 +112,7 @@ export function EmailContentViewer({
           </Text>
           <HStack gap="$1">
             <IconButton
-              icon="reply-outline"
+              icon="mail-outline"
               onPress={() => {}}
               variant="ghost"
               size={20}
@@ -133,7 +133,7 @@ export function EmailContentViewer({
           {/* Tarjeta principal del correo */}
           <Card
             backgroundColor="$background"
-            borderRadius="$3"
+            borderRadius={12}
             padding="$4"
             shadowColor="rgba(0,0,0,0.1)"
             shadowOffset={{ width: 0, height: 2 }}
@@ -194,7 +194,7 @@ export function EmailContentViewer({
                     marginTop="$2"
                     padding="$3"
                     backgroundColor="$background2"
-                    borderRadius="$2"
+                    borderRadius={8}
                     gap="$2"
                   >
                     <Text variant="caption" color="$color3">

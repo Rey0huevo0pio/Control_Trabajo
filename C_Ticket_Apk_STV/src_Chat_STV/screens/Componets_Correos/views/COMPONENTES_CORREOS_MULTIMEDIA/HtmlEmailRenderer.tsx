@@ -25,7 +25,7 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
   // Si no hay HTML ni texto, mostrar mensaje vacío
   if ((!html || html.trim() === "") && (!text || text.trim() === "")) {
     return (
-      <YStack padding="$4" alignItems="center" backgroundColor="$background2" borderRadius="$3" margin="$2">
+      <YStack padding="$4" alignItems="center" backgroundColor="$background2" borderRadius={12} margin="$2">
         <Text variant="body" color="$color3" padding="$3">
           📭 Este correo no tiene contenido visible
         </Text>
@@ -42,7 +42,7 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
     return (
       <YStack 
         backgroundColor="white" 
-        borderRadius="$3" 
+        borderRadius={12} 
         margin="$2" 
         padding="$4"
         shadowColor="rgba(0,0,0,0.1)"
@@ -240,7 +240,7 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
   return (
     <YStack 
       backgroundColor="$background2" 
-      borderRadius="$3" 
+      borderRadius={12} 
       margin="$2"
       overflow="hidden"
     >
