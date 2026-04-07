@@ -78,6 +78,12 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
           -webkit-text-size-adjust: 100%;
         }
         
+        html, body {
+          width: 100% !important;
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+        }
+        
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
           font-size: 15px;
@@ -86,6 +92,7 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
           background-color: transparent;
           word-wrap: break-word;
           overflow-wrap: break-word;
+          -webkit-hyphens: auto;
         }
         
         /* Contenedor principal */
@@ -94,15 +101,41 @@ export function HtmlEmailRenderer({ html, text }: HtmlEmailRendererProps) {
           background: white;
           border-radius: 12px;
           margin: 8px 0;
+          max-width: 100% !important;
+          width: 100% !important;
+          overflow-x: hidden !important;
         }
         
-        /* Imágenes */
+        /* Imágenes responsivas */
         img {
-          max-width: 100%;
-          height: auto;
+          max-width: 100% !important;
+          width: auto !important;
+          height: auto !important;
           display: block;
           margin: 12px 0;
           border-radius: 8px;
+        }
+        
+        /* Tablas responsivas */
+        table {
+          max-width: 100% !important;
+          width: 100% !important;
+          border-collapse: collapse;
+          margin: 8px 0;
+          table-layout: fixed;
+        }
+        
+        td, th {
+          padding: 8px;
+          vertical-align: top;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          max-width: 100%;
+        }
+        
+        /* Forzar elementos anchos a ajustarse */
+        div, p, span, td, th {
+          max-width: 100% !important;
         }
         
         /* Enlaces */

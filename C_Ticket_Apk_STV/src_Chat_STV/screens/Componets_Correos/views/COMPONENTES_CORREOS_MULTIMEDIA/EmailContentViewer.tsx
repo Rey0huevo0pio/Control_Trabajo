@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Dimensions, Share } from "react-native";
 import { YStack, ScrollView, Spinner, XStack } from "tamagui";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -32,6 +33,8 @@ export function EmailContentViewer({
   loading = false,
 }: EmailContentViewerProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const screenWidth = Dimensions.get("window").width;
+  const isMobile = screenWidth < 768;
 
   useEffect(() => {
     console.log("📧 [EmailContentViewer] Received email:", {
@@ -42,6 +45,31 @@ export function EmailContentViewer({
       attachmentsCount: email?.attachments?.length || 0,
     });
   }, [email]);
+
+  // ✅ FUNCIÓN PARA COMPARTIR/DESCARGAR ADJUNTOS (usa Share nativo de RN)
+  const handleShareAttachment = async (attachment: any) => {
+    try {
+      const fileName = attachment.fileName || attachment.filename || "archivo";
+      const mimeType = attachment.contentType || attachment.mimeType || "archivo";
+      const size = attachment.size || 0;
+      
+      const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+      };
+
+      // Mostrar diálogo de compartir nativo
+      await Share.share({
+        message: `📎 ${fileName}\n📄 Tipo: ${mimeType}\n📏 Tamaño: ${formatFileSize(size)}\n\n¿Cómo deseas compartir este archivo?`,
+        title: `Compartir: ${fileName}`,
+      });
+    } catch (error) {
+      console.error("❌ [EmailContentViewer] Error compartiendo adjunto:", error);
+    }
+  };
 
   const getInitials = (from: string) => {
     if (!from) return "?";
@@ -128,8 +156,12 @@ export function EmailContentViewer({
       </Card>
 
       {/* Contenido del correo */}
-      <ScrollView showsVerticalScrollIndicator={false} backgroundColor="$background2">
-        <YStack padding="$3" gap="$3">
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        backgroundColor="$background2"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <YStack padding={isMobile ? "$3" : "$4"} gap="$3">
           {/* Tarjeta principal del correo */}
           <Card
             backgroundColor="$background"
@@ -141,7 +173,7 @@ export function EmailContentViewer({
             shadowRadius={8}
           >
             {/* Asunto */}
-            <Text variant="h5" fontWeight="700" color="$color" marginBottom="$3">
+            <Text variant="h5" fontWeight="700" color="$color" marginBottom="$3" flexShrink={1}>
               {email.subject || "Sin asunto"}
             </Text>
 
@@ -158,8 +190,8 @@ export function EmailContentViewer({
               <YStack
                 width={56}
                 height={56}
-                borderRadius="$full"
-                backgroundColor="$primary"
+                borderRadius={28}
+                backgroundColor="#007AFF"
                 justifyContent="center"
                 alignItems="center"
                 shadowColor="rgba(0,0,0,0.2)"
@@ -173,17 +205,17 @@ export function EmailContentViewer({
               </YStack>
 
               {/* Detalles del remitente */}
-              <YStack flex={1} gap="$2">
-                <XStack justifyContent="space-between" alignItems="flex-start">
-                  <YStack flex={1}>
-                    <Text variant="body" fontWeight="700" color="$color">
+              <YStack flex={1} gap="$2" flexShrink={1}>
+                <XStack justifyContent="space-between" alignItems="flex-start" flexShrink={1}>
+                  <YStack flex={1} flexShrink={1}>
+                    <Text variant="body" fontWeight="700" color="$color" flexShrink={1}>
                       {extractName(email.from)}
                     </Text>
-                    <Text variant="caption" color="$color3">
+                    <Text variant="caption" color="$color3" flexShrink={1}>
                       {extractEmailAddress(email.from)}
                     </Text>
                   </YStack>
-                  <Text variant="caption" color="$color3" textAlign="right">
+                  <Text variant="caption" color="$color3" textAlign="right" flexShrink={0}>
                     {formatDate(email.date)}
                   </Text>
                 </XStack>
@@ -227,8 +259,95 @@ export function EmailContentViewer({
             <HtmlEmailRenderer html={email.html} text={email.text} />
           </Card>
 
-          {/* Adjuntos */}
-          <AttachmentPreview attachments={email.attachments || []} />
+          {/* Adjuntos con botón de descarga */}
+          {email.attachments && email.attachments.length > 0 && (
+            <Card
+              backgroundColor="$background"
+              borderRadius={12}
+              padding="$4"
+              shadowColor="rgba(0,0,0,0.1)"
+              shadowOffset={{ width: 0, height: 2 }}
+              shadowOpacity={0.1}
+              shadowRadius={8}
+            >
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+                <XStack gap="$2" alignItems="center">
+                  <Ionicons name="attach" size={20} color="$color" />
+                  <Text variant="label" fontWeight="600" color="$color">
+                    {email.attachments.length} adjunto{email.attachments.length > 1 ? "s" : ""}
+                  </Text>
+                </XStack>
+              </XStack>
+
+              <YStack gap="$2">
+                {email.attachments.map((att: any, idx: number) => {
+                  const fileName = att.fileName || att.filename || "Archivo adjunto";
+                  const mimeType = (att.contentType || att.mimeType || "").toLowerCase();
+                  const size = att.size || 0;
+                  
+                  // Determinar icono y color
+                  let icon = "document-attach";
+                  let iconColor = "#8E8E93";
+                  if (mimeType.startsWith("image")) { icon = "image"; iconColor = "#007AFF"; }
+                  else if (mimeType.includes("pdf")) { icon = "document"; iconColor = "#FF3B30"; }
+                  else if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) { icon = "grid"; iconColor = "#34C759"; }
+                  else if (mimeType.includes("word")) { icon = "document-text"; iconColor = "#007AFF"; }
+                  else if (mimeType.startsWith("video")) { icon = "videocam"; iconColor = "#AF52DE"; }
+                  else if (mimeType.startsWith("audio")) { icon = "musical-notes"; iconColor = "#FF9500"; }
+                  else if (mimeType.includes("zip") || mimeType.includes("rar")) { icon = "archive"; iconColor = "#FFCC00"; }
+
+                  const formatFileSize = (bytes: number): string => {
+                    if (bytes === 0) return "0 Bytes";
+                    const k = 1024;
+                    const sizes = ["Bytes", "KB", "MB", "GB"];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+                  };
+
+                  return (
+                    <XStack
+                      key={idx}
+                      backgroundColor="$background2"
+                      borderRadius={12}
+                      padding="$3"
+                      gap="$3"
+                      alignItems="center"
+                    >
+                      {/* Icono */}
+                      <YStack
+                        width={48}
+                        height={48}
+                        borderRadius={8}
+                        backgroundColor="$background3"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        <Ionicons name={icon as any} size={28} color={iconColor} />
+                      </YStack>
+
+                      {/* Información */}
+                      <YStack flex={1} gap="$1" flexShrink={1}>
+                        <Text variant="bodySmall" fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
+                          {fileName}
+                        </Text>
+                        <Text variant="caption" color="$color3">
+                          {formatFileSize(size)} • {mimeType || "archivo"}
+                        </Text>
+                      </YStack>
+
+                      {/* Botón de compartir/descargar */}
+                      <IconButton
+                        icon="download-outline"
+                        onPress={() => handleShareAttachment(att)}
+                        variant="ghost"
+                        size={20}
+                      />
+                    </XStack>
+                  );
+                })}
+              </YStack>
+            </Card>
+          )}
 
           {/* Espacio adicional al final */}
           <YStack height={40} />
