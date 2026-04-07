@@ -69,7 +69,7 @@ export class UsersService {
   // OBTENER TODOS LOS USUARIOS
   // ==========================================
   async findAll(searchDto?: SearchUsuariosDto): Promise<any[]> {
-    let query: any = {};
+    const query: any = {};
 
     if (searchDto) {
       if (searchDto.search) {
@@ -201,10 +201,7 @@ export class UsersService {
     }
 
     // Verificar email si se va a cambiar
-    if (
-      updateProfileDto.email &&
-      updateProfileDto.email !== usuario.email
-    ) {
+    if (updateProfileDto.email && updateProfileDto.email !== usuario.email) {
       const existingUser = await this.findByEmail(updateProfileDto.email);
       if (existingUser) {
         throw new ConflictException(

@@ -88,9 +88,7 @@ export class InstalacionesController {
   }
 
   @Get('instalacion/:instalacionId/areas')
-  async findAreasByInstalacion(
-    @Param('instalacionId') instalacionId: string,
-  ) {
+  async findAreasByInstalacion(@Param('instalacionId') instalacionId: string) {
     return this.instalacionesService.findAreasByInstalacion(instalacionId);
   }
 }

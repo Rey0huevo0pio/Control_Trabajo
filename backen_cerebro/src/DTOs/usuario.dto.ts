@@ -19,7 +19,10 @@ export class CreateUsuarioDto {
   @IsString()
   @MinLength(3)
   @MaxLength(20)
-  @Matches(/^[A-Za-z0-9_-]+$/, { message: 'Control_Usuario solo permite letras, números, guiones y guiones bajos' })
+  @Matches(/^[A-Za-z0-9_-]+$/, {
+    message:
+      'Control_Usuario solo permite letras, números, guiones y guiones bajos',
+  })
   Control_Usuario: string;
 
   @IsString()

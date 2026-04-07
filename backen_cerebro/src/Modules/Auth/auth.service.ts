@@ -2,23 +2,23 @@
  * ============================================================================
  * 🔐 AUTH SERVICE - Lógica de Autenticación
  * ============================================================================
- * 
+ *
  * QUÉ HACE ESTE ARCHIVO:
  * - Registro de usuarios con hash de contraseña
  * - Login y validación de credenciales
  * - Generación de tokens JWT
  * - Validación de usuarios para guards
- * 
+ *
  * CONEXIONES:
  * - Models: Usuario, UsuarioDocument (../../Models/Usuarios/usuario.schema.ts)
  * - DTOs: CreateUsuarioDto, LoginDto (../../DTOs/usuario.dto.ts)
  * - Enums: RolUsuario, PERMISOS_POR_ROL (usuario.schema.ts)
  * - Frontend: C_Ticket_Apk_STV/src/services/auth.service.ts
- * 
+ *
  * ENDPOINTS QUE GENERA (vía AuthController):
  * - POST /api/auth/register → Registro de usuario
  * - POST /api/auth/login → Login de usuario
- * 
+ *
  * FLUJO DE REGISTRO:
  * 1. Verifica que Control_Usuario no exista
  * 2. Hashea la contraseña con bcrypt
@@ -26,19 +26,19 @@
  * 4. Asigna permisos según el rol (PERMISOS_POR_ROL)
  * 5. Genera token JWT
  * 6. Retorna usuario sanitizado (sin password)
- * 
+ *
  * FLUJO DE LOGIN:
  * 1. Busca usuario por Control_Usuario
  * 2. Verifica que esté activo
  * 3. Compara contraseña con bcrypt
  * 4. Genera token JWT
  * 5. Retorna usuario sanitizado + token
- * 
+ *
  * PARA MODIFICAR:
  * - Cambiar rol por defecto: línea 41
  * - Cambiar algoritmo de hash: modificar bcrypt.genSalt y bcrypt.hash
  * - Agregar campos al token: modificar generateToken()
- * 
+ *
  * ============================================================================
  */
 import {

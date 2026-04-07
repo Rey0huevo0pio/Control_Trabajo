@@ -1,15 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Imap = require('imap').default || require('imap');
-import { simpleParser } from 'mailparser';
-import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import {
   EmailConfig,
@@ -23,6 +14,12 @@ import {
   SendEmailDto,
   GetEmailsDto,
 } from '../../DTOs/email.dto';
+import {
+  EmailConfigService,
+  EmailFetcherService,
+  EmailSenderService,
+  EmailCacheService,
+} from './Components_Service';
 
 export interface EmailMessage {
   id: string;
@@ -44,401 +41,62 @@ export class EmailService {
   constructor(
     @InjectModel(EmailConfig.name)
     private emailConfigModel: Model<EmailConfigDocument>,
+    private configService: EmailConfigService,
+    private fetcherService: EmailFetcherService,
+    private senderService: EmailSenderService,
+    private cacheService: EmailCacheService,
   ) {}
 
   // ==========================================
-  // ENCRIPTAR CONTRASEÑA
-  // ==========================================
-  private encryptPassword(password: string): string {
-    const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(
-      process.env.EMAIL_ENCRYPTION_KEY || 'default_encryption_key_32',
-      'salt',
-      32,
-    );
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(algorithm, key, iv);
-    let encrypted = cipher.update(password, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return `${iv.toString('hex')}:${encrypted}`;
-  }
-
-  // ==========================================
-  // DESENCRIPTAR CONTRASEÑA
-  // ==========================================
-  private decryptPassword(encrypted: string): string {
-    const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(
-      process.env.EMAIL_ENCRYPTION_KEY || 'default_encryption_key_32',
-      'salt',
-      32,
-    );
-    const [ivHex, encryptedHex] = encrypted.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  }
-
-  // ==========================================
-  // CREAR CONFIGURACIÓN DE CORREO
+  // CONFIGURACIÓN DE CORREO (Delegar a EmailConfigService)
   // ==========================================
   async createConfig(
     usuarioId: string,
     createDto: CreateEmailConfigDto,
   ): Promise<any> {
-    // Verificar si ya existe configuración para este usuario
-    const existingConfig = await this.emailConfigModel.findOne({
-      usuario: new Types.ObjectId(usuarioId),
-    });
-
-    if (existingConfig) {
-      throw new ConflictException(
-        'El usuario ya tiene una configuración de correo',
-      );
-    }
-
-    // Verificar si el email ya está registrado
-    const existingEmail = await this.emailConfigModel.findOne({
-      email: createDto.email.toLowerCase(),
-    });
-
-    if (existingEmail) {
-      throw new ConflictException('El correo electrónico ya está registrado');
-    }
-
-    // Crear configuración - SIN spread para evitar valores vacíos
-    const config = new this.emailConfigModel({
-      usuario: new Types.ObjectId(usuarioId),
-      email: createDto.email.toLowerCase(),
-      displayName:
-        createDto.displayName || createDto.email.split('@')[0] || 'Usuario',
-      passwordEmail: this.encryptPassword(createDto.passwordEmail),
-      status: EmailStatus.INACTIVE,
-      // Usar valores por defecto si vienen vacíos
-      imapHost:
-        createDto.imapHost && createDto.imapHost.trim()
-          ? createDto.imapHost
-          : 'bh8966.banahosting.com',
-      imapPort: createDto.imapPort || 993,
-      imapSecure:
-        createDto.imapSecure !== undefined ? createDto.imapSecure : true,
-      smtpHost:
-        createDto.smtpHost && createDto.smtpHost.trim()
-          ? createDto.smtpHost
-          : 'bh8966.banahosting.com',
-      smtpPort: createDto.smtpPort || 465,
-      smtpSecure:
-        createDto.smtpSecure !== undefined ? createDto.smtpSecure : true,
-    });
-
-    await config.save();
-
-    return {
-      success: true,
-      message: 'Configuración de correo creada correctamente',
-      data: this.sanitizeConfig(config),
-    };
+    return this.configService.createConfig(usuarioId, createDto);
   }
 
-  // ==========================================
-  // OBTENER TODAS LAS CONFIGURACIONES (Debug)
-  // ==========================================
   async getAllConfigs(): Promise<any[]> {
-    console.log('\n📧 [EmailService] getAllConfigs');
-    const configs = await this.emailConfigModel
-      .find()
-      .populate('usuario', 'Control_Usuario nombre apellido')
-      .exec();
-
-    console.log(
-      `📩 [EmailService] Encontradas ${configs.length} configuraciones`,
-    );
-    configs.forEach((c: any) => {
-      const usuario = c.usuario;
-      console.log(
-        `  - Usuario: ${usuario?.Control_Usuario || 'N/A'} | Email: ${c.email} | Status: ${c.status}`,
-      );
-    });
-
-    return configs.map((c) => this.sanitizeConfig(c));
+    return this.configService.getAllConfigs();
   }
 
-  // ==========================================
-  // OBTENER CONFIGURACIÓN POR USUARIO
-  // ==========================================
   async getConfigByUsuario(usuarioId: string): Promise<any> {
-    console.log('\n📧 [EmailService] getConfigByUsuario, ID:', usuarioId);
-
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
-
-    console.log(
-      '📩 [EmailService] Config encontrada:',
-      config ? '✅ SÍ' : '❌ NO',
-    );
-    if (config) {
-      console.log('📧 [EmailService] Email:', config.email);
-      console.log('📧 [EmailService] Status:', config.status);
-    }
-
-    if (!config) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
-      );
-    }
-
-    return this.sanitizeConfig(config);
+    return this.configService.getConfigByUsuario(usuarioId);
   }
 
-  // ==========================================
-  // ACTUALIZAR CONFIGURACIÓN
-  // ==========================================
   async updateConfig(
     usuarioId: string,
     updateDto: UpdateEmailConfigDto,
   ): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
-
-    if (!config) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
-      );
-    }
-
-    // Si se actualiza la contraseña, encriptarla
-    if (updateDto.passwordEmail) {
-      updateDto.passwordEmail = this.encryptPassword(updateDto.passwordEmail);
-    }
-
-    // Si se actualiza el email, convertir a minúsculas
-    if (updateDto.email) {
-      updateDto.email = updateDto.email.toLowerCase();
-    }
-
-    const updatedConfig = await this.emailConfigModel
-      .findByIdAndUpdate(config._id, updateDto, { new: true })
-      .exec();
-
-    return {
-      success: true,
-      message: 'Configuración actualizada correctamente',
-      data: this.sanitizeConfig(updatedConfig),
-    };
+    return this.configService.updateConfig(usuarioId, updateDto);
   }
 
-  // ==========================================
-  // PROBAR CONEXIÓN (IMAP y SMTP)
-  // ==========================================
   async testConnection(
     usuarioId: string,
     testDto: TestEmailConnectionDto,
   ): Promise<any> {
-    const results = {
-      imap: { success: false, error: null as string | null },
-      smtp: { success: false, error: null as string | null },
-    };
-
-    // Probar IMAP
-    try {
-      await this.testImapConnection(testDto);
-      results.imap.success = true;
-    } catch (error: any) {
-      results.imap.error = error.message;
-    }
-
-    // Probar SMTP
-    try {
-      await this.testSmtpConnection(testDto);
-      results.smtp.success = true;
-    } catch (error: any) {
-      results.smtp.error = error.message;
-    }
-
-    return {
-      success: results.imap.success && results.smtp.success,
-      message:
-        results.imap.success && results.smtp.success
-          ? 'Conexión exitosa a IMAP y SMTP'
-          : 'Error en la conexión',
-      data: results,
-    };
+    return this.configService.testConnection(usuarioId, testDto);
   }
 
-  // ==========================================
-  // PROBAR IMAP
-  // ==========================================
-  private testImapConnection(testDto: TestEmailConnectionDto): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const imapConnection = new Imap({
-        user: testDto.email,
-        password: testDto.passwordEmail,
-        host: testDto.imapHost,
-        port: testDto.imapPort,
-        tls: testDto.imapSecure,
-        connTimeout: 10000,
-      });
-
-      imapConnection.once('error', (err: any) => {
-        reject(new Error(`IMAP Error: ${err.message}`));
-      });
-
-      imapConnection.once('ready', () => {
-        imapConnection.end();
-        resolve();
-      });
-
-      imapConnection.connect();
-    });
-  }
-
-  // ==========================================
-  // PROBAR SMTP
-  // ==========================================
-  private async testSmtpConnection(
-    testDto: TestEmailConnectionDto,
-  ): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host: testDto.smtpHost,
-      port: testDto.smtpPort,
-      secure: testDto.smtpSecure,
-      auth: {
-        user: testDto.email,
-        pass: testDto.passwordEmail,
-      },
-      connectionTimeout: 10000,
-    });
-
-    try {
-      await transporter.verify();
-    } catch (error: any) {
-      throw new Error(`SMTP Error: ${error.message}`);
-    }
-  }
-
-  // ==========================================
-  // ACTIVAR CONFIGURACIÓN SIN PROBAR (Manual)
-  // ==========================================
   async activateConfigForce(usuarioId: string): Promise<any> {
-    console.log('\n📧 [EmailService] activateConfigForce, ID:', usuarioId);
-
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
-
-    if (!config) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
-      );
-    }
-
-    // Activar sin probar conexión
-    config.status = EmailStatus.ACTIVE;
-    config.verified = true;
-    config.verifiedAt = new Date();
-    await config.save();
-
-    console.log('✅ [EmailService] Configuración activada manualmente');
-
-    return {
-      success: true,
-      message: 'Configuración activada manualmente',
-      data: this.sanitizeConfig(config),
-    };
+    return this.configService.activateConfigForce(usuarioId);
   }
 
-  // ==========================================
-  // ACTIVAR CONFIGURACIÓN
-  // ==========================================
   async activateConfig(usuarioId: string): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
-
-    if (!config) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
-      );
-    }
-
-    // Probar conexión antes de activar
-    try {
-      await this.testImapConnection({
-        email: config.email,
-        passwordEmail: this.decryptPassword(config.passwordEmail),
-        imapHost: config.imapHost,
-        imapPort: config.imapPort,
-        imapSecure: config.imapSecure,
-        smtpHost: config.smtpHost,
-        smtpPort: config.smtpPort,
-        smtpSecure: config.smtpSecure,
-      });
-
-      config.status = EmailStatus.ACTIVE;
-      config.verified = true;
-      config.verifiedAt = new Date();
-      await config.save();
-
-      return {
-        success: true,
-        message: 'Configuración activada correctamente',
-        data: this.sanitizeConfig(config),
-      };
-    } catch (error: any) {
-      config.status = EmailStatus.ERROR;
-      config.lastError = error.message;
-      await config.save();
-
-      throw new BadRequestException(
-        `No se pudo activar la configuración: ${error.message}`,
-      );
-    }
+    return this.configService.activateConfig(usuarioId);
   }
 
-  // ==========================================
-  // OBTENER CORREOS (IMAP)
-  // ==========================================
-
-  // ==========================================
-  // TOGGLE EMAIL STATUS (Active ↔ Inactive only)
-  // ==========================================
   async toggleEmailStatus(usuarioId: string): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
+    return this.configService.toggleEmailStatus(usuarioId);
+  }
 
-    if (!config) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
-      );
-    }
-
-    // Solo permite toggle entre active e inactive
-    const newStatus =
-      config.status === EmailStatus.ACTIVE
-        ? EmailStatus.INACTIVE
-        : EmailStatus.ACTIVE;
-
-    config.status = newStatus;
-    await config.save();
-
-    console.log(
-      `📧 [EmailService] Toggle status: ${config.email} → ${newStatus}`,
-    );
-
-    return {
-      success: true,
-      message: `Correo ${newStatus === EmailStatus.ACTIVE ? 'activado' : 'desactivado'} correctamente`,
-      data: this.sanitizeConfig(config),
-    };
+  async deleteConfig(usuarioId: string): Promise<void> {
+    return this.configService.deleteConfig(usuarioId);
   }
 
   // ==========================================
-  // OBTENER CORREOS (IMAP)
+  // OBTENER CORREOS (IMAP) - DELEGAR A EMAIL FETCHER SERVICE
   // ==========================================
   async getEmails(usuarioId: string, getEmailsDto: GetEmailsDto): Promise<any> {
     console.log('\n📧 [EmailService] getEmails - userId:', usuarioId);
@@ -483,238 +141,57 @@ export class EmailService {
       };
     }
 
-    return new Promise((resolve) => {
-      console.log(
-        '📧 [EmailService] Intentando conectar a IMAP:',
-        config.imapHost,
-        ':',
-        config.imapPort,
+    try {
+      // Usar el fetcher service con caché integrada
+      const result = await this.fetcherService.getEmailsLegacy(
+        {
+          email: config.email,
+          password: this.decryptPassword(config.passwordEmail),
+          imapHost: config.imapHost,
+          imapPort: config.imapPort,
+          imapSecure: config.imapSecure,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpSecure: config.smtpSecure,
+        },
+        getEmailsDto.folder || 'INBOX',
+        usuarioId,
+        {
+          unreadOnly: getEmailsDto.unreadOnly,
+          page: getEmailsDto.page,
+          limit: getEmailsDto.limit,
+        },
       );
 
-      const imapConnection = new Imap({
-        user: config.email,
-        password: this.decryptPassword(config.passwordEmail),
-        host: config.imapHost,
-        port: config.imapPort,
-        tls: config.imapSecure,
-        connTimeout: 5000, // 5 segundos de timeout
-      });
-
-      const emails: EmailMessage[] = [];
-
-      // Si hay timeout o error de conexión, devolver respuesta graceful
-      imapConnection.once('error', (err: any) => {
-        console.log('⚠️ [EmailService] IMAP error:', err.message || err);
-
-        // Siempre devolver respuesta graceful en lugar de error
-        resolve({
-          success: true,
-          message: `No se pudo conectar al servidor IMAP (${config.imapHost}:${config.imapPort}). ${err.message || 'Error de conexión'}`,
-          data: {
-            emails: [],
-            total: 0,
-            configStatus: config.status,
-            imapHost: config.imapHost,
-            imapPort: config.imapPort,
-            imapError: err.message || 'Unknown error',
-          },
-        });
-      });
-
-      imapConnection.once('ready', () => {
-        console.log('✅ [EmailService] Conectado a IMAP exitosamente');
-
-        imapConnection.openBox(
-          getEmailsDto.folder || 'INBOX',
-          true,
-          (err: any, box: any) => {
-            if (err) {
-              console.log(
-                '❌ [EmailService] Error abriendo carpeta:',
-                err.message,
-              );
-              resolve({
-                success: true,
-                message: `Error abriendo carpeta: ${err.message}`,
-                data: { emails: [], total: 0 },
-              });
-              return;
-            }
-
-            console.log(
-              '📬 [EmailService] Carpeta abierta. Mensajes totales:',
-              box.messages.total,
-            );
-
-            const searchCriteria = getEmailsDto.unreadOnly
-              ? ['UNSEEN']
-              : ['ALL'];
-
-            imapConnection.search(
-              searchCriteria,
-              (err: any, results: number[]) => {
-                if (err) {
-                  console.log(
-                    '❌ [EmailService] Error en búsqueda:',
-                    err.message,
-                  );
-                  imapConnection.end();
-                  resolve({
-                    success: true,
-                    message: `Error en búsqueda: ${err.message}`,
-                    data: { emails: [], total: 0 },
-                  });
-                  return;
-                }
-
-                console.log(
-                  '📩 [EmailService] Mensajes encontrados:',
-                  results.length,
-                );
-
-                if (results.length === 0) {
-                  imapConnection.end();
-                  resolve({
-                    success: true,
-                    message: 'No hay correos en esta carpeta',
-                    data: { emails: [], total: 0 },
-                  });
-                  return;
-                }
-
-                const fetch = imapConnection.fetch(results, {
-                  bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT', '1'],
-                  struct: true,
-                  envelope: true,
-                });
-
-                fetch.on('message', (msg: any) => {
-                  const headers: any = {};
-                  let textBuffer = '';
-
-                  msg.on('body', (stream: any, info: any) => {
-                    let buffer = '';
-                    stream.on('data', (chunk: Buffer) => {
-                      buffer += chunk.toString('utf8');
-                    });
-                    stream.once('end', () => {
-                      const which = (info.which || '').toUpperCase();
-
-                      // SOLO procesar headers - NO el cuerpo del mensaje
-                      if (which.includes('HEADER')) {
-                        // Extraer solo las líneas de headers (generalmente las primeras 10-20 líneas)
-                        const lines = buffer.split(/\r?\n/);
-
-                        for (const line of lines) {
-                          const trimmed = line.trim();
-                          if (trimmed.length === 0) continue;
-                          // Ignorar metadata IMAP
-                          if (
-                            trimmed.startsWith('*') ||
-                            trimmed.startsWith(')') ||
-                            /^\d+$/.test(trimmed)
-                          )
-                            continue;
-
-                          // Buscar headers específicos
-                          const fromMatch = trimmed.match(/^From:\s*(.+)$/i);
-                          const toMatch = trimmed.match(/^To:\s*(.+)$/i);
-                          const subjectMatch =
-                            trimmed.match(/^Subject:\s*(.+)$/i);
-                          const dateMatch = trimmed.match(/^Date:\s*(.+)$/i);
-
-                          if (fromMatch) headers.from = fromMatch[1].trim();
-                          if (toMatch) headers.to = toMatch[1].trim();
-                          if (subjectMatch)
-                            headers.subject = subjectMatch[1].trim();
-                          if (dateMatch) headers.date = dateMatch[1].trim();
-                        }
-                      }
-                      // Solo guardar texto plano, ignorar HTML y base64
-                      else if (which === 'TEXT' && buffer.length < 50000) {
-                        // Extraer solo texto plano (antes del primer boundary MIME o HTML)
-                        const textEnd = buffer.indexOf(
-                          'Content-Type: text/html',
-                        );
-                        const mimeBoundary =
-                          buffer.indexOf('--===============');
-                        let cutPoint =
-                          textEnd > 0
-                            ? textEnd
-                            : mimeBoundary > 0
-                              ? mimeBoundary
-                              : buffer.length;
-                        cutPoint = Math.min(cutPoint, 10000); // Máximo 10KB de texto
-                        textBuffer = buffer.substring(0, cutPoint).trim();
-                      }
-                    });
-                  });
-
-                  msg.once('end', () => {
-                    emails.push({
-                      id: `email_${Date.now()}_${emails.length}`,
-                      uid: 0,
-                      from: headers.from || 'Desconocido',
-                      to: headers.to || '',
-                      subject: headers.subject || 'Sin asunto',
-                      date: headers.date ? new Date(headers.date) : new Date(),
-                      text: textBuffer || 'Sin contenido',
-                      html: '',
-                      attachments: [],
-                      seen: true,
-                      flagged: false,
-                    });
-                  });
-                });
-
-                fetch.once('error', (err: any) => {
-                  console.log('❌ [EmailService] Fetch error:', err.message);
-                  imapConnection.end();
-                  resolve({
-                    success: true,
-                    message: `Error obteniendo mensajes: ${err.message}`,
-                    data: { emails: [], total: 0 },
-                  });
-                });
-
-                fetch.once('end', () => {
-                  imapConnection.end();
-
-                  const page = getEmailsDto.page || 1;
-                  const limit = getEmailsDto.limit || 50;
-                  const start = (page - 1) * limit;
-                  const end = start + limit;
-
-                  resolve({
-                    success: true,
-                    data: {
-                      emails: emails.slice(start, end),
-                      total: emails.length,
-                      page,
-                      limit,
-                    },
-                  });
-                });
-              },
-            );
-          },
-        );
-      });
-
-      imapConnection.connect();
-
-      // Actualizar última sincronización (void para evitar floating promise)
+      // Actualizar última sincronización
       void this.emailConfigModel
         .findOneAndUpdate(
           { usuario: new Types.ObjectId(usuarioId) },
           { lastSync: new Date() },
         )
         .exec();
-    });
+
+      return {
+        success: true,
+        data: {
+          emails: result.emails,
+          total: result.total,
+          page: getEmailsDto.page || 1,
+          limit: getEmailsDto.limit || 50,
+        },
+      };
+    } catch (error: any) {
+      console.log('❌ [EmailService] Error getting emails:', error.message);
+      return {
+        success: true,
+        message: `Error obteniendo correos: ${error.message}`,
+        data: { emails: [], total: 0 },
+      };
+    }
   }
 
   // ==========================================
-  // OBTENER SOLO UIDs DE UNA CARPETA
+  // OBTENER SOLO UIDs DE UNA CARPETA (CON CACHÉ)
   // ==========================================
   async getMessageUIDs(usuarioId: string, folder: string): Promise<any> {
     const config = await this.emailConfigModel
@@ -725,52 +202,34 @@ export class EmailService {
       return { success: true, data: { uids: [], total: 0 } };
     }
 
-    return new Promise((resolve) => {
-      const imapConnection = new Imap({
-        user: config.email,
-        password: this.decryptPassword(config.passwordEmail),
-        host: config.imapHost,
-        port: config.imapPort,
-        tls: config.imapSecure,
-        connTimeout: 5000,
-      });
+    try {
+      const uids = await this.fetcherService.getMessageUIDs(
+        {
+          email: config.email,
+          password: this.decryptPassword(config.passwordEmail),
+          imapHost: config.imapHost,
+          imapPort: config.imapPort,
+          imapSecure: config.imapSecure,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpSecure: config.smtpSecure,
+        },
+        folder,
+        usuarioId,
+      );
 
-      imapConnection.once('error', () => {
-        resolve({ success: true, data: { uids: [], total: 0 } });
-      });
-
-      imapConnection.once('ready', () => {
-        imapConnection.openBox(folder, true, (err: any) => {
-          if (err) {
-            imapConnection.end();
-            resolve({ success: true, data: { uids: [], total: 0 } });
-            return;
-          }
-
-          imapConnection.search(['ALL'], (err: any, results: number[]) => {
-            imapConnection.end();
-            if (err) {
-              resolve({ success: true, data: { uids: [], total: 0 } });
-              return;
-            }
-
-            console.log(
-              `📧 [EmailService] getMessageUIDs: ${results.length} UIDs en ${folder}`,
-            );
-            resolve({
-              success: true,
-              data: { uids: results, total: results.length },
-            });
-          });
-        });
-      });
-
-      imapConnection.connect();
-    });
+      return {
+        success: true,
+        data: { uids, total: uids.length },
+      };
+    } catch (error: any) {
+      console.log('❌ [EmailService] Error getting UIDs:', error.message);
+      return { success: true, data: { uids: [], total: 0 } };
+    }
   }
 
   // ==========================================
-  // OBTENER CORREOS POR UIDs ESPECÍFICOS (CON HTML Y ADJUNTOS)
+  // OBTENER CORREOS POR UIDs ESPECÍFICOS (CON CACHÉ Y MULTIMEDIA)
   // ==========================================
   async getMessagesByUIDs(
     usuarioId: string,
@@ -789,273 +248,72 @@ export class EmailService {
       return { success: true, data: { emails: [], total: 0 } };
     }
 
-    return new Promise((resolve) => {
-      const imapConnection = new Imap({
-        user: config.email,
-        password: this.decryptPassword(config.passwordEmail),
-        host: config.imapHost,
-        port: config.imapPort,
-        tls: config.imapSecure,
-        connTimeout: 30000,
-      });
-
-      const emails: EmailMessage[] = [];
-
-      imapConnection.once('error', (err) => {
-        console.log('❌ [EmailService] IMAP error:', err.message);
-        resolve({ success: true, data: { emails: [], total: 0 } });
-      });
-
-      imapConnection.once('ready', () => {
-        imapConnection.openBox(folder, true, async (err: any) => {
-          if (err) {
-            console.log('❌ [EmailService] Error opening box:', err.message);
-            imapConnection.end();
-            resolve({ success: true, data: { emails: [], total: 0 } });
-            return;
-          }
-
-          console.log(
-            `📧 [EmailService] Fetching ${uids.length} messages with mailparser...`,
-          );
-
-          const fetch = imapConnection.fetch(uids, {
-            bodies: '',
-            struct: true,
-            envelope: true,
-          });
-
-          fetch.on('message', async (msg: any) => {
-            const headers: any = {};
-            let fullBody = Buffer.alloc(0);
-            const attachments: any[] = [];
-
-            msg.on('body', async (stream: any) => {
-              try {
-                const parsed = await simpleParser(stream);
-
-                headers.from = parsed.from?.text || '';
-                headers.to = parsed.to?.text || '';
-                headers.subject = parsed.subject || '';
-                headers.date = parsed.date?.toISOString() || new Date().toISOString();
-
-                if (parsed.html) {
-                  fullBody = Buffer.from(parsed.html);
-                } else if (parsed.text) {
-                  fullBody = Buffer.from(parsed.text);
-                }
-
-                if (parsed.attachments && parsed.attachments.length > 0) {
-                  for (const att of parsed.attachments) {
-                    attachments.push({
-                      fileName: att.filename,
-                      contentType: att.contentType,
-                      size: att.size,
-                      content: att.content,
-                    });
-                  }
-                }
-              } catch (parseErr) {
-                console.log('❌ [EmailService] Parse error:', parseErr);
-              }
-            });
-
-            msg.on('attributes', (attrs: any) => {
-              let htmlContent = '';
-              let textContent = '';
-
-              if (fullBody) {
-                const bodyStr = fullBody.toString('utf8');
-                if (
-                  bodyStr.includes('<html') ||
-                  bodyStr.includes('<!DOCTYPE html>')
-                ) {
-                  htmlContent = bodyStr;
-                } else {
-                  textContent = bodyStr;
-                }
-              }
-
-              const email: EmailMessage = {
-                uid: attrs.uid,
-                id: `msg_${attrs.uid}`,
-                from: headers.from || 'Desconocido',
-                to: headers.to || '',
-                subject: headers.subject || '',
-                date: headers.date || new Date().toISOString(),
-                text: textContent,
-                html: htmlContent,
-                attachments,
-                seen: attrs.flags.includes('\\Seen'),
-                flagged: attrs.flags.includes('\\Flagged'),
-                folder,
-              };
-
-              console.log(
-                `📧 [EmailService] Email parsed UID:${attrs.uid} - html: ${htmlContent.length > 0}, text: ${textContent.length}, attachments: ${attachments.length}`,
-              );
-              emails.push(email);
-            });
-          });
-
-          fetch.once('error', (err: any) => {
-            console.log('❌ [EmailService] Fetch error:', err.message);
-            imapConnection.end();
-            resolve({ success: true, data: { emails: [], total: 0 } });
-          });
-
-          fetch.once('end', () => {
-            console.log(
-              `📧 [EmailService] Completed. ${emails.length} emails parsed`,
-            );
-            imapConnection.end();
-            resolve({
-              success: true,
-              data: { emails, total: emails.length },
-            });
-          });
-        });
-      });
-
-      imapConnection.connect();
-    });
-  }
-
-  // ==========================================
-  // EXTRAER ADJUNTOS DE LA ESTRUCTURA MIME
-  // ==========================================
-  private extractAttachments(parts: any[], attachments: any[]): void {
-    for (const part of parts) {
-      if (part.disposition && part.disposition.toLowerCase() === 'attachment') {
-        attachments.push({
-          fileName: part.params?.name || `attachment_${attachments.length}`,
-          contentType: part.type || 'application/octet-stream',
-          size: part.size || 0,
-          encoding: part.encoding || '',
-          partId: part.partID || part.partId || attachments.length,
-        });
-      }
-
-      if (part.part && Array.isArray(part)) {
-        this.extractAttachments(part, attachments);
-      }
-    }
-  }
-
-  // ==========================================
-  // DECODIFICAR QUOTED-PRINTABLE
-  // ==========================================
-  private decodeQuotedPrintable(input: string): string {
-    return input
-      .replace(/=\r?\n/g, '')
-      .replace(/=3D/g, '=')
-      .replace(/=0D=0A/g, '\r\n')
-      .replace(/=([0-9A-F]{2})/g, (_match: string, hex: string) =>
-        String.fromCharCode(parseInt(hex, 16)),
-      )
-      .replace(/\r?\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
-
-  // ==========================================
-  // ENVIAR CORREO (SMTP)
-  // ==========================================
-  async sendEmail(usuarioId: string, sendDto: SendEmailDto): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
-      })
-      .exec();
-
-    if (!config) {
-      throw new NotFoundException(
-        'No hay configuración de correo activa para este usuario',
-      );
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      secure: config.smtpSecure,
-      auth: {
-        user: config.email,
-        pass: this.decryptPassword(config.passwordEmail),
-      },
-    });
-
-    const mailOptions = {
-      from: `${config.displayName} <${config.email}>`,
-      to: sendDto.to,
-      subject: sendDto.subject,
-      html: sendDto.html,
-      text: sendDto.text,
-      cc: sendDto.cc,
-      bcc: sendDto.bcc,
-      attachments: sendDto.attachments?.map((url) => ({
-        filename: url.split('/').pop() || 'archivo',
-        path: url,
-      })),
-    };
-
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const emails = await this.fetcherService.getMessagesByUIDs(
+        {
+          email: config.email,
+          password: this.decryptPassword(config.passwordEmail),
+          imapHost: config.imapHost,
+          imapPort: config.imapPort,
+          imapSecure: config.imapSecure,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpSecure: config.smtpSecure,
+        },
+        folder,
+        uids,
+        usuarioId,
+      );
 
       return {
         success: true,
-        message: 'Correo enviado correctamente',
-        data: {
-          messageId: info.messageId,
-          accepted: info.accepted,
-          rejected: info.rejected,
-        },
+        data: { emails, total: emails.length },
       };
     } catch (error: any) {
-      throw new BadRequestException(`Error al enviar correo: ${error.message}`);
-    }
-  }
-
-  // ==========================================
-  // ELIMINAR CONFIGURACIÓN
-  // ==========================================
-  async deleteConfig(usuarioId: string): Promise<void> {
-    const result = await this.emailConfigModel
-      .findOneAndDelete({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
-
-    if (!result) {
-      throw new NotFoundException(
-        'No se encontró configuración de correo para este usuario',
+      console.log(
+        '❌ [EmailService] Error getting messages by UIDs:',
+        error.message,
       );
+      return { success: true, data: { emails: [], total: 0 } };
     }
   }
 
   // ==========================================
-  // SANITIZAR CONFIGURACIÓN (quitar datos sensibles)
+  // ENVIAR CORREO (SMTP) - DELEGAR A EMAIL SENDER SERVICE
   // ==========================================
-  private sanitizeConfig(config: any): object {
-    return {
-      id: config._id,
-      email: config.email,
-      displayName: config.displayName,
-      imapHost: config.imapHost,
-      imapPort: config.imapPort,
-      imapSecure: config.imapSecure,
-      smtpHost: config.smtpHost,
-      smtpPort: config.smtpPort,
-      smtpSecure: config.smtpSecure,
-      status: config.status,
-      lastSync: config.lastSync,
-      lastError: config.lastError,
-      verified: config.verified,
-      verifiedAt: config.verifiedAt,
-      autoSync: config.autoSync,
-      syncInterval: config.syncInterval,
-      defaultFolder: config.defaultFolder,
-      messagesPerSync: config.messagesPerSync,
-      createdAt: config.createdAt,
-      updatedAt: config.updatedAt,
-    };
+  async sendEmail(usuarioId: string, sendDto: SendEmailDto): Promise<any> {
+    return this.senderService.sendEmail(usuarioId, sendDto);
+  }
+
+  // ==========================================
+  // OBTENER ESTADÍSTICAS DE CACHÉ
+  // ==========================================
+  getCacheStats(): any {
+    return this.cacheService.getCacheStats();
+  }
+
+  // ==========================================
+  // LIMPIAR CACHÉ
+  // ==========================================
+  clearCache(): void {
+    this.cacheService.clearCache();
+  }
+
+  // ==========================================
+  // MÉTODOS PRIVADOS DE COMPATIBILIDAD
+  // ==========================================
+  private decryptPassword(encrypted: string): string {
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(
+      process.env.EMAIL_ENCRYPTION_KEY || 'default_encryption_key_32',
+      'salt',
+      32,
+    );
+    const [ivHex, encryptedHex] = encrypted.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
   }
 }

@@ -34,9 +34,15 @@ export class UploadsService {
     const año = ahora.getFullYear();
     const mes = String(ahora.getMonth() + 1).padStart(2, '0');
     const dia = String(ahora.getDate()).padStart(2, '0');
-    
+
     // Estructura: EMP-001/2026/2026-02/2026-02-04/
-    return join(this.uploadsDir, numeroControl, String(año), `${año}-${mes}`, `${año}-${mes}-${dia}`);
+    return join(
+      this.uploadsDir,
+      numeroControl,
+      String(año),
+      `${año}-${mes}`,
+      `${año}-${mes}-${dia}`,
+    );
   }
 
   private getRutaPorTipo(
@@ -147,7 +153,7 @@ export class UploadsService {
       const mes = String(ahora.getMonth() + 1).padStart(2, '0');
       const dia = String(ahora.getDate()).padStart(2, '0');
       const fecha = `${año}-${mes}-${dia}`;
-      
+
       const rutaBase = this.getRutaBase(uploadDto.numero_control);
       const rutaDestino = this.getRutaPorTipo(
         rutaBase,
