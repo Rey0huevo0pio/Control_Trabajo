@@ -52,7 +52,16 @@ export function EmailInboxView() {
       console.log("📩 [EmailInboxView] Correos:", result.emails.length);
       console.log("📩 [EmailInboxView] Desde caché:", result.fromCache);
 
-      setEmails(result.emails);
+      // ✅ ORDENAR correos por fecha (más reciente primero)
+      const sortedEmails = [...result.emails].sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Descendente: más reciente primero
+      });
+
+      console.log("📋 [EmailInboxView] Correos ordenados por fecha");
+
+      setEmails(sortedEmails);
       setFromCache(result.fromCache);
     } catch (err: any) {
       console.error("❌ [EmailInboxView] Error:", err);

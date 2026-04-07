@@ -56,19 +56,28 @@ class EmailCacheService {
       if (!cacheJson) return [];
 
       const cache: EmailCacheState = JSON.parse(cacheJson);
-      const emails = cache.emails.filter((e) => e.folder === folder) || [];
-      
+      let emails = cache.emails.filter((e) => e.folder === folder) || [];
+
       // LIMPIEZA AUTOMÁTICA: Eliminar emails con UID:0 (datos viejos corruptos)
       const validEmails = emails.filter(e => e.uid > 0);
       if (validEmails.length !== emails.length) {
         const removedCount = emails.length - validEmails.length;
         console.log(`🗑️ [EmailCache] Eliminando ${removedCount} emails corruptos (UID:0)`);
-        
+
         // Guardar solo emails válidos
         cache.emails = [...validEmails, ...cache.emails.filter(e => e.folder !== folder)];
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
       }
-      
+
+      // ✅ ORDENAR POR FECHA DESCENDENTE (más reciente primero)
+      validEmails.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Descendente: más reciente primero
+      });
+
+      console.log(`📋 [EmailCache] ${validEmails.length} emails ordenados por fecha (más reciente primero)`);
+
       return validEmails;
     } catch (error) {
       console.error("❌ [EmailCache] Error obteniendo caché:", error);
@@ -114,6 +123,13 @@ class EmailCacheService {
       }));
 
       cache.emails = [...newEmails, ...otherEmails];
+
+      // ✅ ORDENAR todos los emails por fecha (más reciente primero)
+      cache.emails.sort((a, b) => {
+        const dateA = new Date(a.date || a.cachedAt || 0).getTime();
+        const dateB = new Date(b.date || b.cachedAt || 0).getTime();
+        return dateB - dateA; // Descendente: más reciente primero
+      });
 
       // ✅ LIMITAR a MAX_CACHED_EMAILS (30) y limpiar full emails removidos
       if (cache.emails.length > MAX_CACHED_EMAILS) {
