@@ -60,8 +60,25 @@
 - **ENDPOINTS.md** - 🔌 Todos los 34 endpoints con DTOs y responses
 - **FLUJOS.md** - 🔄 8 flujos de negocio paso a paso
 - **DECISIONES.md** - 🎯 Por qué se eligió cada tecnología/patrón
+- **DESIGN_SYSTEM.md** - 🎨 **TODOS los estilos Tamagui** - ⭐ NO cambiar sin confirmar
 - **CHANGELOG.md** - 📝 Historial de cambios
 - **CONTEXT.md** - Este archivo (resumen rápido)
+
+### 🎨 PROTECCIÓN DE DISEÑOS
+**ANTES d e modificar cualquier estiloTamagui:**
+1. Leer `DESIGN_SYSTEM.md`
+2. Preguntar al usuario qué quiere cambiar
+3. Mostrar diseño antes/después
+4. Esperar confirmación
+5. Si confirma → modificar Y actualizar DESIGN_SYSTEM.md
+
+**NO CAMBIAR sin permiso:**
+- Colores de componentes
+- Spacing, padding, margin
+- Border radius
+- Font sizes
+- Tamaños de botones/cards/inputs
+- Variantes de design-system
 
 ### 💬 COMENTARIOS EN CÓDIGO
 Todos los archivos clave tienen comentarios explicativos con:

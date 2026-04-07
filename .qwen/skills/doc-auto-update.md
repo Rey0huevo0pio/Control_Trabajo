@@ -117,6 +117,22 @@ content: |
   - ✅ Cambios en roles/permisos
   - ✅ Nuevas rutas de navegación
   - ✅ Nuevas dependencias importantes
+  - ✅ **CAMBIOS EN DISEÑO/ESTILOS TAMAGUI** → Actualizar DESIGN_SYSTEM.md
+
+  ### ⚠️ QUÉ NO CAMBIAR SIN PERMISO EXPLÍCITO:
+  - ❌ Estilos Tamagui existentes en componentes
+  - ❌ Tokens de color en tamagui.config.ts
+  - ❌ Variantes de componentes en design-system/
+  - ❌ Patrones de diseño ya establecidos
+  - ❌ Colores de cards, botones, inputs
+  - ❌ Spacing, border radius, tamaños existentes
+  
+  ### 🎨 SI NECESITAS MODIFICAR ESTILOS:
+  1. VERIFICAR DESIGN_SYSTEM.md primero
+  2. Preguntar al usuario EXPLÍCITAMENTE qué quiere cambiar
+  3. Mostrar diseño ANTES y diseño DESPUÉS propuesto
+  4. Esperar confirmación antes de modificar
+  5. Si confirma → modificar Y actualizar DESIGN_SYSTEM.md
 
   ### Qué documentar SOLO si es importante:
   - ⚠️ Cambios en lógica de negocio existente

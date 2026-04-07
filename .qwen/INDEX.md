@@ -21,6 +21,8 @@
 | [🔌 ENDPOINTS.md](./ENDPOINTS.md) | **Todos los endpoints de la API** | Cuando necesites saber qué hace cada endpoint, qué DTO usa, qué response da |
 | [🔄 FLUJOS.md](./FUJOS.md) | **Flujos de negocio completos** | Cuando necesites entender paso a paso cómo funciona cada caso de uso |
 | [🎯 DECISIONES.md](./DECISIONES.md) | **Decisiones técnicas y por qué** | Cuando necesites entender por qué se eligió cada tecnología, patrón o enfoque |
+| [🎨 DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | **Sistema de diseños Tamagui** | ⭐ **CRÍTICO** - Para NO cambiar estilos accidentalmente |
+| [📝 CHANGELOG.md](./CHANGELOG.md) | **Historial de cambios** | Registro cronológico de todos los cambios |
 
 ---
 
