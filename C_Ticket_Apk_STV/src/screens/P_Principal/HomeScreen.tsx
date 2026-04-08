@@ -1,5 +1,26 @@
+/**
+ * ============================================================================
+ * 🏠 HOME SCREEN - Professional Dashboard Redesign
+ * ============================================================================
+ *
+ * QUÉ HACE ESTE ARCHIVO:
+ * - Dashboard principal con diseño profesional nivel Google/Microsoft
+ * - Tarjetas de módulos con gradientes y animaciones
+ * - Navegación intuitiva entre módulos
+ * - Diseño moderno con sombras, bordes redondeados y micro-interacciones
+ *
+ * DISEÑO:
+ * - Gradientes suaves y modernos
+ * - Cards con elevación y sombras
+ * - Animaciones suaves al presionar
+ * - Iconografía clara y profesional
+ * - Espaciado optimizado para touch
+ *
+ * ============================================================================
+ */
 import React from 'react'
-import { YStack, XStack, ScrollView } from 'tamagui'
+import { ScrollView, Dimensions, Platform } from 'react-native'
+import { YStack, XStack } from 'tamagui'
 import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../store'
@@ -15,12 +36,30 @@ import {
 } from '../../components/design-system'
 import { useResponsive } from '../../components/useResponsive'
 
+const { width } = Dimensions.get('window')
+
+interface ModuleCard {
+  id: string
+  title: string
+  description: string
+  icon: keyof typeof Ionicons.glyphMap
+  gradient: string[]
+  screen: string
+  requiredRole?: string
+  badge?: number
+}
+
 export default function HomeScreen() {
   const navigation = useNavigation<any>()
   const { user, logout, hasRole } = useAuthStore()
   const { isMobile, spacing, buttonSizes } = useResponsive()
 
   const permissions = user ? ROLE_PERMISSIONS[user.rol] : null
+
+  // Handle navigation to main tabs
+  const handleNavigateToMainTabs = () => {
+    navigation.navigate('MainTabs')
+  }
 
   const handleNavigateToInstalaciones = () => {
     navigation.navigate('InstalacionesHome')
@@ -42,378 +81,405 @@ export default function HomeScreen() {
     navigation.navigate('UserManagement')
   }
 
-  const modules = [
+  // Module definitions with modern design
+  const modules: ModuleCard[] = [
     {
       id: 'instalaciones',
       title: 'Instalaciones',
-      description: 'Gestiona instalaciones y áreas'
+      description: 'Gestiona instalaciones y áreas',
+      icon: 'business',
+      gradient: ['#007AFF', '#5AC8FA'],
+      screen: 'InstalacionesHome',
+    },
+    {
+      id: 'chat',
+      title: 'Chat y Mensajería',
+      description: 'Mensajería privada, grupal y noticias',
+      icon: 'chatbubbles',
+      gradient: ['#34C759', '#30D158'],
+      screen: 'ChatHome',
+    },
+    {
+      id: 'archivero',
+      title: 'Archivero Digital',
+      description: 'Gestión documental y archivos',
+      icon: 'folder',
+      gradient: ['#5856D6', '#AF52DE'],
+      screen: 'ArchiveroHome',
     },
     {
       id: 'tickets',
-      title: 'Tickets',
-      description: 'Crea, asigna y da seguimiento'
+      title: 'Tickets de Soporte',
+      description: 'Crear, asignar y dar seguimiento',
+      icon: 'ticket',
+      gradient: ['#FF9500', '#FF6B00'],
+      screen: 'TicketsHome',
+      requiredRole: 'it,rh,supervisor',
     },
     {
       id: 'usuarios',
-      title: 'Usuarios',
-      description: 'Administra usuarios y roles',
-      requiredRole: 'it'
+      title: 'Gestión de Usuarios',
+      description: 'Administra usuarios y roles del sistema',
+      icon: 'people',
+      gradient: ['#FF2D55', '#FF3742'],
+      screen: 'UserManagement',
+      requiredRole: 'it',
     },
-    {
-      id: 'reportes',
-      title: 'Reportes',
-      description: 'Métricas y análisis',
-      requiredRole: 'supervisor'
-    }
   ]
 
+  // Filter modules based on user role
+  const filteredModules = modules.filter(module => {
+    if (!module.requiredRole) return true
+    const roles = module.requiredRole.split(',')
+    return user && roles.includes(user.rol)
+  })
+
   return (
-    <ScreenLayout>
-      {/* Header profesional con gradiente */}
-      <Card 
-        variant="default" 
-        backgroundColor="$primary" 
-        padding={isMobile ? '$5' : '$6'} 
-        overflow="hidden" 
-        position="relative" 
-        borderRadius="$xl"
+    <ScreenLayout style={{ backgroundColor: '#F2F2F7' }}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <YStack position="absolute" right={-20} top={-30} opacity={0.15}>
-          <Ionicons name="grid" size={180} color="white" />
+        {/* Modern Header with Gradient */}
+        <YStack
+          style={{
+            background: 'linear-gradient(135deg, #007AFF 0%, #5856D6 100%)',
+            padding: isMobile ? 24 : 32,
+            paddingTop: Platform.OS === 'ios' ? 60 : 40,
+            paddingBottom: 32,
+            borderRadius: 0,
+            marginBottom: 24,
+          }}
+        >
+          {/* Decorative background elements */}
+          <YStack
+            style={{
+              position: 'absolute',
+              right: -30,
+              top: -40,
+              opacity: 0.1,
+            }}
+          >
+            <Ionicons name="grid" size={200} color="white" />
+          </YStack>
+          
+          <YStack
+            style={{
+              position: 'absolute',
+              left: -20,
+              bottom: -30,
+              opacity: 0.08,
+            }}
+          >
+            <Ionicons name="apps" size={150} color="white" />
+          </YStack>
+
+          {/* Header content */}
+          <HStack justify="space-between" align="center">
+            <Stack gap={8} flex={1}>
+              <HStack gap={8} align="center">
+                <Text 
+                  variant="h1" 
+                  color="white" 
+                  fontWeight="800" 
+                  letterSpacing={-0.5}
+                  style={{ fontSize: 32 }}
+                >
+                  C Ticket
+                </Text>
+                <Text 
+                  variant="h3" 
+                  color="white" 
+                  opacity={0.9} 
+                  fontWeight="600"
+                  style={{ fontSize: 20 }}
+                >
+                  STV
+                </Text>
+              </HStack>
+              <Text 
+                variant="body" 
+                color="white" 
+                opacity={0.8} 
+                fontWeight="500"
+                style={{ fontSize: 15 }}
+              >
+                Panel de Control Profesional
+              </Text>
+            </Stack>
+
+            <YStack
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: 'rgba(255,255,255,0.3)',
+              }}
+            >
+              <Ionicons name="shield-checkmark" size={30} color="white" />
+            </YStack>
+          </HStack>
         </YStack>
 
-        <HStack justify="space-between">
-          <Stack gap="$1" flex={1}>
-            <HStack gap="$2" align="center">
-              <Text variant="h3" color="white" fontWeight="800" letterSpacing={-0.5}>
-                C Ticket
-              </Text>
-              <Text variant="h6" color="white" opacity={0.8} fontWeight="600">
-                STV
-              </Text>
-            </HStack>
-            <Text variant="bodySmall" color="white" opacity={0.75} fontWeight="500">
-              Panel de Control
-            </Text>
-          </Stack>
-
-          <YStack
-            width={56}
-            height={56}
-            borderRadius="$full"
-            backgroundColor="rgba(255,255,255,0.2)"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Ionicons name="shield-checkmark" size={32} color="white" />
-          </YStack>
-        </HStack>
-      </Card>
-
-      {/* Usuario Card mejorado */}
-      <Card variant="outlined" padding={isMobile ? '$4' : '$5'} borderColor="$borderColor" borderWidth={1.5}>
-        <HStack gap="$3">
-          <YStack
-            width={56}
-            height={56}
-            borderRadius="$full"
-            backgroundColor="$primary"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text color="white" fontWeight="800" fontSize={22}>
-              {user?.nombre?.charAt(0) || 'U'}
-            </Text>
-          </YStack>
-
-          <Stack flex={1} gap="$1">
-            <Text variant="h6" fontWeight="700" color="$color">
-              {user ? `${user.nombre} ${user.apellido}` : 'Usuario'}
-            </Text>
-            <HStack gap="$2" align="center">
-              <Text variant="bodySmall" color="$color2">
-                {user?.Control_Usuario || '---'}
-              </Text>
-              <XStack backgroundColor="$primary" paddingHorizontal="$3" paddingVertical="$2" borderRadius="$md">
-                <Text variant="caption" color="white" fontWeight="600" textTransform="uppercase">
-                  {user?.rol || 'Guest'}
-                </Text>
-              </XStack>
-            </HStack>
-          </Stack>
-
-          <IconButton
-            icon="exit"
-            onPress={logout}
-            variant="error"
-            size={22}
-          />
-        </HStack>
-      </Card>
-
-      {/* Módulos */}
-      <Stack gap="$4">
-        <Text variant="h5" fontWeight="700" color="$color" paddingHorizontal="$1" letterSpacing={-0.3}>
-          Módulos del Sistema
-        </Text>
-
-        <Stack gap="$3">
-          {/* Instalaciones */}
-          <Card
-            variant="outlined"
-            borderColor="$primary"
-            borderWidth={1.5}
-            onPress={handleNavigateToInstalaciones}
-            padding={isMobile ? '$4' : '$5'}
-            pressStyle={{ backgroundColor: '$primaryMuted', scale: 0.98 }}
-            borderRadius="$lg"
-          >
-            <HStack gap="$3">
-              <YStack
-                backgroundColor="$primary"
-                width={isMobile ? '$6' : '$7'}
-                height={isMobile ? '$6' : '$7'}
-                borderRadius="$md"
-                justifyContent="center"
-                alignItems="center"
-                shadowColor="$primary"
-                shadowOpacity={0.3}
-                shadowRadius={8}
-              >
-                <Ionicons name="business" size={isMobile ? 24 : 28} color="white" />
-              </YStack>
-
-              <Stack flex={1} gap="$1">
-                <Text variant="h6" fontWeight="700" color="$color">
-                  Instalaciones
-                </Text>
-                <Text variant="bodySmall" color="$color2" lineHeight={18}>
-                  Gestiona instalaciones y áreas
-                </Text>
-              </Stack>
-
-              <Ionicons name="chevron-forward-circle" size={28} color="$primary" />
-            </HStack>
-          </Card>
-
-          {/* Chat y Mensajería */}
-          <Card
-            variant="outlined"
-            borderColor="$success"
-            borderWidth={1.5}
-            onPress={handleNavigateToChat}
-            padding={isMobile ? '$4' : '$5'}
-            pressStyle={{ backgroundColor: '$successMuted', scale: 0.98 }}
-            borderRadius="$lg"
-          >
-            <HStack gap="$3">
-              <YStack
-                backgroundColor="$success"
-                width={isMobile ? '$6' : '$7'}
-                height={isMobile ? '$6' : '$7'}
-                borderRadius="$md"
-                justifyContent="center"
-                alignItems="center"
-                shadowColor="$success"
-                shadowOpacity={0.3}
-                shadowRadius={8}
-              >
-                <Ionicons name="chatbubbles" size={isMobile ? 24 : 28} color="white" />
-              </YStack>
-
-              <Stack flex={1} gap="$1">
-                <Text variant="h6" fontWeight="700" color="$color">
-                  Chat y Mensajería
-                </Text>
-                <Text variant="bodySmall" color="$color2" lineHeight={18}>
-                  Mensajería privada, grupal y noticias
-                </Text>
-              </Stack>
-
-              <Ionicons name="chevron-forward-circle" size={28} color="$success" />
-            </HStack>
-          </Card>
-
-          {/* Archivero */}
-          <Card
-            variant="outlined"
-            borderColor="$secondary"
-            borderWidth={1.5}
-            onPress={handleNavigateToArchivero}
-            padding={isMobile ? '$4' : '$5'}
-            pressStyle={{ backgroundColor: '$secondaryMuted', scale: 0.98 }}
-            borderRadius="$lg"
-          >
-            <HStack gap="$3">
-              <YStack
-                backgroundColor="$secondary"
-                width={isMobile ? '$6' : '$7'}
-                height={isMobile ? '$6' : '$7'}
-                borderRadius="$md"
-                justifyContent="center"
-                alignItems="center"
-                shadowColor="$secondary"
-                shadowOpacity={0.3}
-                shadowRadius={8}
-              >
-                <Ionicons name="folder" size={isMobile ? 24 : 28} color="white" />
-              </YStack>
-
-              <Stack flex={1} gap="$1">
-                <Text variant="h6" fontWeight="700" color="$color">
-                  Archivero
-                </Text>
-                <Text variant="bodySmall" color="$color2" lineHeight={18}>
-                  Gestión documental y archivos
-                </Text>
-              </Stack>
-
-              <Ionicons name="chevron-forward-circle" size={28} color="$secondary" />
-            </HStack>
-          </Card>
-
-          {/* Gestión de Usuarios */}
-          {hasRole('it') && (
-            <Card
-              variant="outlined"
-              borderColor="$secondary"
-              borderWidth={1.5}
-              onPress={handleNavigateToUserManagement}
-              padding={isMobile ? '$4' : '$5'}
-              pressStyle={{ backgroundColor: '$secondaryMuted', scale: 0.98 }}
-              borderRadius="$lg"
+        {/* User Profile Card */}
+        <Card
+          variant="elevated"
+          padding={isMobile ? 20 : 24}
+          marginHorizontal={isMobile ? 16 : 24}
+          marginBottom={24}
+          borderRadius={20}
+          style={{
+            backgroundColor: 'white',
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 4,
+          }}
+        >
+          <HStack gap={16} align="center">
+            {/* Avatar */}
+            <YStack
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: 'linear-gradient(135deg, #007AFF 0%, #5856D6 100%)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#007AFF',
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
+              }}
             >
-              <HStack gap="$3">
-                <YStack
-                  backgroundColor="$secondary"
-                  width={isMobile ? '$6' : '$7'}
-                  height={isMobile ? '$6' : '$7'}
-                  borderRadius="$md"
-                  justifyContent="center"
-                  alignItems="center"
-                  shadowColor="$secondary"
-                  shadowOpacity={0.3}
-                  shadowRadius={8}
+              <Text color="white" fontWeight="800" fontSize={26}>
+                {user?.nombre?.charAt(0) || 'U'}
+              </Text>
+            </YStack>
+
+            {/* User info */}
+            <Stack flex={1} gap={6}>
+              <Text variant="h5" fontWeight="700" color="#000000" style={{ fontSize: 18 }}>
+                {user ? `${user.nombre} ${user.apellido}` : 'Usuario'}
+              </Text>
+              <HStack gap={8} align="center" flexWrap="wrap">
+                <Text variant="bodySmall" color="#8E8E93" style={{ fontSize: 13 }}>
+                  {user?.Control_Usuario || '---'}
+                </Text>
+                <XStack 
+                  style={{
+                    backgroundColor: '#007AFF',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 12,
+                  }}
                 >
-                  <Ionicons name="people" size={isMobile ? 24 : 28} color="white" />
-                </YStack>
-
-                <Stack flex={1} gap="$1">
-                  <Text variant="h6" fontWeight="700" color="$color">
-                    Gestión de Usuarios
+                  <Text variant="caption" color="white" fontWeight="700" textTransform="uppercase" style={{ fontSize: 11 }}>
+                    {user?.rol || 'Guest'}
                   </Text>
-                  <Text variant="bodySmall" color="$color2" lineHeight={18}>
-                    Administra usuarios y roles
-                  </Text>
-                </Stack>
-
-                <Ionicons name="chevron-forward-circle" size={28} color="$secondary" />
+                </XStack>
               </HStack>
-            </Card>
-          )}
+            </Stack>
 
-          {/* Tickets */}
-          {(hasRole('it') || hasRole('rh') || hasRole('supervisor')) && (
-            <Card
-              variant="outlined"
-              borderColor="$warning"
-              borderWidth={1.5}
-              onPress={handleNavigateToTickets}
-              padding={isMobile ? '$4' : '$5'}
-              pressStyle={{ backgroundColor: '$warningMuted', scale: 0.98 }}
-              borderRadius="$lg"
-            >
-              <HStack gap="$3">
-                <YStack
-                  backgroundColor="$warning"
-                  width={isMobile ? '$6' : '$7'}
-                  height={isMobile ? '$6' : '$7'}
-                  borderRadius="$md"
-                  justifyContent="center"
-                  alignItems="center"
-                  shadowColor="$warning"
-                  shadowOpacity={0.3}
-                  shadowRadius={8}
-                >
-                  <Ionicons name="ticket" size={isMobile ? 24 : 28} color="white" />
-                </YStack>
+            {/* Logout button */}
+            <IconButton
+              icon="power"
+              onPress={logout}
+              variant="error"
+              size={24}
+            />
+          </HStack>
+        </Card>
 
-                <Stack flex={1} gap="$1">
-                  <Text variant="h6" fontWeight="700" color="$color">
-                    Tickets de Soporte
-                  </Text>
-                  <Text variant="bodySmall" color="$color2" lineHeight={18}>
-                    Crear, asignar y dar seguimiento
-                  </Text>
-                </Stack>
+        {/* Modules Grid */}
+        <Stack gap={20} paddingHorizontal={isMobile ? 16 : 24}>
+          <Text 
+            variant="h5" 
+            fontWeight="700" 
+            color="#000000" 
+            letterSpacing={-0.3}
+            style={{ fontSize: 20 }}
+          >
+            Módulos del Sistema
+          </Text>
 
-                <Ionicons name="chevron-forward-circle" size={28} color="$warning" />
-              </HStack>
-            </Card>
-          )}
+          {/* Modern grid layout for modules */}
+          <YStack gap={16}>
+            {filteredModules.map((module, index) => (
+              <ModuleCardComponent
+                key={module.id}
+                module={module}
+                index={index}
+                onPress={() => {
+                  switch (module.screen) {
+                    case 'InstalacionesHome':
+                      handleNavigateToInstalaciones()
+                      break
+                    case 'ChatHome':
+                      handleNavigateToChat()
+                      break
+                    case 'ArchiveroHome':
+                      handleNavigateToArchivero()
+                      break
+                    case 'TicketsHome':
+                      handleNavigateToTickets()
+                      break
+                    case 'UserManagement':
+                      handleNavigateToUserManagement()
+                      break
+                  }
+                }}
+              />
+            ))}
+          </YStack>
         </Stack>
-      </Stack>
 
-      {/* Permisos */}
-      <Stack gap="$3">
-        <Text variant="h5" fontWeight="700" color="$color" paddingHorizontal="$1" letterSpacing={-0.3}>
-          Permisos de tu Rol
-        </Text>
+        {/* Permissions Section */}
+        {permissions && (
+          <Stack gap={16} paddingHorizontal={isMobile ? 16 : 24} marginTop={32}>
+            <Text 
+              variant="h5" 
+              fontWeight="700" 
+              color="#000000" 
+              letterSpacing={-0.3}
+              style={{ fontSize: 20 }}
+            >
+              Permisos de tu Rol
+            </Text>
 
-        <HStack gap="$2" flexWrap="wrap">
-          {permissions && (
-            <>
+            <XStack gap={10} flexWrap="wrap">
               <PermissionChip label="Crear" active={permissions.create} />
               <PermissionChip label="Leer" active={permissions.read} />
               <PermissionChip label="Actualizar" active={permissions.update} />
               <PermissionChip label="Eliminar" active={permissions.delete} />
-            </>
-          )}
-        </HStack>
-      </Stack>
+            </XStack>
+          </Stack>
+        )}
 
-      {/* Footer info */}
-      <YStack alignItems="center" paddingVertical="$5" gap="$1">
-        <YStack 
-          width={60} 
-          height={3} 
-          backgroundColor="$color4" 
-          borderRadius="$full" 
-          marginBottom="$3"
-          opacity={0.3}
-        />
-        <Text variant="caption" color="$color3" fontWeight="600">
-          C Ticket STV v1.0
-        </Text>
-        <Text variant="caption" color="$color4">
-          Sistema de Gestión de Tickets
-        </Text>
-      </YStack>
+        {/* Footer */}
+        <YStack alignItems="center" paddingVertical={40} gap={8} marginTop={24}>
+          <YStack
+            style={{
+              width: 60,
+              height: 4,
+              backgroundColor: '#C7C7CC',
+              borderRadius: 2,
+              opacity: 0.3,
+            }}
+          />
+          <Text variant="caption" color="#8E8E93" fontWeight="600">
+            C Ticket STV v2.0
+          </Text>
+          <Text variant="caption" color="#C7C7CC">
+            Sistema de Gestión Profesional
+          </Text>
+        </YStack>
+      </ScrollView>
     </ScreenLayout>
   )
 }
 
+/**
+ * Modern Module Card Component
+ */
+function ModuleCardComponent({ 
+  module, 
+  index, 
+  onPress 
+}: { 
+  module: ModuleCard
+  index: number
+  onPress: () => void
+}) {
+  return (
+    <YStack
+      onPress={onPress}
+      style={{
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 20,
+        shadowColor: module.gradient[0],
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: `${module.gradient[0]}20`,
+        transform: [{ scale: 1 }],
+      }}
+      pressStyle={{
+        transform: [{ scale: 0.98 }],
+        opacity: 0.9,
+      }}
+    >
+      <HStack gap={16} align="center">
+        {/* Icon with gradient background */}
+        <YStack
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            background: `linear-gradient(135deg, ${module.gradient[0]} 0%, ${module.gradient[1]} 100%)`,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: module.gradient[0],
+            shadowOpacity: 0.4,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }}
+        >
+          <Ionicons name={module.icon} size={28} color="white" />
+        </YStack>
+
+        {/* Text content */}
+        <Stack flex={1} gap={4}>
+          <Text variant="h6" fontWeight="700" color="#000000" style={{ fontSize: 17 }}>
+            {module.title}
+          </Text>
+          <Text variant="bodySmall" color="#8E8E93" lineHeight={18} style={{ fontSize: 14 }}>
+            {module.description}
+          </Text>
+        </Stack>
+
+        {/* Arrow icon */}
+        <Ionicons name="chevron-forward-circle" size={26} color={module.gradient[0]} />
+      </HStack>
+    </YStack>
+  )
+}
+
+/**
+ * Permission Chip Component
+ */
 function PermissionChip({ label, active }: { label: string; active: boolean }) {
   return (
     <XStack
-      backgroundColor={active ? '$successMuted' : '$errorMuted'}
-      paddingHorizontal="$3"
-      paddingVertical="$2"
-      borderRadius="$full"
-      borderWidth={1.5}
-      borderColor={active ? '$success' : '$error'}
-      alignItems="center"
-      gap="$1.5"
+      style={{
+        backgroundColor: active ? '#E3F9E8' : '#FFE5E3',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: active ? '#34C759' : '#FF3B30',
+        alignItems: 'center',
+        gap: 6,
+      }}
     >
       <Ionicons
         name={active ? "checkmark-circle" : "close-circle"}
         size={14}
-        color={active ? '$success' : '$error'}
+        color={active ? '#34C759' : '#FF3B30'}
       />
       <Text
         variant="labelSmall"
-        color={active ? '$success' : '$error'}
+        color={active ? '#34C759' : '#FF3B30'}
         fontWeight="700"
+        style={{ fontSize: 12 }}
       >
         {label}
       </Text>

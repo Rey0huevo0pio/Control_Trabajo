@@ -1,60 +1,25 @@
 /**
  * ============================================================================
- * 🧭 APP NAVIGATOR - Configuración de Navegación Principal
+ * 🎨 MODERN APP NAVIGATOR - Google/Microsoft Style Navigation
  * ============================================================================
- * 
+ *
  * QUÉ HACE ESTE ARCHIVO:
- * - Define todas las rutas de la aplicación
- * - Configura el Stack Navigator de React Navigation
- * - Conecta los módulos principales (Instalaciones, Tickets, Chat, Archivero)
- * - Decide qué pantalla mostrar según autenticación
- * 
- * CONEXIONES:
- * - Types: RootStackParamList (../types) - Define tipos de rutas
- * - Screens: LoginScreen, HomeScreen (../screens/)
- * - Módulos externos:
- *   - src_Instalaciones_STV/navigation → Instalaciones
- *   - src_P_Ticket_IT/navigation → Tickets IT
- *   - src_Chat_STV/navigation → Chat
- *   - src_Archivero_STV/navigation → Archivero
- * - Store: useAuthStore (para verificar autenticación si es necesario)
- * 
- * RUTAS DEFINIDAS:
- * - Login → Pantalla de inicio de sesión (P_Auth)
- * - Home → Pantalla principal después de login (P_Principal)
- * - InstalacionesHome → Módulo de instalaciones
- * - TicketsHome → Módulo de tickets IT
- * - ChatHome → Módulo de chat empresarial
- * - ArchiveroHome → Módulo de gestión documental
- * - UserManagement → Gestión de usuarios
- * 
- * FLUJO DE NAVEGACIÓN:
- * App.tsx
- *   └─ AppNavigator
- *       ├─ Login (pantalla inicial)
- *       └─ Home (después de login exitoso)
- *           ├─ → InstalacionesHome
- *           ├─ → TicketsHome
- *           ├─ → ChatHome
- *           ├─ → ArchiveroHome
- *           └─ → UserManagement
- * 
- * PARA AGREGAR NUEVA RUTA:
- * 1. Importar el screen: import { NuevoScreen } from '../screens/P_Nuevo';
- * 2. Agregar al Stack:
- *    <Stack.Screen name="Nuevo" component={NuevoScreen} />
- * 3. Si es un módulo con navegación propia:
- *    <Stack.Screen name="NuevoHome" component={NuevoNavigator} />
- * 
- * PARA MODIFICAR:
- * - Cambiar pantalla inicial: modificar initialRouteName
- * - Mostrar headers: cambiar headerShown: true
- * - Agregar animación: agregar animation: 'slide_from_right'
- * 
+ * - Implementa navegación con Bottom Tabs (estilo apps modernas)
+ * - Transiciones suaves entre pantallas
+ * - Navegación intuitiva tipo Google/Microsoft apps
+ * - Mantiene Stack Navigation para módulos internos
+ *
+ * ARQUITECTURA:
+ * - Bottom Tabs para módulos principales
+ * - Stack Navigation dentro de cada módulo
+ * - Animaciones compartidas entre transiciones
+ *
  * ============================================================================
  */
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { RootStackParamList } from '../types'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { Ionicons } from '@expo/vector-icons'
+import { RootStackParamList, MainTabParamList } from '../types'
 import { LoginScreen } from '../screens/P_Auth'
 import { HomeScreen } from '../screens/P_Principal'
 import { InstalacionNavigator } from '../../src_Instalaciones_STV/navigation'
@@ -62,6 +27,7 @@ import { TicketNavigator } from '../../src_P_Ticket_IT/navigation'
 import { ChatNavigator } from '../../src_Chat_STV/navigation'
 import { ArchiveroNavigator } from '../../src_Archivero_STV/navigation'
 import UserManagementScreen from '../screens/Components_Usuarios/screens/UserManagementScreen'
+import MainTabs from './MainTabs'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -71,43 +37,57 @@ export default function AppNavigator() {
       initialRouteName="Login"
       screenOptions={{
         headerShown: false,
+        animation: 'slide_from_right',
+        animationDuration: 300,
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      
+      {/* Modern Bottom Tabs Navigator */}
+      <Stack.Screen 
+        name="MainTabs" 
+        component={MainTabs}
+        options={{
+          animation: 'fade',
+          animationDuration: 200,
+        }}
+      />
+      
+      {/* Module screens (accessible from tabs and home) */}
       <Stack.Screen
         name="InstalacionesHome"
         component={InstalacionNavigator}
         options={{
-          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
       <Stack.Screen
         name="TicketsHome"
         component={TicketNavigator}
         options={{
-          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
       <Stack.Screen
         name="ChatHome"
         component={ChatNavigator}
         options={{
-          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
       <Stack.Screen
         name="ArchiveroHome"
         component={ArchiveroNavigator}
         options={{
-          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
       <Stack.Screen
         name="UserManagement"
         component={UserManagementScreen}
         options={{
-          headerShown: false,
+          animation: 'slide_from_right',
         }}
       />
     </Stack.Navigator>

@@ -70,9 +70,23 @@ export type ArchiveroStackParamList = {
 export type RootStackParamList = {
   Login: undefined
   Home: undefined
+  MainTabs: undefined
   Principal: undefined
+  InstalacionesHome: undefined
+  TicketsHome: undefined
+  ChatHome: undefined
+  ArchiveroHome: undefined
   UserManagement: undefined
 } & InstalacionStackParamList & TicketStackParamList & ChatStackParamList & ArchiveroStackParamList
+
+// Tipos para Main Tabs
+export type MainTabParamList = {
+  HomeTab: undefined
+  InstalacionesTab: undefined
+  ChatTab: undefined
+  ArchiveroTab: undefined
+  TicketsTab: undefined
+}
 
 // Tipos para API
 export interface ApiResponse<T> {
