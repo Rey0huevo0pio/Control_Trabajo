@@ -61,6 +61,7 @@
 - **FLUJOS.md** - 🔄 8 flujos de negocio paso a paso
 - **DECISIONES.md** - 🎯 Por qué se eligió cada tecnología/patrón
 - **DESIGN_SYSTEM.md** - 🎨 **TODOS los estilos Tamagui** - ⭐ NO cambiar sin confirmar
+- **DESIGN_RULES.md** - 📐 **REGLAS OBLIGATORIAS** de consistencia - ⭐ EVITAR "desparpajo"
 - **CHANGELOG.md** - 📝 Historial de cambios
 - **CONTEXT.md** - Este archivo (resumen rápido)
 

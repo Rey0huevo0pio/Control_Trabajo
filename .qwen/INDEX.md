@@ -22,7 +22,17 @@
 | [🔄 FLUJOS.md](./FUJOS.md) | **Flujos de negocio completos** | Cuando necesites entender paso a paso cómo funciona cada caso de uso |
 | [🎯 DECISIONES.md](./DECISIONES.md) | **Decisiones técnicas y por qué** | Cuando necesites entender por qué se eligió cada tecnología, patrón o enfoque |
 | [🎨 DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | **Sistema de diseños Tamagui** | ⭐ **CRÍTICO** - Para NO cambiar estilos accidentalmente |
+| [📐 DESIGN_RULES.md](./DESIGN_RULES.md) | **Reglas de consistencia de diseño** | ⭐ **OBLIGATORIO** - Reglas para evitar "desparpajo" de estilos |
 | [📝 CHANGELOG.md](./CHANGELOG.md) | **Historial de cambios** | Registro cronológico de todos los cambios |
+
+---
+
+## 🎨 SKILLS DE DISEÑO
+
+| Skill | Propósito | Cuándo usar |
+|-------|-----------|-------------|
+| [🎨 UI Design Planning](./skills/ui-design-planning.md) | Planificación de diseño UI/UX profesional | Antes de implementar cualquier cambio visual |
+| [🔄 Doc Auto-Update](./skills/doc-auto-update.md) | Actualización automática de docs | Después de cada cambio en código |
 
 ---
 

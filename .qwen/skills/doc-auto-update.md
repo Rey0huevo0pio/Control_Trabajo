@@ -15,6 +15,7 @@ content: |
   - Antes de hacer commit
   - Cuando el usuario pide "actualizar docs" o "sync docs"
   - Cuando se detecta código no documentado
+  - ⚠️ **DESPUÉS de cualquier cambio de diseño/estilos** → Ejecutar UI Design Planning skill primero
 
   ## Proceso de Actualización
 
