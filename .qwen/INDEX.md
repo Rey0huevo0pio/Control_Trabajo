@@ -24,6 +24,7 @@
 | [🎨 DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | **Sistema de diseños Tamagui** | ⭐ **CRÍTICO** - Para NO cambiar estilos accidentalmente |
 | [📐 DESIGN_RULES.md](./DESIGN_RULES.md) | **Reglas de consistencia de diseño** | ⭐ **OBLIGATORIO** - Reglas para evitar "desparpajo" de estilos |
 | [📝 CHANGELOG.md](./CHANGELOG.md) | **Historial de cambios** | Registro cronológico de todos los cambios |
+| [🐛 ERRORES_COMUNES.md](./ERRORES_COMUNES.md) | **Errores frecuentes y soluciones** | ⭐ **IMPORTANTE** - Referencia rápida de errores conocidos |
 
 ---
 
