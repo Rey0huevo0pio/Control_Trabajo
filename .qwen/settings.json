@@ -28,7 +28,8 @@
       "Bash(powershell *)",
       "Bash(npm *)",
       "Bash(dir *)",
-      "Bash(xcopy *)"
+      "Bash(xcopy *)",
+      "Bash(echo *)"
     ]
   },
   "$version": 3

@@ -28,11 +28,19 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
-// Importar pantallas
+// Importar pantallas principales
 import { LoginScreen } from '../screens/P_Auth/LoginScreen';
 import { HomeScreen } from '../screens/P_Principal/HomeScreen';
 
-// Placeholder screens para módulos (se crearán después)
+// Importar módulos
+import ArchiveroModule from '../src_Archivero_STV';
+import ChatModule from '../src_Chat_STV';
+import InstalacionesModule from '../src_Instalaciones_STV';
+import TicketsModule from '../src_P_Ticket_IT';
+
+/**
+ * PlaceholderScreen - Para rutas sin implementar
+ */
 const PlaceholderScreen = ({ moduleName }) => (
   <div style={{ padding: 40, textAlign: 'center' }}>
     <h1>Módulo {moduleName}</h1>
@@ -73,12 +81,12 @@ export const AppRouter = () => {
           }
         />
         
-        {/* Módulos (placeholder - se implementarán después) */}
+        {/* Módulos */}
         <Route
           path="/instalaciones"
           element={
             <ProtectedRoute>
-              <PlaceholderScreen moduleName="Instalaciones" />
+              <InstalacionesModule.InstalacionesHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -86,7 +94,7 @@ export const AppRouter = () => {
           path="/tickets"
           element={
             <ProtectedRoute>
-              <PlaceholderScreen moduleName="Tickets IT" />
+              <TicketsModule.TicketHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -94,7 +102,7 @@ export const AppRouter = () => {
           path="/chat"
           element={
             <ProtectedRoute>
-              <PlaceholderScreen moduleName="Chat" />
+              <ChatModule.ChatHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -102,7 +110,7 @@ export const AppRouter = () => {
           path="/archivero"
           element={
             <ProtectedRoute>
-              <PlaceholderScreen moduleName="Archivero" />
+              <ArchiveroModule.ArchiveroHomeScreen />
             </ProtectedRoute>
           }
         />
