@@ -1,12 +1,21 @@
 /**
  * ============================================================================
- * 📝 REGISTRO AREA - Formulario de registro de área
+ * 📝 REGISTRO AREA SCREEN - Pantalla de registro de área (Web)
  * ============================================================================
  *
+ * ADAPTADO DE: C_Ticket_Apk_STV/src_Instalaciones_STV/screens/RegistroAreaScreen.tsx
+ *
  * QUÉ HACE:
- * - Formulario para registrar nueva área dentro de una instalación
- * - Placeholder temporal hasta implementar funcionalidad completa
+ * - Wrapper del formulario de registro de área
+ *
+ * CONEXIONES:
+ * - Component: src_Instalaciones_STV/components/RegistroAreaForm.jsx
  *
  * ============================================================================
  */
-export const RegistroAreaScreen = () => <div>📝 Registro área - En desarrollo</div>;
+import React from 'react';
+import { RegistroAreaForm } from '../components/RegistroAreaForm';
+
+export const RegistroAreaScreen = () => {
+  return <RegistroAreaForm />;
+};
