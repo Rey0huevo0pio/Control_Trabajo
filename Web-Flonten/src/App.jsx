@@ -11,7 +11,7 @@
  * 
  * CONEXIONES:
  * - Mobile: C_Ticket_Apk_STV/App.tsx (mismo patrón)
- * - Tamagui: src/lib/tamagui.config.js (mismos tokens)
+ * - Tamagui: src/lib/tamagui.config.ts (mismos tokens)
  * - Router: src/navigation/AppRouter.jsx (rutas)
  * - Store: Zustand (auto-inicializado, no necesita provider)
  * 
@@ -28,7 +28,7 @@
  * 
  * PARA MODIFICAR:
  * - Agregar provider global: envolver dentro de TamaguiProvider
- * - Cambiar tema default: modificar defaultTheme en tamagui.config.js
+ * - Cambiar tema default: modificar defaultTheme en tamagui.config.ts
  * - Agregar lógica de inicio: agregar useEffect antes del return
  * 
  * ============================================================================

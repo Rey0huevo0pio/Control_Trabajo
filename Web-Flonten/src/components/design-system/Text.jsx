@@ -10,7 +10,7 @@
  * 
  * CONEXIONES:
  * - Mobile: C_Ticket_Apk_STV/src/components/design-system/Text.tsx
- * - Tamagui: Usa tokens de tamagui.config.js
+ * - Tamagui: Usa tokens de tamagui.config.ts
  * 
  * VARIANTES:
  * - h1, h2, h3, h4, h5, h6 → Títulos

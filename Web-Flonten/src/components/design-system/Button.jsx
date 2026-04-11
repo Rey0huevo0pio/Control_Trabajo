@@ -11,7 +11,7 @@
  * 
  * CONEXIONES:
  * - Mobile: C_Ticket_Apk_STV/src/components/design-system/Button.tsx
- * - Tamagui: Usa tokens de tamagui.config.js
+ * - Tamagui: Usa tokens de tamagui.config.ts
  * 
  * ============================================================================
  */

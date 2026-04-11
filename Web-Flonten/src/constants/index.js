@@ -81,17 +81,19 @@ export const PERMISSIONS = {
 // ============================================================================
 // MAPEO DE ROLES A PERMISOS (Mismo que el móvil)
 // ============================================================================
+const _vigilantePerms = [
+  PERMISSIONS.DASHBOARD_VER,
+  PERMISSIONS.CHAT_VER,
+  PERMISSIONS.CHAT_ENVIAR,
+  PERMISSIONS.TICKETS_VER,
+  PERMISSIONS.TICKETS_CREAR,
+  PERMISSIONS.ARCHIVERO_VER,
+];
+
 export const ROLE_PERMISSIONS = {
-  [ROLES.VIGILANTE]: [
-    PERMISSIONS.DASHBOARD_VER,
-    PERMISSIONS.CHAT_VER,
-    PERMISSIONS.CHAT_ENVIAR,
-    PERMISSIONS.TICKETS_VER,
-    PERMISSIONS.TICKETS_CREAR,
-    PERMISSIONS.ARCHIVERO_VER,
-  ],
+  [ROLES.VIGILANTE]: _vigilantePerms,
   [ROLES.SUPERVISOR]: [
-    ...ROLE_PERMISSIONS[ROLES.VIGILANTE],
+    ..._vigilantePerms,
     PERMISSIONS.REPORTES_VER,
     PERMISSIONS.CHAT_CREAR_GRUPO,
     PERMISSIONS.TICKETS_ASIGNAR,

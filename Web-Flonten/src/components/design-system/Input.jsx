@@ -10,7 +10,7 @@
  * 
  * CONEXIONES:
  * - Mobile: Mismo patrón que inputs del móvil
- * - Tamagui: Usa tokens de tamagui.config.js
+ * - Tamagui: Usa tokens de tamagui.config.ts
  * 
  * ============================================================================
  */
