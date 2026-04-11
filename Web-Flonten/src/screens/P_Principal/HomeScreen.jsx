@@ -74,7 +74,7 @@ const modules = [
 
 export const HomeScreen = () => {
   const navigate = useNavigate();
-  const { user, logout, hasPermission } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
     logout();

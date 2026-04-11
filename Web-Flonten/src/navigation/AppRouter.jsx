@@ -38,6 +38,33 @@ import { ChatHomeScreen } from '../src_Chat_STV';
 import { InstalacionesHomeScreen } from '../src_Instalaciones_STV';
 import { TicketHomeScreen } from '../src_P_Ticket_IT';
 
+// Importar pantallas de Archivero
+import { ArchiveroDetalleScreen } from '../src_Archivero_STV/screens/ArchiveroDetalleScreen';
+import { CrearArchiveroScreen } from '../src_Archivero_STV/screens/CrearArchiveroScreen';
+import { CarpetaDetalleScreen } from '../src_Archivero_STV/screens/CarpetaDetalleScreen';
+import { GestionarMiembrosScreen } from '../src_Archivero_STV/screens/GestionarMiembrosScreen';
+import { EscanearDocumentoScreen } from '../src_Archivero_STV/screens/EscanearDocumentoScreen';
+
+// Importar pantallas de Tickets
+import { CrearTicketScreen } from '../src_P_Ticket_IT/screens/CrearTicketScreen';
+import { MisTicketsScreen } from '../src_P_Ticket_IT/screens/MisTicketsScreen';
+import { TodosTicketsScreen } from '../src_P_Ticket_IT/screens/TodosTicketsScreen';
+import { ReportesTicketsScreen } from '../src_P_Ticket_IT/screens/ReportesTicketsScreen';
+import { DetalleTicketScreen } from '../src_P_Ticket_IT/screens/DetalleTicketScreen';
+
+// Importar pantallas de Chat
+import { PrivateChatsScreen } from '../src_Chat_STV/screens/PrivateChatsScreen';
+import { GroupChatsScreen } from '../src_Chat_STV/screens/GroupChatsScreen';
+import { EmailMainScreen } from '../src_Chat_STV/screens/EmailMainScreen';
+import { ChatSearchScreen } from '../src_Chat_STV/screens/ChatSearchScreen';
+import { EmployeeDirectoryScreen } from '../src_Chat_STV/screens/EmployeeDirectoryScreen';
+import { NewsBoardScreen } from '../src_Chat_STV/screens/NewsBoardScreen';
+
+// Importar pantallas de Instalaciones
+import { RegistroInstalacionScreen } from '../src_Instalaciones_STV/screens/RegistroInstalacionScreen';
+import { DetalleInstalacionScreen } from '../src_Instalaciones_STV/screens/DetalleInstalacionScreen';
+import { RegistroAreaScreen } from '../src_Instalaciones_STV/screens/RegistroAreaScreen';
+
 /**
  * PlaceholderScreen - Para rutas sin implementar
  */
@@ -81,15 +108,97 @@ export const AppRouter = () => {
           }
         />
         
-        {/* Módulos */}
+        {/* Módulos - Archivero */}
         <Route
-          path="/instalaciones"
+          path="/archivero"
           element={
             <ProtectedRoute>
-              <InstalacionesHomeScreen />
+              <ArchiveroHomeScreen />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/archivero/crear"
+          element={
+            <ProtectedRoute>
+              <CrearArchiveroScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId"
+          element={
+            <ProtectedRoute>
+              <ArchiveroDetalleScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/carpeta/nueva"
+          element={
+            <ProtectedRoute>
+              <CarpetaDetalleScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/carpeta/:carpetaId"
+          element={
+            <ProtectedRoute>
+              <CarpetaDetalleScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/miembros"
+          element={
+            <ProtectedRoute>
+              <GestionarMiembrosScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/subir"
+          element={
+            <ProtectedRoute>
+              <ArchiveroHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/escanear"
+          element={
+            <ProtectedRoute>
+              <EscanearDocumentoScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/archivo/:archivoId"
+          element={
+            <ProtectedRoute>
+              <ArchiveroHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/:archiveroId/config"
+          element={
+            <ProtectedRoute>
+              <ArchiveroHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archivero/carpeta/:carpetaId/config"
+          element={
+            <ProtectedRoute>
+              <ArchiveroHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Módulos - Tickets */}
         <Route
           path="/tickets"
           element={
@@ -99,6 +208,56 @@ export const AppRouter = () => {
           }
         />
         <Route
+          path="/tickets/crear"
+          element={
+            <ProtectedRoute>
+              <CrearTicketScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/mis-tickets"
+          element={
+            <ProtectedRoute>
+              <MisTicketsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/todos"
+          element={
+            <ProtectedRoute>
+              <TodosTicketsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/reportes"
+          element={
+            <ProtectedRoute>
+              <ReportesTicketsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/:ticketId"
+          element={
+            <ProtectedRoute>
+              <DetalleTicketScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/:ticketId/editar"
+          element={
+            <ProtectedRoute>
+              <CrearTicketScreen />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Módulos - Chat */}
+        <Route
           path="/chat"
           element={
             <ProtectedRoute>
@@ -107,13 +266,129 @@ export const AppRouter = () => {
           }
         />
         <Route
-          path="/archivero"
+          path="/chat/private"
           element={
             <ProtectedRoute>
-              <ArchiveroHomeScreen />
+              <PrivateChatsScreen />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/chat/grupos"
+          element={
+            <ProtectedRoute>
+              <GroupChatsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/email"
+          element={
+            <ProtectedRoute>
+              <EmailMainScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/conversacion/:chatId"
+          element={
+            <ProtectedRoute>
+              <ChatHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/buscar"
+          element={
+            <ProtectedRoute>
+              <ChatSearchScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/directorio"
+          element={
+            <ProtectedRoute>
+              <EmployeeDirectoryScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/noticias"
+          element={
+            <ProtectedRoute>
+              <NewsBoardScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/noticias/:noticiaId"
+          element={
+            <ProtectedRoute>
+              <NewsBoardScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/grupos/nuevo"
+          element={
+            <ProtectedRoute>
+              <GroupChatsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/grupos/:groupId/info"
+          element={
+            <ProtectedRoute>
+              <GroupChatsScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/usuario/:userId"
+          element={
+            <ProtectedRoute>
+              <EmployeeDirectoryScreen />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Módulos - Instalaciones */}
+        <Route
+          path="/instalaciones"
+          element={
+            <ProtectedRoute>
+              <InstalacionesHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instalaciones/nueva"
+          element={
+            <ProtectedRoute>
+              <RegistroInstalacionScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instalaciones/:instalacionId"
+          element={
+            <ProtectedRoute>
+              <DetalleInstalacionScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instalaciones/:instalacionId/area/nueva"
+          element={
+            <ProtectedRoute>
+              <RegistroAreaScreen />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Módulos - Otros */}
         <Route
           path="/usuarios"
           element={
