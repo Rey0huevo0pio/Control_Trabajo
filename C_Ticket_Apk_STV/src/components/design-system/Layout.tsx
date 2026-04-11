@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 // iOS/Android-style vertical stack
 interface StackProps {
   children: React.ReactNode
-  gap?: number
+  gap?: number | string
   style?: ViewStyle
   flex?: number
 }
@@ -60,7 +60,7 @@ export function Stack({
 // iOS/Android-style horizontal stack
 interface HStackProps {
   children: React.ReactNode
-  gap?: number
+  gap?: number | string
   align?: 'flex-start' | 'center' | 'flex-end' | 'stretch'
   justify?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly'
   style?: ViewStyle
@@ -178,7 +178,7 @@ export function ScreenLayout({
 interface ScreenSectionProps {
   title?: string
   children: React.ReactNode
-  gap?: number
+  gap?: number | string
   padding?: number
   style?: ViewStyle
 }

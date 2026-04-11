@@ -7,4 +7,4 @@
  *
  * ============================================================================
  */
-export { EmailMainScreen } from '../Componets_Correos/EmailMainScreen';
+export { EmailMainScreen } from './Componets_Correos/EmailMainScreen';

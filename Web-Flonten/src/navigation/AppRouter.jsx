@@ -32,11 +32,11 @@ import { useAuthStore } from '../store/authStore';
 import { LoginScreen } from '../screens/P_Auth/LoginScreen';
 import { HomeScreen } from '../screens/P_Principal/HomeScreen';
 
-// Importar módulos
-import ArchiveroModule from '../src_Archivero_STV';
-import ChatModule from '../src_Chat_STV';
-import InstalacionesModule from '../src_Instalaciones_STV';
-import TicketsModule from '../src_P_Ticket_IT';
+// Importar módulos (named exports para pantallas)
+import { ArchiveroHomeScreen } from '../src_Archivero_STV';
+import { ChatHomeScreen } from '../src_Chat_STV';
+import { InstalacionesHomeScreen } from '../src_Instalaciones_STV';
+import { TicketHomeScreen } from '../src_P_Ticket_IT';
 
 /**
  * PlaceholderScreen - Para rutas sin implementar
@@ -86,7 +86,7 @@ export const AppRouter = () => {
           path="/instalaciones"
           element={
             <ProtectedRoute>
-              <InstalacionesModule.InstalacionesHomeScreen />
+              <InstalacionesHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -94,7 +94,7 @@ export const AppRouter = () => {
           path="/tickets"
           element={
             <ProtectedRoute>
-              <TicketsModule.TicketHomeScreen />
+              <TicketHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -102,7 +102,7 @@ export const AppRouter = () => {
           path="/chat"
           element={
             <ProtectedRoute>
-              <ChatModule.ChatHomeScreen />
+              <ChatHomeScreen />
             </ProtectedRoute>
           }
         />
@@ -110,7 +110,7 @@ export const AppRouter = () => {
           path="/archivero"
           element={
             <ProtectedRoute>
-              <ArchiveroModule.ArchiveroHomeScreen />
+              <ArchiveroHomeScreen />
             </ProtectedRoute>
           }
         />
