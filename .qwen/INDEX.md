@@ -33,6 +33,31 @@
 |-------|-----------|-------------|
 | [🎨 UI Design Planning](./skills/ui-design-planning.md) | Planificación de diseño UI/UX profesional | Antes de implementar cualquier cambio visual |
 | [🔄 Doc Auto-Update](./skills/doc-auto-update.md) | Actualización automática de docs | Después de cada cambio en código |
+| [🛠️ Error Resolution](./skills/error-resolution.md) | Resolución y aprendizaje de errores | Al encontrar errores, debug, fix |
+
+---
+
+## 🧠 SISTEMA DE AUTO-APRENDIZAJE
+
+### Documentos de Aprendizaje
+| Documento | Propósito | Cuándo usar |
+|-----------|-----------|-------------|
+| [🧠 APRENDIZAJE.md](./APRENDIZAJE.md) | **Lecciones aprendidas de errores** | Consultar ANTES de implementar |
+| [💡 SOLUCIONES_CONOCIDAS.md](./SOLUCIONES_CONOCIDAS.md) | Base de datos de soluciones técnicas | Buscar patrones de solución |
+| [📝 CHANGELOG.md](./CHANGELOG.md) | Historial cronológico de cambios | Ver qué cambió y cuándo |
+
+### 📋 Reglas de Auto-Aprendizaje
+1. ✅ **Cada error** → documentado en APRENDIZAJE.md
+2. ✅ **Cada solución** → documentada en SOLUCIONES_CONOCIDAS.md
+3. ✅ **Cada cambio** → documentado en CHANGELOG.md
+4. ✅ **Cada módulo** → tiene su propio .md explicativo
+5. ✅ **NUNCA repetir errores** documentados
+6. ✅ **SIEMPRE consultar** antes de implementar
+
+### 📁 Plantillas de Documentación
+| Plantilla | Ubicación | Uso |
+|-----------|-----------|-----|
+| [📝 Componente.md](./templates/Componente.md) | `templates/` | Documentar cada componente/screen |
 
 ---
 

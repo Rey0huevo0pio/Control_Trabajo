@@ -3,12 +3,29 @@ description: |
   Automatically detects code changes and updates project documentation in .qwen/ folder.
   Use when: after implementing any code change, before committing, or when user asks to update docs.
   This skill ensures project documentation is always up-to-date and no code change goes undocumented.
+  NOW INCLUDES: Auto-learning from errors, solution tracking, and per-module documentation.
 
 content: |
-  # Skill: Auto-Actualización de Documentación
+  # Skill: Auto-Actualización de Documentación & Auto-Aprendizaje
 
   ## Propósito
   Detectar cambios en el código y actualizar automáticamente la documentación en `.qwen/` para mantener el cerebro del proyecto siempre actualizado.
+  
+  ## 🧠 SISTEMA DE AUTO-APRENDIZAJE INTEGRADO
+  
+  **REGLA FUNDAMENTAL:** Cada error encontrado y solución aplicada DEBE quedar documentada.
+  
+  ### Después de CADA cambio:
+  1. ✅ Documentar QUÉ se hizo
+  2. ✅ Documentar POR QUÉ se hizo
+  3. ✅ Documentar CÓMO funciona
+  4. ✅ Registrar errores encontradas
+  5. ✅ Registrar soluciones aplicadas
+  6. ✅ Registrar lecciones aprendidas
+  7. ✅ Actualizar APRENDIZAJE.md
+  8. ✅ Actualizar SOLUCIONES_CONOCIDAS.md
+  9. ✅ Actualizar CHANGELOG.md
+  10. ✅ Crear/actualizar .md del módulo afectado
 
   ## Cuándo ejecutar
   - Después de implementar cualquier cambio en el código
@@ -16,6 +33,7 @@ content: |
   - Cuando el usuario pide "actualizar docs" o "sync docs"
   - Cuando se detecta código no documentado
   - ⚠️ **DESPUÉS de cualquier cambio de diseño/estilos** → Ejecutar UI Design Planning skill primero
+  - **DESPUÉS de resolver cualquier error** → Ejecutar Error Resolution skill
 
   ## Proceso de Actualización
 
@@ -194,6 +212,71 @@ content: |
   3. Verificar que los ejemplos de código funcionen
   4. Actualizar fecha de última actualización
   5. Confirmar que no quedó nada sin documentar
+  6. ✅ Verificar APRENDIZAJE.md actualizado
+  7. ✅ Verificar SOLUCIONES_CONOCIDAS.md actualizado
+  8. ✅ Verificar .md del módulo creado/actualizado
+
+  ## 📝 Documentación por Módulo
+
+  **REGLA:** Cada vez que se modifica un componente, screen o archivo importante,
+  crear/actualizar el archivo `.md` correspondiente en la misma carpeta del archivo modificado.
+
+  ### Formato de documentación por módulo:
+
+  ```markdown
+  # 📱 [NOMBRE_MÓDULO] - Documentación
+
+  > **Última actualización:** YYYY-MM-DD
+  > **Archivos en esta carpeta:** lista de archivos
+
+  ---
+
+  ## 📋 RESUMEN DE ARCHIVOS
+
+  | Archivo | Propósito | Última modificación |
+  |---------|-----------|---------------------|
+  | `archivo1.jsx` | Descripción | YYYY-MM-DD |
+  | `archivo2.jsx` | Descripción | YYYY-MM-DD |
+
+  ---
+
+  ## 🔄 HISTORIAL DE CAMBIOS
+
+  ### [YYYY-MM-DD] - Descripción del cambio
+  - **Qué se hizo:** descripción
+  - **Por qué:** razón del cambio
+  - **Cómo funciona:** explicación técnica
+  - **Archivos modificados:** lista
+  - **Problemas encontrados:** (si hubo)
+  - **Soluciones aplicadas:** (si hubo)
+
+  ---
+
+  ## 🚨 PROBLEMAS Y SOLUCIONES
+
+  ### Problema: [Descripción]
+  - **Síntoma:** qué se observó
+  - **Causa:** qué lo provocó
+  - **Solución:** cómo se resolvió
+  - **Lección:** qué aprender
+
+  ---
+
+  ## 🔗 CONEXIONES
+
+  - **API:** endpoints que consume
+  - **Store:** stores que utiliza
+  - **Componentes:** componentes hijos que usa
+  - **Navegación:** rutas relacionadas
+
+  ---
+
+  ## 💡 NOTAS IMPORTANTES
+
+  - Cosas a recordar
+  - Advertencias
+  - Mejores prácticas específicas de este módulo
+  ```
 
   ## Ejemplo de Uso
 
