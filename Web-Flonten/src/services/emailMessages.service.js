@@ -80,18 +80,41 @@ class EmailMessagesService {
 
   async fullDownload(folder, token, page, limit) {
     try {
+      console.log('[EmailMessages] Descargando correos...');
+      
       const response = await api.get(EMAIL_MESSAGES_ENDPOINT, {
-        params: { folder, page, limit },
+        params: { folder, page, limit: 20 }, // Reducir a 20 para evitar timeout
         headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000, // 30 segundos
       });
 
+      console.log('[EmailMessages] Response:', response.status, response.data);
+
       let emails = [];
-      if (response.data.success && response.data.data?.emails) {
-        emails = response.data.data.emails;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        emails = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        emails = response.data;
+      // Manejar diferentes formatos de respuesta
+      if (response.data) {
+        // Si tiene estructura success
+        if (response.data.success && response.data.data) {
+          emails = response.data.data.emails || response.data.data;
+        } 
+        // Si tiene propiedad emails directamente
+        else if (response.data.emails) {
+          emails = response.data.emails;
+        }
+        // Si data es array directo
+        else if (Array.isArray(response.data.data)) {
+          emails = response.data.data;
+        }
+        // Si response.data es array directo
+        else if (Array.isArray(response.data)) {
+          emails = response.data;
+        }
+      }
+
+      // Asegurar que sea array
+      if (!Array.isArray(emails)) {
+        emails = [];
+        console.log('[EmailMessages] Emails no es array, ajustado:', typeof emails);
       }
 
       emails = emails.map(e => ({ ...e, folder }));
@@ -112,12 +135,17 @@ class EmailMessagesService {
         message: response.data.message || 'Correos cargados desde servidor',
       };
     } catch (error) {
-      console.error('[EmailMessages] Error en fullDownload:', error);
+      console.error('[EmailMessages] Error en fullDownload:', error.message || error.code);
       const cached = this.getCachedEmails(folder);
       if (cached.length > 0) {
         return { emails: cached, total: cached.length, fromCache: true, message: 'Error de conexión, mostrando caché local' };
       }
-      const errorMsg = error.response?.status === 404 ? 'Configura tu correo IMAP primero' : (error.message || 'Error al cargar correos');
+      let errorMsg = 'Error al cargar correos';
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMsg = 'Timeout - el servidor tarda demasiado en responder';
+      } else if (error.response?.status === 404) {
+        errorMsg = 'IMAP no configurado';
+      }
       return { emails: [], total: 0, fromCache: false, message: errorMsg };
     }
   }

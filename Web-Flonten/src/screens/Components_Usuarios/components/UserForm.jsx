@@ -5,6 +5,8 @@
  */
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../../services/userService';
+import { emailService } from '../../../services/emailService';
+import { EmailConfigModal } from './modulo_correo';
 
 export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -21,6 +23,31 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [emailModalVisible, setEmailModalVisible] = useState(false);
+  const [configuredEmail, setConfiguredEmail] = useState(null);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+
+  // Cargar correo configurado al abrir el formulario en modo edición
+  useEffect(() => {
+    if (mode === 'edit' && user?.id) {
+      loadConfiguredEmail();
+    }
+  }, [mode, user?.id]);
+
+  const loadConfiguredEmail = async () => {
+    try {
+      setLoadingEmail(true);
+      const config = await emailService.getEmailConfigByUserId(user.id);
+      if (config && config.email) {
+        setConfiguredEmail(config.email);
+        setFormData((prev) => ({ ...prev, email: config.email }));
+      }
+    } catch (err) {
+      console.log('No hay correo configurado o error al cargar');
+    } finally {
+      setLoadingEmail(false);
+    }
+  };
 
   useEffect(() => {
     if (user && mode === 'edit') {
@@ -153,12 +180,40 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #D1D1D6', fontSize: 14 }}
-            />
+            {loadingEmail ? (
+              <div style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #D1D1D6', fontSize: 14, color: '#8E8E93' }}>
+                Cargando configuración de correo...
+              </div>
+            ) : configuredEmail ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid #34C759', backgroundColor: '#F0FFF4' }}>
+                <span style={{ fontSize: 24 }}>✅</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>📧 {configuredEmail}</div>
+                  <div style={{ fontSize: 12, color: '#8E8E93' }}>Toca para editar la configuración</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEmailModalVisible(true)}
+                  style={{
+                    padding: '8px 16px', borderRadius: 8, border: '1px solid #007AFF',
+                    backgroundColor: 'white', color: '#007AFF', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  Editar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEmailModalVisible(true)}
+                style={{
+                  width: '100%', padding: '14px 16px', borderRadius: 10, border: '1px dashed #007AFF',
+                  backgroundColor: '#F0F8FF', color: '#007AFF', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                ⚙️ Configurar Correo Electrónico
+              </button>
+            )}
           </div>
 
           <div>
@@ -218,6 +273,21 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
           </button>
         </div>
       </form>
+
+      {/* Modal de Configuración de Correo */}
+      <EmailConfigModal
+        visible={emailModalVisible}
+        onClose={() => setEmailModalVisible(false)}
+        userId={user?.id || ''}
+        targetUserId={user?.id}
+        userEmail={configuredEmail || user?.email || ''}
+        userFullName={`${user?.nombre} ${user?.apellido}`}
+        onSuccess={async () => {
+          if (user?.id) {
+            await loadConfiguredEmail();
+          }
+        }}
+      />
     </div>
   );
 }

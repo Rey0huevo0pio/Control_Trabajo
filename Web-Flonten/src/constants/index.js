@@ -25,7 +25,7 @@
 // API CONFIGURATION
 // ============================================================================
 export const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.190.154:3000/api';
-export const API_TIMEOUT = 10000; // 10 segundos
+export const API_TIMEOUT = 30000; // 30 segundos - necesario para IMAP
 
 // ============================================================================
 // ROLES (Mismos que el móvil)

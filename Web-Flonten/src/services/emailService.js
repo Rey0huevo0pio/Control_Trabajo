@@ -33,6 +33,21 @@ export const emailService = {
     return response.data;
   },
 
+  async getEmailConfigByUserId(userId) {
+    try {
+      const token = getAuthToken();
+      if (!token) return null;
+
+      const response = await api.get(`/email/config/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data.data || response.data;
+    } catch (error) {
+      return null;
+    }
+  },
+
   async saveConfigForUser(userId, data) {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
