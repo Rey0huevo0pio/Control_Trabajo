@@ -35,13 +35,19 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
       : `data:${attMimeType};base64,${attContent}`
     : null;
 
+  // Validar que el URI no esté truncado o corrupto
+  const isValidImage = imageUri && (
+    imageUri.startsWith('http') ||
+    (imageUri.startsWith('data:') && imageUri.length > 100)
+  );
+
   return (
     <div style={{
       borderRadius: 12,
       overflow: 'hidden',
       backgroundColor: '#F2F2F7',
     }}>
-      {imageUri ? (
+      {isValidImage ? (
         <div style={{ position: 'relative' }}>
           <img
             src={imageUri}
@@ -52,11 +58,7 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
               objectFit: 'contain',
               display: 'block',
             }}
-            onLoadStart={() => {
-              setLoading(true);
-              setError(false);
-            }}
-            onLoadEnd={() => setLoading(false)}
+            onLoad={() => setLoading(false)}
             onError={() => {
               setLoading(false);
               setError(true);
