@@ -65,6 +65,9 @@ import { RegistroInstalacionScreen } from '../src_Instalaciones_STV/screens/Regi
 import { DetalleInstalacionScreen } from '../src_Instalaciones_STV/screens/DetalleInstalacionScreen';
 import { RegistroAreaScreen } from '../src_Instalaciones_STV/screens/RegistroAreaScreen';
 
+// Importar pantallas de Usuarios
+import { UserManagementScreen } from '../screens/Components_Usuarios';
+
 /**
  * PlaceholderScreen - Para rutas sin implementar
  */
@@ -388,12 +391,12 @@ export const AppRouter = () => {
           }
         />
 
-        {/* Módulos - Otros */}
+        {/* Módulos - Usuarios */}
         <Route
           path="/usuarios"
           element={
             <ProtectedRoute>
-              <PlaceholderScreen moduleName="Usuarios" />
+              <UserManagementScreen />
             </ProtectedRoute>
           }
         />

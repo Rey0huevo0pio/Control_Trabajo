@@ -54,6 +54,11 @@ const loadFromStorage = () => {
 
 const stored = loadFromStorage();
 
+// Sincronizar token con API al iniciar
+if (stored?.token) {
+  setAuthToken(stored.token);
+}
+
 // ============================================================================
 // STORE
 // ============================================================================

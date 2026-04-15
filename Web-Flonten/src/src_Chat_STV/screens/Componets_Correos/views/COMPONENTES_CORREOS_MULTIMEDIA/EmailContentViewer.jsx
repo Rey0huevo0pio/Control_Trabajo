@@ -2,152 +2,184 @@
  * ============================================================================
  * 📧 EMAIL CONTENT VIEWER - Visor de contenido de correo (Web)
  * ============================================================================
- *
- * ADAPTADO DE: C_Ticket_Apk_STV/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/EmailContentViewer.tsx
- *
+ * 
+ * ADAPTADO DE: C_Ticket_Apk_STV/.../EmailContentViewer.tsx
+ * 
  * ============================================================================
  */
 import React, { useState } from 'react';
-import { HtmlEmailRenderer } from './HtmlEmailRenderer';
-import { AttachmentPreview } from './AttachmentPreview';
 
-export function EmailContentViewer({ email, onBack, loading = false }) {
+const getInitials = (from) => {
+  if (!from) return '?';
+  const parts = from.split(' ').filter(p => !p.includes('<'));
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts[0]?.substring(0, 2).toUpperCase() || '?';
+};
+
+const extractEmailAddress = (from) => {
+  const match = from.match(/<([^>]+)>/);
+  return match ? match[1] : from;
+};
+
+const extractName = (from) => {
+  const match = from.match(/<([^>]+)>/);
+  return match ? from.substring(0, from.indexOf('<')).trim() : from;
+};
+
+const formatDate = (date) => {
+  if (!date) return '';
+  const emailDate = new Date(date);
+  return emailDate.toLocaleDateString('es-MX', {
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
+export function EmailContentViewer({ email, onBack }) {
   const [showDetails, setShowDetails] = useState(false);
-  const [showAttachments, setShowAttachments] = useState(false);
 
-  const getInitials = (from) => {
-    if (!from) return '?';
-    const parts = from.split(' ').filter(p => !p.includes('<'));
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return parts[0]?.substring(0, 2).toUpperCase() || '?';
-  };
-
-  const extractName = (from) => {
-    const match = from.match(/<([^>]+)>/);
-    return match ? from.substring(0, from.indexOf('<')).trim() : from;
-  };
-
-  const extractEmail = (from) => {
-    const match = from.match(/<([^>]+)>/);
-    return match ? match[1] : from;
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const emailDate = new Date(dateStr);
-    const diffMs = Date.now() - emailDate.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    if (diffHours < 1) return 'Hace menos de 1 hora';
-    if (diffHours < 24) return `Hace ${Math.floor(diffHours)} hora(s)`;
-    if (diffDays < 7) return `Hace ${Math.floor(diffDays)} día(s)`;
-    return emailDate.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  if (loading) {
+  if (!email) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 60 }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📧</div>
-          <p style={{ color: '#3C3C43' }}>Cargando correo...</p>
-        </div>
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <p style={{ color: '#8E8E93' }}>Cargando correo...</p>
       </div>
     );
   }
 
+  const getTextContent = () => {
+    if (email.text && email.text.length > 0) return email.text;
+    if (email.html) {
+      return email.html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    return '';
+  };
+
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: 16, border: '1px solid #D1D1D6', overflow: 'hidden' }}>
-      {/* Header */}
+    <div>
       <div style={{
-        padding: '12px 16px', borderBottom: '1px solid #F2F2F7',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        backgroundColor: '#007AFF', padding: '12px 16px',
+        borderRadius: '14px 14px 0 0',
+        display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <button onClick={onBack} style={{
-          border: 'none', backgroundColor: '#F2F2F7', borderRadius: 18,
-          width: 36, height: 36, cursor: 'pointer', fontSize: 16,
+          width: 36, height: 36, borderRadius: 18, border: 'none',
+          backgroundColor: 'rgba(255,255,255,0.2)', cursor: 'pointer',
+          fontSize: 16, color: 'white',
         }}>←</button>
-        <span style={{ fontSize: 14, fontWeight: 700 }}>Correo</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowDetails(!showDetails)} style={{
-            border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 16,
-          }}>⋮</button>
-        </div>
+        <span style={{ color: 'white', fontSize: 17, fontWeight: 700 }}>Correo</span>
       </div>
 
-      {/* Contenido */}
-      <div style={{ padding: 24 }}>
-        {/* Asunto */}
-        <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: '#000' }}>
-          {email.subject || 'Sin asunto'}
-        </h2>
-        <hr style={{ border: 'none', borderTop: '1px solid #E5E5EA', margin: '0 0 20px' }} />
+      <div style={{
+        backgroundColor: 'white', padding: 20,
+        borderRadius: '0 0 14px 14px', border: '1px solid #D1D1D6',
+        borderTop: 'none',
+      }}>
+        <div style={{ marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#000' }}>
+            {email.subject || 'Sin asunto'}
+          </h3>
+        </div>
 
-        {/* Remitente */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 24 }}>
+        <div style={{
+          display: 'flex', gap: 14, alignItems: 'flex-start',
+          paddingBottom: 16, borderBottom: '1px solid #F2F2F7',
+        }}>
           <div style={{
-            width: 56, height: 56, borderRadius: 28, backgroundColor: '#007AFF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, fontWeight: 700, color: 'white', flexShrink: 0,
+            width: 48, height: 48, borderRadius: 24,
+            backgroundColor: '#007AFF', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, fontWeight: 700, color: 'white',
           }}>
             {getInitials(email.from)}
           </div>
 
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#000' }}>{extractName(email.from)}</div>
-                <div style={{ fontSize: 13, color: '#8E8E93' }}>{extractEmail(email.from)}</div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#000' }}>
+                  {extractName(email.from)}
+                </p>
+                <p style={{ margin: 0, fontSize: 12, color: '#8E8E93' }}>
+                  {extractEmailAddress(email.from)}
+                </p>
               </div>
-              <span style={{ fontSize: 12, color: '#8E8E93' }}>{formatDate(email.date)}</span>
+              <span style={{ fontSize: 12, color: '#8E8E93' }}>
+                {formatDate(email.date)}
+              </span>
             </div>
 
             {showDetails && (
               <div style={{
                 marginTop: 12, padding: 12, backgroundColor: '#F2F2F7',
-                borderRadius: 8, fontSize: 13, color: '#3C3C43',
+                borderRadius: 8, fontSize: 12, color: '#8E8E93',
               }}>
-                <div><strong>De:</strong> {email.from}</div>
-                <div><strong>Fecha:</strong> {new Date(email.date).toLocaleString('es-MX')}</div>
+                <p><strong>De:</strong> {email.from}</p>
+                <p><strong>Fecha:</strong> {new Date(email.date).toLocaleString()}</p>
               </div>
             )}
           </div>
         </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #E5E5EA', margin: '0 0 20px' }} />
+        <div style={{ paddingTop: 20 }}>
+          {email.html ? (
+            <div dangerouslySetInnerHTML={{ __html: email.html }} style={{ fontSize: 14, lineHeight: 1.6 }} />
+          ) : (
+            <p style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              {getTextContent()}
+            </p>
+          )}
+        </div>
 
-        {/* Cuerpo del correo */}
-        <HtmlEmailRenderer html={email.html} text={email.text} />
-
-        {/* Adjuntos */}
         {email.attachments && email.attachments.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <div
-              onClick={() => setShowAttachments(!showAttachments)}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                cursor: 'pointer', marginBottom: 12,
-              }}
-            >
-              <span style={{ fontSize: 16, fontWeight: 600, color: '#3C3C43' }}>
-                📎 {email.attachments.length} adjunto{email.attachments.length > 1 ? 's' : ''}
+          <div style={{
+            marginTop: 24, padding: 16, backgroundColor: '#F2F2F7',
+            borderRadius: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>📎</span>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>
+                {email.attachments.length} adjunto{email.attachments.length > 1 ? 's' : ''}
               </span>
-              <span style={{ fontSize: 18 }}>{showAttachments ? '▼' : '▶'}</span>
             </div>
 
-            {showAttachments && (
-              <AttachmentPreview attachments={email.attachments} />
-            )}
+            {email.attachments.map((att, idx) => {
+              const fileName = att.fileName || att.filename || 'Archivo';
+              const mimeType = (att.contentType || att.mimeType || '').toLowerCase();
+              const size = att.size || 0;
+              
+              const formatSize = (bytes) => {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+              };
+
+              return (
+                <div key={idx} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+                  backgroundColor: 'white', borderRadius: 8, marginBottom: 8,
+                }}>
+                  <span style={{ fontSize: 24 }}>
+                    {mimeType.startsWith('image') ? '🖼️' : 
+                     mimeType.includes('pdf') ? '📄' : '📎'}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>
+                      {fileName}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 12, color: '#8E8E93' }}>
+                      {formatSize(size)} • {mimeType || 'archivo'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
   );
 }
+
+export default EmailContentViewer;

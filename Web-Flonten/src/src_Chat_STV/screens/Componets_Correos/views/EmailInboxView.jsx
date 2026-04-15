@@ -14,35 +14,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { EmailContentViewer } from './COMPONENTES_CORREOS_MULTIMEDIA/EmailContentViewer';
-
-// Mock data (luego vendrá de la API)
-const mockEmails = [
-  {
-    id: '1', uid: 1, from: 'Carlos Lopez <carlos.lopez@stv.com>', to: 'user@stv.com',
-    subject: 'Servidor actualizado exitosamente',
-    date: new Date(Date.now() - 2 * 3600000).toISOString(),
-    text: 'El mantenimiento del servidor principal se completó sin problemas. Todos los servicios están operativos. Se aplicaron las actualizaciones de seguridad programadas.',
-    html: '<h2>Mantenimiento Completado</h2><p>El mantenimiento del servidor principal se completó <strong>sin problemas</strong>. Todos los servicios están operativos.</p><p>Se aplicaron las actualizaciones de seguridad programadas.</p>',
-    attachments: [], seen: false, flagged: false, folder: 'INBOX',
-  },
-  {
-    id: '2', uid: 2, from: 'Ana Martinez <ana.martinez@stv.com>', to: 'user@stv.com',
-    subject: 'Nueva política de vacaciones 2026',
-    date: new Date(Date.now() - 24 * 3600000).toISOString(),
-    text: 'Adjunto encontrarás la nueva política de vacaciones actualizada. Por favor revisa los cambios importantes respecto al año anterior.',
-    html: '<h2>Nueva Política de Vacaciones 2026</h2><p>Adjunto encontrarás la nueva política de vacaciones actualizada.</p><p>Por favor revisa los <em>cambios importantes</em> respecto al año anterior.</p>',
-    attachments: [{ fileName: 'politica_vacaciones_2026.pdf', contentType: 'application/pdf', size: 245000 }],
-    seen: false, flagged: false, folder: 'INBOX',
-  },
-  {
-    id: '3', uid: 3, from: 'Sistema de Tickets <tickets@stv.com>', to: 'user@stv.com',
-    subject: 'Ticket #TK-005 asignado',
-    date: new Date(Date.now() - 48 * 3600000).toISOString(),
-    text: 'Se te ha asignado el ticket TK-005: "Error en conexión de red en Oficina Central".',
-    html: '<p>Se te ha asignado el ticket <strong>TK-005</strong>: "Error en conexión de red en Oficina Central".</p>',
-    attachments: [], seen: true, flagged: false, folder: 'INBOX',
-  },
-];
+import { emailMessagesService } from '../../../../services/emailMessages.service';
 
 export function EmailInboxView() {
   const [emails, setEmails] = useState([]);
@@ -51,19 +23,25 @@ export function EmailInboxView() {
   const [selectedEmail, setSelectedEmail] = useState(null);
 
   useEffect(() => {
-    // Simular carga de API
-    setTimeout(() => {
-      setEmails(mockEmails);
-      setLoading(false);
-    }, 800);
+    loadEmails();
   }, []);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setEmails(mockEmails);
+  const loadEmails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await emailMessagesService.getMessages('INBOX', 1, 50);
+      setEmails(result.emails || []);
+    } catch (err) {
+      console.error('[EmailInbox] Error cargando correos:', err);
+      setError('Error al cargar correos');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  const handleRefresh = () => {
+    loadEmails();
   };
 
   const openEmail = (email) => {
