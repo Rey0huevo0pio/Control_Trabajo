@@ -41,7 +41,7 @@ async function bootstrap() {
   // ARCHIVOS ESTÁTICOS - Uploads
   // ==========================================================================
   // Los archivos subidos por usuarios se sirven públicamente en /uploads
-  // Acceso: http://localhost:3000uploads/[nombre-archivo]
+  // Acceso: http://192.168.68.115:3000uploads/[nombre-archivo]
   // Usado por: Módulo Uploads (backen_cerebro/src/Modules/Uploads/)
   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 

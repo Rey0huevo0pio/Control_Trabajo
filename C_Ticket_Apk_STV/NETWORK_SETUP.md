@@ -19,7 +19,7 @@ cd backen_cerebro
 npm run start:dev
 ```
 El backend escuchará en:
-- `http://localhost:3000`
+- `http://192.168.68.115:3000`
 - `http://192.168.68.111:3000` (accesible desde la red)
 
 ### 2. Iniciar Frontend
@@ -82,7 +82,7 @@ Si no puedes conectar desde otros dispositivos:
    - Desactivar en redes privadas (temporalmente)
 
 ### Backend no responde
-- Verifica que está corriendo: `http://localhost:3000/api`
+- Verifica que está corriendo: `http://192.168.68.115:3000/api`
 - Revisa la consola del backend para errores
 
 ### Dispositivo no conecta

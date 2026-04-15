@@ -308,7 +308,7 @@ Error: Network Error
 // Terminal: cd backen_cerebro && npm run start:dev
 
 // 2. Verificar URL en constants/index.js
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.68.115:3000/api';
 
 // 3. Verificar .env.local tiene VITE_API_URL configurado
 

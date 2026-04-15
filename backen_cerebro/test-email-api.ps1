@@ -2,7 +2,7 @@
 # SCRIPT DE PRUEBA - API DE CORREOS (PowerShell)
 # ==========================================
 
-$BASE_URL = "http://localhost:3000/api"
+$BASE_URL = "http://192.168.68.115:3000/api"
 $USERNAME = "USR001"
 $PASSWORD = "12345678"  # Ajusta si es diferente para USR001
 

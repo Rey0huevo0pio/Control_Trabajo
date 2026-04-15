@@ -479,7 +479,7 @@ Backend
           data: {
             filename: string,
             path: string,
-            url: "http://localhost:3000uploads/[filename]",
+            url: "http://192.168.68.115:3000uploads/[filename]",
             size: number,
             mimetype: string
           }

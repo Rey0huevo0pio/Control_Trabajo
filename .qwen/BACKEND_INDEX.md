@@ -262,7 +262,7 @@ getAdminOnly() { ... }
 ## 📂 UPLOADS (backen_cerebro/uploads/)
 
 **Propósito:** Almacenamiento de archivos subidos por usuarios
-**Acceso público:** `http://localhost:3000/uploads/[archivo]`
+**Acceso público:** `http://192.168.68.115:3000/uploads/[archivo]`
 
 ---
 

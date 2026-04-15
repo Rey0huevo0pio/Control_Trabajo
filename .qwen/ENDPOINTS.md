@@ -601,7 +601,7 @@
 }
 ```
 
-**Archivos servidos en:** `http://localhost:3000uploads/[filename]`
+**Archivos servidos en:** `http://192.168.68.115:3000uploads/[filename]`
 
 ---
 

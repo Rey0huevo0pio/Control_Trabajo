@@ -115,7 +115,7 @@ Crea un archivo `test-email-api.sh` en el directorio del backend:
 # ==========================================
 
 # Configuración
-BASE_URL="http://localhost:3000/api"  # Cambia según tu puerto
+BASE_URL="http://192.168.68.115:3000/api"  # Cambia según tu puerto
 TOKEN="TU_TOKEN_AQUI"  # Obtén del login
 
 echo "=========================================="

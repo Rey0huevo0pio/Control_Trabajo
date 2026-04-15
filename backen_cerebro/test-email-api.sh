@@ -5,7 +5,7 @@
 # Este script verifica que el backend envía datos correctos
 
 # Configuración
-BASE_URL="http://localhost:3000/api"  # Cambia el puerto si es necesario
+BASE_URL="http://192.168.68.115:3000/api"  # Cambia el puerto si es necesario
 EMAIL="vacios@sotaventolzc.com"
 PASSWORD="12345678"
 

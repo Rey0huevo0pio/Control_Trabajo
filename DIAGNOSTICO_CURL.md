@@ -5,7 +5,7 @@
 ### **Prueba CURL Real:**
 
 ```bash
-GET http://localhost:3000/api/email/messages?folder=INBOX&page=1&limit=3
+GET http://192.168.68.115:3000/api/email/messages?folder=INBOX&page=1&limit=3
 Authorization: Bearer TOKEN
 
 RESPUESTA:
