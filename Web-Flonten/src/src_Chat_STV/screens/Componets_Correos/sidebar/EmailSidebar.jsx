@@ -5,65 +5,126 @@
  *
  * ADAPTADO DE: C_Ticket_Apk_STV/src_Chat_STV/screens/Componets_Correos/sidebar/EmailSidebar.tsx
  *
+ * QUÉ HACE:
+ * - Menú lateral con navegación del correo
+ * - Items con iconos y estados activos
+ * - Diseño limpio tipo Gmail
+ *
  * ============================================================================
  */
 import React from 'react';
 
 const menuItems = [
-  { id: 'inbox', title: 'Bandeja de Entrada', icon: '📥', color: '#007AFF' },
-  { id: 'compose', title: 'Redactar Correo', icon: '✏️', color: '#34C759' },
+  { id: 'inbox', title: 'Bandeja de Entrada', icon: '📥', color: '#007AFF', description: 'Correos recibidos' },
+  { id: 'compose', title: 'Redactar Correo', icon: '✏️', color: '#34C759', description: 'Nuevo mensaje' },
 ];
 
 export function EmailSidebar({ currentView, onViewChange, onClose }) {
   return (
     <div style={{
-      width: 260, flexShrink: 0,
-      backgroundColor: 'white', borderRadius: 16,
-      border: '1px solid #D1D1D6', padding: 16,
+      backgroundColor: 'white',
+      borderRadius: 16,
+      border: '1px solid #E5E5EA',
+      padding: 16,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ fontSize: 17, fontWeight: 700, color: '#000' }}>Correo</span>
-        <button onClick={onClose} style={{
-          border: 'none', backgroundColor: 'transparent',
-          cursor: 'pointer', fontSize: 18, color: '#8E8E93',
-        }}>✕</button>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingBottom: 12,
+        borderBottom: '1px solid #F2F2F7',
+      }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1A1A1A' }}>
+          Menú
+        </h3>
+        <button
+          onClick={onClose}
+          style={{
+            width: 28, height: 28, borderRadius: 14,
+            border: 'none',
+            backgroundColor: '#F2F2F7',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#8E8E93',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E5E5EA'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F2F2F7'}
+        >
+          ✕
+        </button>
       </div>
 
+      {/* Items de menú */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {menuItems.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => onViewChange(item.id)}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              cursor: 'pointer',
-              backgroundColor: currentView === item.id ? `${item.color}15` : 'transparent',
-              border: currentView === item.id ? `1px solid ${item.color}` : '1px solid transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              transition: 'all 0.2s',
-            }}
-          >
-            <div style={{
-              width: 40, height: 40, borderRadius: 12,
-              backgroundColor: item.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18,
-            }}>
-              {item.icon}
+        {menuItems.map((item) => {
+          const isActive = currentView === item.id;
+          return (
+            <div
+              key={item.id}
+              onClick={() => onViewChange(item.id)}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 12,
+                cursor: 'pointer',
+                backgroundColor: isActive ? `${item.color}10` : 'transparent',
+                border: isActive ? `2px solid ${item.color}30` : '2px solid transparent',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = '#F2F2F7';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              {/* Icono */}
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                backgroundColor: isActive ? item.color : '#F2F2F7',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20,
+                transition: 'all 0.2s',
+              }}>
+                <span role="img" aria-label={item.title}>{item.icon}</span>
+              </div>
+
+              {/* Texto */}
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: 14,
+                  fontWeight: isActive ? 700 : 600,
+                  color: isActive ? item.color : '#1A1A1A',
+                  marginBottom: 2,
+                }}>
+                  {item.title}
+                </div>
+                <div style={{
+                  fontSize: 12,
+                  color: '#8E8E93',
+                }}>
+                  {item.description}
+                </div>
+              </div>
             </div>
-            <span style={{
-              fontSize: 15,
-              fontWeight: currentView === item.id ? 700 : 500,
-              color: '#3C3C43',
-            }}>
-              {item.title}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
+export default EmailSidebar;

@@ -1,14 +1,27 @@
 /**
  * ============================================================================
- * 📧 EMAIL CONTENT VIEWER - Visor de contenido de correo (Web)
+ * 📧 EMAIL CONTENT VIEWER - Visor profesional de correos (Web)
  * ============================================================================
- * 
+ *
  * ADAPTADO DE: C_Ticket_Apk_STV/.../EmailContentViewer.tsx
- * 
+ *
+ * MEJORAS:
+ * - Diseño tipo Gmail/Outlook con header limpio
+ * - Imágenes inline renderizadas dentro del contenido HTML
+ * - Adjuntos con preview visual tipo Outlook (iconos + grid)
+ * - HtmlEmailRenderer para contenido HTML estilizado
+ * - AttachmentPreview para adjuntos profesionales
+ *
  * ============================================================================
  */
 import React, { useState } from 'react';
+import { HtmlEmailRenderer } from './HtmlEmailRenderer';
+import { AttachmentPreview } from './AttachmentPreview';
+import { ImageAttachmentView } from './ImageAttachmentView';
 
+// ==========================================
+// UTILIDADES
+// ==========================================
 const getInitials = (from) => {
   if (!from) return '?';
   const parts = from.split(' ').filter(p => !p.includes('<'));
@@ -29,155 +42,327 @@ const extractName = (from) => {
 const formatDate = (date) => {
   if (!date) return '';
   const emailDate = new Date(date);
+  const now = new Date();
+  const diffMs = now - emailDate.getTime();
+  const diffH = diffMs / (1000 * 60 * 60);
+  const diffD = diffMs / (1000 * 60 * 60 * 24);
+
+  if (diffH < 1) return 'Hace minutos';
+  if (diffH < 24) return `Hace ${Math.floor(diffH)}h`;
+  if (diffD < 1) return 'Hoy';
+  if (diffD < 7) return `Hace ${Math.floor(diffD)}d`;
   return emailDate.toLocaleDateString('es-MX', {
-    year: 'numeric', month: 'long', day: 'numeric',
+    day: 'numeric', month: 'short', year: emailDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     hour: '2-digit', minute: '2-digit',
   });
 };
 
+const formatFullDate = (date) => {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('es-MX', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
+// Colores para avatares
+const AVATAR_COLORS = [
+  '#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE',
+  '#FF2D55', '#5856D6', '#00C7BE', '#FFCC00', '#A2845E',
+];
+
+const getAvatarColor = (name) => {
+  if (!name) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
 export function EmailContentViewer({ email, onBack }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [expandedAttachments, setExpandedAttachments] = useState(false);
 
   if (!email) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <p style={{ color: '#8E8E93' }}>Cargando correo...</p>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
+        <p style={{ color: '#8E8E93', fontSize: 15 }}>Cargando correo...</p>
       </div>
     );
   }
 
-  const getTextContent = () => {
-    if (email.text && email.text.length > 0) return email.text;
-    if (email.html) {
-      return email.html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-    return '';
-  };
+  const hasAttachments = email.attachments && email.attachments.length > 0;
+  const imageAttachments = hasAttachments
+    ? email.attachments.filter(att => {
+        const mt = (att.contentType || att.mimeType || '').toLowerCase();
+        return mt.startsWith('image');
+      })
+    : [];
+  const fileAttachments = hasAttachments
+    ? email.attachments.filter(att => {
+        const mt = (att.contentType || att.mimeType || '').toLowerCase();
+        return !mt.startsWith('image');
+      })
+    : [];
+
+  const avatarColor = getAvatarColor(email.from);
+  const senderName = extractName(email.from);
+  const senderEmail = extractEmailAddress(email.from);
 
   return (
-    <div>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    }}>
+      {/* ==========================================
+          HEADER DEL CORREO (Tipo Gmail)
+      ========================================== */}
       <div style={{
-        backgroundColor: '#007AFF', padding: '12px 16px',
-        borderRadius: '14px 14px 0 0',
-        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '20px 24px',
+        borderBottom: '1px solid #E5E5EA',
+        backgroundColor: '#FAFAFA',
       }}>
-        <button onClick={onBack} style={{
-          width: 36, height: 36, borderRadius: 18, border: 'none',
-          backgroundColor: 'rgba(255,255,255,0.2)', cursor: 'pointer',
-          fontSize: 16, color: 'white',
-        }}>←</button>
-        <span style={{ color: 'white', fontSize: 17, fontWeight: 700 }}>Correo</span>
-      </div>
+        {/* Barra superior con botón volver */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={onBack}
+              style={{
+                width: 36, height: 36, borderRadius: 18, border: '1px solid #D1D1D6',
+                backgroundColor: 'white', cursor: 'pointer', fontSize: 16,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#F2F2F7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+              }}
+            >
+              ←
+            </button>
+            <h2 style={{
+              margin: 0,
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#1A1A1A',
+              lineHeight: 1.3,
+            }}>
+              {email.subject || 'Sin asunto'}
+            </h2>
+          </div>
 
-      <div style={{
-        backgroundColor: 'white', padding: 20,
-        borderRadius: '0 0 14px 14px', border: '1px solid #D1D1D6',
-        borderTop: 'none',
-      }}>
-        <div style={{ marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#000' }}>
-            {email.subject || 'Sin asunto'}
-          </h3>
+          {/* Botón info */}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: '1px solid #D1D1D6',
+              backgroundColor: showDetails ? '#F2F2F7' : 'white',
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
+          >
+            ℹ️
+          </button>
         </div>
 
-        <div style={{
-          display: 'flex', gap: 14, alignItems: 'flex-start',
-          paddingBottom: 16, borderBottom: '1px solid #F2F2F7',
-        }}>
+        {/* Info del remitente */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          {/* Avatar */}
           <div style={{
-            width: 48, height: 48, borderRadius: 24,
-            backgroundColor: '#007AFF', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 700, color: 'white',
+            width: 48, height: 48, borderRadius: 24, flexShrink: 0,
+            backgroundColor: avatarColor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, fontWeight: 700, color: 'white',
           }}>
             {getInitials(email.from)}
           </div>
 
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#000' }}>
-                  {extractName(email.from)}
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: '#8E8E93' }}>
-                  {extractEmailAddress(email.from)}
-                </p>
-              </div>
-              <span style={{ fontSize: 12, color: '#8E8E93' }}>
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#1A1A1A',
+              }}>
+                {senderName}
+              </h3>
+              <span style={{
+                fontSize: 13,
+                color: '#8E8E93',
+                flexShrink: 0,
+                marginLeft: 12,
+              }}>
                 {formatDate(email.date)}
               </span>
             </div>
+            <p style={{
+              margin: '4px 0 0',
+              fontSize: 13,
+              color: '#8E8E93',
+            }}>
+              {senderEmail}
+            </p>
 
+            {/* Detalles expandidos */}
             {showDetails && (
               <div style={{
-                marginTop: 12, padding: 12, backgroundColor: '#F2F2F7',
-                borderRadius: 8, fontSize: 12, color: '#8E8E93',
+                marginTop: 12,
+                padding: 12,
+                backgroundColor: '#F2F2F7',
+                borderRadius: 8,
+                fontSize: 12,
+                color: '#3C3C43',
               }}>
-                <p><strong>De:</strong> {email.from}</p>
-                <p><strong>Fecha:</strong> {new Date(email.date).toLocaleString()}</p>
+                <p style={{ margin: '4px 0' }}><strong>De:</strong> {email.from}</p>
+                <p style={{ margin: '4px 0' }}><strong>Fecha:</strong> {formatFullDate(email.date)}</p>
+                <p style={{ margin: '4px 0' }}><strong>Para:</strong> {email.to || 'No disponible'}</p>
+                {email.cc && <p style={{ margin: '4px 0' }}><strong>CC:</strong> {email.cc}</p>}
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        <div style={{ paddingTop: 20 }}>
-          {email.html ? (
-            <div dangerouslySetInnerHTML={{ __html: email.html }} style={{ fontSize: 14, lineHeight: 1.6 }} />
-          ) : (
-            <p style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-              {getTextContent()}
-            </p>
+      {/* ==========================================
+          IMÁGENES INLINE (Tipo Outlook)
+          Se muestran ANTES del contenido, como preview
+      ========================================== */}
+      {imageAttachments.length > 0 && (
+        <div style={{
+          padding: '16px 24px',
+          borderBottom: '1px solid #E5E5EA',
+          backgroundColor: '#FAFAFA',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 16 }}>🖼️</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>
+              {imageAttachments.length} imagen{imageAttachments.length > 1 ? 'es' : ''}
+            </span>
+          </div>
+
+          {/* Grid de imágenes */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 12,
+          }}>
+            {imageAttachments.slice(0, 4).map((att, idx) => (
+              <div
+                key={idx}
+                style={{
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  backgroundColor: '#F2F2F7',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              >
+                <ImageAttachmentView
+                  attachment={att}
+                  style={{ maxHeight: 200 }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {imageAttachments.length > 4 && (
+            <button
+              onClick={() => setExpandedAttachments(!expandedAttachments)}
+              style={{
+                marginTop: 12,
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: '1px solid #D1D1D6',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                fontSize: 14,
+                color: '#007AFF',
+                fontWeight: 600,
+              }}
+            >
+              Ver {imageAttachments.length - 4} imagen{imageAttachments.length - 4 > 1 ? 'es' : ''} más
+            </button>
+          )}
+
+          {expandedAttachments && imageAttachments.length > 4 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 12,
+              marginTop: 12,
+            }}>
+              {imageAttachments.slice(4).map((att, idx) => (
+                <div
+                  key={idx + 4}
+                  style={{
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    backgroundColor: '#F2F2F7',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <ImageAttachmentView attachment={att} />
+                </div>
+              ))}
+            </div>
           )}
         </div>
+      )}
 
-        {email.attachments && email.attachments.length > 0 && (
-          <div style={{
-            marginTop: 24, padding: 16, backgroundColor: '#F2F2F7',
-            borderRadius: 12,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 16 }}>📎</span>
-              <span style={{ fontSize: 14, fontWeight: 600 }}>
-                {email.attachments.length} adjunto{email.attachments.length > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            {email.attachments.map((att, idx) => {
-              const fileName = att.fileName || att.filename || 'Archivo';
-              const mimeType = (att.contentType || att.mimeType || '').toLowerCase();
-              const size = att.size || 0;
-              
-              const formatSize = (bytes) => {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-              };
-
-              return (
-                <div key={idx} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: 12,
-                  backgroundColor: 'white', borderRadius: 8, marginBottom: 8,
-                }}>
-                  <span style={{ fontSize: 24 }}>
-                    {mimeType.startsWith('image') ? '🖼️' : 
-                     mimeType.includes('pdf') ? '📄' : '📎'}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>
-                      {fileName}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 12, color: '#8E8E93' }}>
-                      {formatSize(size)} • {mimeType || 'archivo'}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* ==========================================
+          CONTENIDO DEL CORREO
+      ========================================== */}
+      <div style={{ padding: '24px' }}>
+        <HtmlEmailRenderer
+          html={email.html}
+          text={email.text}
+        />
       </div>
+
+      {/* ==========================================
+          ARCHIVOS ADJUNTOS (Tipo Outlook)
+      ========================================== */}
+      {fileAttachments.length > 0 && (
+        <div style={{
+          padding: '20px 24px',
+          borderTop: '1px solid #E5E5EA',
+          backgroundColor: '#FAFAFA',
+        }}>
+          <AttachmentPreview attachments={fileAttachments} />
+        </div>
+      )}
+
+      {/* ==========================================
+          FOOTER CON TOTAL ADJUNTOS
+      ========================================== */}
+      {hasAttachments && (
+        <div style={{
+          padding: '12px 24px',
+          borderTop: '1px solid #E5E5EA',
+          backgroundColor: '#F2F2F7',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        }}>
+          <span style={{ fontSize: 14 }}>📎</span>
+          <span style={{ fontSize: 13, color: '#8E8E93', fontWeight: 500 }}>
+            {email.attachments.length} adjunto{email.attachments.length > 1 ? 's' : ''} en total
+          </span>
+        </div>
+      )}
     </div>
   );
 }
