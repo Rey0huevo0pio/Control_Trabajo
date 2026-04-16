@@ -116,9 +116,9 @@ export function AttachmentPreview({ attachments }) {
       {/* Vista en cuadrícula */}
       {viewMode === 'grid' && attachments.length > 1 ? (
         <div style={{
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
           gap: 12,
-          overflowX: 'auto',
           padding: '8px 0',
         }}>
           {attachments.map((att, idx) => {
@@ -130,22 +130,20 @@ export function AttachmentPreview({ attachments }) {
               <div
                 key={idx}
                 style={{
-                  width: 160,
                   backgroundColor: '#F2F2F7',
                   borderRadius: 12,
                   overflow: 'hidden',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  flexShrink: 0,
                 }}
               >
                 {/* Thumbnail o Icono */}
                 <div style={{
-                  height: 120,
+                  height: 100,
                   backgroundColor: '#E5E5EA',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  fontSize: 48,
+                  fontSize: 40,
                 }}>
                   {getFileIcon(mimeType)}
                 </div>
@@ -154,7 +152,7 @@ export function AttachmentPreview({ attachments }) {
                 <div style={{ padding: 8 }}>
                   <p style={{
                     margin: 0,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 600,
                     color: '#1A1A1A',
                     overflow: 'hidden',
@@ -165,7 +163,7 @@ export function AttachmentPreview({ attachments }) {
                   </p>
                   <p style={{
                     margin: '4px 0 0',
-                    fontSize: 11,
+                    fontSize: 10,
                     color: '#8E8E93',
                   }}>
                     {formatFileSize(size)}

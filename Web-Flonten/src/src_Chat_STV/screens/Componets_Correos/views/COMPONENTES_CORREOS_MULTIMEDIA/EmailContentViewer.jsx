@@ -256,14 +256,14 @@ export function EmailContentViewer({ email, onBack }) {
           {/* Grid de imágenes */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: 12,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+            gap: 10,
           }}>
             {imageAttachments.slice(0, 4).map((att, idx) => (
               <div
                 key={idx}
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 10,
                   overflow: 'hidden',
                   backgroundColor: '#F2F2F7',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -271,7 +271,6 @@ export function EmailContentViewer({ email, onBack }) {
               >
                 <ImageAttachmentView
                   attachment={att}
-                  style={{ maxHeight: 200 }}
                 />
               </div>
             ))}
@@ -299,15 +298,15 @@ export function EmailContentViewer({ email, onBack }) {
           {expandedAttachments && imageAttachments.length > 4 && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 12,
-              marginTop: 12,
+              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+              gap: 10,
+              marginTop: 10,
             }}>
               {imageAttachments.slice(4).map((att, idx) => (
                 <div
                   key={idx + 4}
                   style={{
-                    borderRadius: 12,
+                    borderRadius: 10,
                     overflow: 'hidden',
                     backgroundColor: '#F2F2F7',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',

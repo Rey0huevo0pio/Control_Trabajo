@@ -81,12 +81,13 @@ export function HtmlEmailRenderer({ html, text }) {
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          font-size: 15px;
-          line-height: 1.6;
+          font-size: 14px;
+          line-height: 1.5;
           color: #1a1a1a;
           background-color: transparent;
           word-wrap: break-word;
           overflow-wrap: break-word;
+          max-width: 100%;
         }
 
         .email-content {
@@ -95,6 +96,7 @@ export function HtmlEmailRenderer({ html, text }) {
           border-radius: 12px;
           margin: 8px 0;
           max-width: 100% !important;
+          overflow-x: hidden;
         }
 
         img {
@@ -107,8 +109,10 @@ export function HtmlEmailRenderer({ html, text }) {
 
         table {
           max-width: 100% !important;
+          width: 100% !important;
           border-collapse: collapse;
           margin: 8px 0;
+          overflow-x: hidden;
         }
 
         td, th {
