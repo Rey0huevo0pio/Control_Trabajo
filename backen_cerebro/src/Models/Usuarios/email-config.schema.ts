@@ -94,7 +94,7 @@ export class EmailConfig {
   defaultFolder: string;
 
   // Límite de mensajes por sincronización
-  @Prop({ default: 50 })
+  @Prop({ default: 500 })
   messagesPerSync: number;
 }
 

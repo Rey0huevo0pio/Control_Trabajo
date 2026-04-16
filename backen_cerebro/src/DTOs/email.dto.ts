@@ -223,7 +223,7 @@ export class GetEmailsDto {
 
   @IsNumber()
   @Min(1)
-  @Max(100)
+  @Max(500)
   @IsOptional()
   @Transform(({ value }) => (value ? parseInt(value, 10) : 50))
   limit?: number;

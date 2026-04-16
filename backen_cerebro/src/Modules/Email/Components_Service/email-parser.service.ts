@@ -203,8 +203,18 @@ export class EmailParserService {
     attrs?: any,
   ): Promise<ParsedEmail> {
     try {
+      // Opciones para obtener todo el contenido
+      const parserOptions = {
+        // No limits on size
+        maxBodyLineLength: -1,
+        // Preserve raw buffers for debugging
+        debug: false,
+        // Don't escape HTML inside messages
+        escapeHTML: false,
+      };
+
       // Parsear el buffer con simpleParser
-      const parsed = await simpleParser(buffer);
+      const parsed = await simpleParser(buffer, parserOptions);
 
       // Construir el objeto de email
       const email = this.buildEmailObject(parsed, uid, folder, attrs);
