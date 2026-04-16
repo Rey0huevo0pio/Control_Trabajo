@@ -130,7 +130,7 @@ export function EmailInboxView() {
     if (!subject) return 'Sin asunto';
     if (!subject.startsWith('=?')) return subject;
     try {
-      const decoded = subject.replace(/=\?([^\?]+)\?([BQ])\?([^\?]*)\?=/gi, (match, charset, encoding, text) => {
+      const decoded = subject.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (match, charset, encoding, text) => {
         if (encoding.toUpperCase() === 'B') {
           return atob(text.replace(/-/g, '+').replace(/_/g, '/'));
         } else if (encoding.toUpperCase() === 'Q') {
@@ -191,12 +191,6 @@ export function EmailInboxView() {
     if (hasOther) indicators.push('📎');
 
     return indicators;
-  };
-
-  const hasImages = (email) => {
-    return email.attachments?.some(a =>
-      (a.contentType || a.mimeType || '').toLowerCase().startsWith('image')
-    );
   };
 
   // Filtrar emails por búsqueda

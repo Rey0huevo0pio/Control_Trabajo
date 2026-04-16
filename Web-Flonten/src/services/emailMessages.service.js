@@ -98,6 +98,7 @@ const saveEmailsToDB = async (emails, folder) => {
   });
 };
 
+// eslint-disable-next-line no-unused-vars
 const getMetadata = async (folder) => {
   const database = await openDatabase();
   return new Promise((resolve, reject) => {
@@ -279,6 +280,7 @@ class EmailMessagesService {
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   async getFullMessage(uid, folder = 'INBOX') {
     try {
       const cached = await this.getFullEmailFromDB(uid, folder);
