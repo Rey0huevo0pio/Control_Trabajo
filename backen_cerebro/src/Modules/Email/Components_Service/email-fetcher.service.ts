@@ -241,6 +241,10 @@ export class EmailFetcherService {
             const validEmails = results
               .filter((email): email is EmailMessage => email !== null)
               .map((email) => {
+            // DEBUG: Log detallado del contenido
+            console.log(`📧 [EmailFetcher] 🔍 UID:${email.uid} - html: ${email.html?.length || 0} chars, text: ${email.text?.length || 0} chars`);
+            console.log(`   📧 HTML preview: ${email.html?.substring(0, 200) || 'VACÍO'}`);
+            
             // Enviar HTML completo (hasta 2MB) - el frontend decide qué mostrar
             const MAX_HTML_LENGTH = 2000000; // 2MB - permitir correos muy largos
             if (email.html && email.html.length > MAX_HTML_LENGTH) {

@@ -197,6 +197,19 @@ class EmailMessagesService {
 
       emails = emails.map(e => ({ ...e, folder }));
       console.log('[EmailMessages] Correos descargados:', emails.length);
+      
+      // LOG: Verificar contenido del primer correo como ejemplo
+      if (emails.length > 0) {
+        const firstEmail = emails[0];
+        console.log('[EmailMessages] 🔍 Primer correo análisis:', {
+          uid: firstEmail.uid,
+          subject: firstEmail.subject?.substring(0, 50),
+          htmlLength: firstEmail.html?.length || 0,
+          textLength: firstEmail.text?.length || 0,
+          hasHtml: !!firstEmail.html,
+          htmlPreview: firstEmail.html?.substring(0, 200) || 'SIN HTML',
+        });
+      }
 
       if (emails.length > 0) {
         await saveEmailsToDB(emails, folder);

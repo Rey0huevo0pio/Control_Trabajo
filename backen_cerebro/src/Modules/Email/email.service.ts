@@ -142,8 +142,8 @@ export class EmailService {
     }
 
     try {
-      // Usar el fetcher service con caché integrada
-      const result = await this.fetcherService.getEmailsLegacy(
+      // Obtener UIDs primero
+      const uidsResult = await this.fetcherService.getMessageUIDs(
         {
           email: config.email,
           password: this.decryptPassword(config.passwordEmail),
@@ -156,11 +156,32 @@ export class EmailService {
         },
         getEmailsDto.folder || 'INBOX',
         usuarioId,
+      );
+      
+      const allUIDs = uidsResult || [];
+      const limit = getEmailsDto.limit || 100;
+      const page = getEmailsDto.page || 1;
+      
+      // Obtener los UIDs para esta página
+      const startIdx = (page - 1) * limit;
+      const pageUIDs = allUIDs.slice(startIdx, startIdx + limit);
+      
+      // Obtener los correos con HTML completo
+      const result = await this.fetcherService.getMessagesByUIDs(
         {
-          unreadOnly: getEmailsDto.unreadOnly,
-          page: getEmailsDto.page,
-          limit: getEmailsDto.limit,
+          email: config.email,
+          password: this.decryptPassword(config.passwordEmail),
+          imapHost: config.imapHost,
+          imapPort: config.imapPort,
+          imapSecure: config.imapSecure,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpSecure: config.smtpSecure,
         },
+        getEmailsDto.folder || 'INBOX',
+        pageUIDs,
+        usuarioId,
+        true, // truncateAttachments=true para lista
       );
 
       // Actualizar última sincronización
@@ -174,8 +195,8 @@ export class EmailService {
       return {
         success: true,
         data: {
-          emails: result.emails,
-          total: result.total,
+          emails: result,
+          total: allUIDs.length,
           page: getEmailsDto.page || 1,
           limit: getEmailsDto.limit || 50,
         },

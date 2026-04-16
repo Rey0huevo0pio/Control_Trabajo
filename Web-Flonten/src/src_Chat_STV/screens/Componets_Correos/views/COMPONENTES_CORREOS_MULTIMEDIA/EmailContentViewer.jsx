@@ -114,6 +114,16 @@ export function EmailContentViewer({ email, onBack }) {
   }
 
   const hasAttachments = email.attachments && email.attachments.length > 0;
+  
+  // DEBUG: Log del contenido del correo
+  console.log('[EmailContentViewer] 📧 Correo recibido:', {
+    uid: email.uid,
+    subject: email.subject?.substring(0, 50),
+    htmlLength: email.html?.length || 0,
+    textLength: email.text?.length || 0,
+    htmlPreview: email.html?.substring(0, 300) || 'SIN HTML',
+  });
+  
   const imageAttachments = hasAttachments
     ? email.attachments.filter(att => {
         const mt = (att.contentType || att.mimeType || '').toLowerCase();

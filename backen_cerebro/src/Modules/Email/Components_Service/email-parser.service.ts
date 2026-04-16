@@ -216,11 +216,14 @@ export class EmailParserService {
       // Parsear el buffer con simpleParser
       const parsed = await simpleParser(buffer, parserOptions);
 
+      // DEBUG: Verificar qué tiene parsed
+      console.log(`📧 [EmailParser] 🔍 UID:${uid} - raw html: ${parsed.html?.length || 0}, raw text: ${parsed.text?.length || 0}, textAsHtml: ${parsed.textAsHtml?.length || 0}`);
+
       // Construir el objeto de email
       const email = this.buildEmailObject(parsed, uid, folder, attrs);
 
       console.log(
-        `📧 [EmailParser] Email parsed UID:${uid} - html: ${email.html.length > 0}, text: ${email.text.length}, attachments: ${email.attachments.length}`,
+        `📧 [EmailParser] ✅ Email parsed UID:${uid} - html: ${email.html.length > 0 ? email.html.length + ' chars' : 'VACÍO'}, text: ${email.text.length}, attachments: ${email.attachments.length}`,
       );
 
       return email;
