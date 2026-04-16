@@ -68,37 +68,20 @@ export function EmailInboxView() {
   };
 
   const openEmail = async (email) => {
-    console.log('[EmailInbox] Abriendo email UID:', email.uid, 'HTML length:', email.html?.length || 0);
-    
-    // Si el email ya tiene contenido completo (html con más de 100 chars), usarlo directamente
     if (email.html && email.html.length > 100) {
-      console.log('[EmailInbox] Usando email de lista (ya tiene contenido completo)');
       setSelectedEmail(email);
       return;
     }
     
-    // Obtener el email completo con adjuntos sin truncar
     try {
-      console.log('[EmailInbox] Solicitando contenido completo...');
       const fullEmail = await emailMessagesService.getFullMessage(email.uid || email.id, 'INBOX');
       
-      if (fullEmail) {
-        console.log('[EmailInbox] Respuesta del servidor - HTML length:', fullEmail.html?.length || 0, 'Text length:', fullEmail.text?.length || 0);
-        
-        if (fullEmail.html && fullEmail.html.length > 100) {
-          setSelectedEmail(fullEmail);
-        } else if (fullEmail.text && fullEmail.text.length > 50) {
-          setSelectedEmail(fullEmail);
-        } else {
-          console.log('[EmailInbox] El servidor no devolvió contenido completo, mostrando de lista');
-          setSelectedEmail(email);
-        }
+      if (fullEmail && (fullEmail.html?.length > 100 || fullEmail.text?.length > 50)) {
+        setSelectedEmail(fullEmail);
       } else {
-        console.log('[EmailInbox] No se pudo obtener contenido completo');
         setSelectedEmail(email);
       }
     } catch (err) {
-      console.error('[EmailInbox] Error obteniendo email completo:', err);
       setSelectedEmail(email);
     }
   };
