@@ -26,7 +26,8 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
   const attName = fileName || attachment?.fileName || attachment?.filename || 'Imagen';
   const attSize = size || attachment?.size || 0;
   // El contenido puede venir de diferentes campos según el backend
-  const attContent = content
+  // Validar que sea string antes de usar
+  const rawContent = content
     || attachment?.content
     || attachment?.thumbnail
     || attachment?.base64
@@ -34,6 +35,7 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
     || attachment?.url
     || attachment?.downloadUrl
     || '';
+  const attContent = typeof rawContent === 'string' ? rawContent : '';
   const attMimeType = mimeType || attachment?.contentType || attachment?.mimeType || attachment?.type || '';
 
   const sizeKB = (attSize / 1024).toFixed(1);

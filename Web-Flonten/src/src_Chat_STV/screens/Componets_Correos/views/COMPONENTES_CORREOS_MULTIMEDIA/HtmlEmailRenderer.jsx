@@ -12,10 +12,17 @@
  *
  * ============================================================================
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export function HtmlEmailRenderer({ html, text }) {
+  const containerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Si no hay HTML ni texto, mostrar mensaje vacío
   if ((!html || html.trim() === '') && (!text || text.trim() === '')) {
@@ -168,36 +175,8 @@ export function HtmlEmailRenderer({ html, text }) {
       margin: 8,
       overflow: 'hidden',
     }}>
-      {isLoading && (
-        <div style={{
-          padding: 16,
-          textAlign: 'center',
-          minHeight: 120,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            width: 24,
-            height: 24,
-            border: '3px solid #F2F2F7',
-            borderTop: '3px solid #007AFF',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-          }} />
-          <p style={{ margin: '8px 0 0', fontSize: 12, color: '#8E8E93' }}>
-            Cargando correo...
-          </p>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      )}
       <div
+        ref={containerRef}
         style={{
           flex: 1,
           backgroundColor: 'transparent',
@@ -205,10 +184,6 @@ export function HtmlEmailRenderer({ html, text }) {
           transition: 'opacity 0.3s ease',
         }}
         dangerouslySetInnerHTML={{ __html: htmlContent }}
-        onLoad={() => {
-          setIsLoading(false);
-          console.log('✅ [HtmlEmailRenderer] HTML loaded successfully');
-        }}
       />
     </div>
   );
