@@ -24,7 +24,6 @@ export function HtmlEmailRenderer({ html, text }) {
     }
   }, []);
 
-  // Si no hay HTML ni texto, mostrar mensaje vacío
   if ((!html || html.trim() === '') && (!text || text.trim() === '')) {
     return (
       <div style={{
@@ -42,7 +41,6 @@ export function HtmlEmailRenderer({ html, text }) {
     );
   }
 
-  // Si solo hay texto plano, formatearlo bonitamente
   if (!html || html.trim() === '') {
     return (
       <div style={{
@@ -65,129 +63,26 @@ export function HtmlEmailRenderer({ html, text }) {
     );
   }
 
-  // HTML completo con estilos profesionales
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          font-size: 14px;
-          line-height: 1.5;
-          color: #1a1a1a;
-          background-color: transparent;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          max-width: 100%;
-        }
-
-        .email-content {
-          padding: 16px;
-          background: white;
-          border-radius: 12px;
-          margin: 8px 0;
-          max-width: 100% !important;
-          overflow-x: hidden;
-        }
-
-        img {
-          max-width: 100% !important;
-          height: auto !important;
-          display: block;
-          margin: 12px 0;
-          border-radius: 8px;
-        }
-
-        table {
-          max-width: 100% !important;
-          width: 100% !important;
-          border-collapse: collapse;
-          margin: 8px 0;
-          overflow-x: hidden;
-        }
-
-        td, th {
-          padding: 8px;
-          vertical-align: top;
-          word-wrap: break-word;
-        }
-
-        a {
-          color: #007AFF;
-          text-decoration: none;
-        }
-
-        a:hover {
-          text-decoration: underline;
-        }
-
-        blockquote {
-          border-left: 3px solid #e0e0e0;
-          padding-left: 16px;
-          margin: 16px 0;
-          color: #666;
-        }
-
-        pre, code {
-          background: #f5f5f5;
-          padding: 12px;
-          border-radius: 6px;
-          font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-          font-size: 13px;
-          overflow-x: auto;
-          margin: 12px 0;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-          margin: 20px 0 12px 0;
-          font-weight: 600;
-          line-height: 1.3;
-        }
-
-        p {
-          margin: 12px 0;
-        }
-
-        hr {
-          border: none;
-          border-top: 1px solid #e0e0e0;
-          margin: 20px 0;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="email-content">
-        ${html}
-      </div>
-    </body>
-    </html>
-  `;
-
   return (
     <div style={{
-      backgroundColor: '#F2F2F7',
+      backgroundColor: 'white',
       borderRadius: 12,
       margin: 8,
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
       overflow: 'hidden',
     }}>
       <div
         ref={containerRef}
         style={{
-          flex: 1,
-          backgroundColor: 'transparent',
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.3s ease',
+          padding: 16,
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontSize: 14,
+          lineHeight: 1.6,
+          color: '#1a1a1a',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
         }}
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
+        dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>
   );

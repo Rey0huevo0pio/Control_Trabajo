@@ -268,28 +268,42 @@ class EmailMessagesService {
 
   async getFullMessage(uid, folder = 'INBOX') {
     try {
+      // Primero revisar si hay en caché
       const cached = await this.getFullEmailFromDB(uid, folder);
-      if (cached) return cached;
+      if (cached && cached.html && cached.html.length > 100) {
+        console.log('[EmailMessages] Usando email completo de caché - UID:', uid, 'HTML:', cached.html.length, 'chars');
+        return cached;
+      }
 
       const token = getAuthToken();
-      if (!token) return null;
+      if (!token) return cached || null;
 
+      console.log('[EmailMessages] Descargando email completo desde servidor - UID:', uid);
       const response = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
         { folder, uids: [uid] },
-        { headers: { Authorization: `Bearer ${token}` }, timeout: 45000 }
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
       );
 
+      console.log('[EmailMessages] Respuesta del servidor - status:', response.status);
+      console.log('[EmailMessages] Respuesta data:', JSON.stringify(response.data).substring(0, 500));
+      
       const emails = response.data.data?.emails || [];
       if (emails.length > 0) {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
+        
+        // Guardar en IndexedDB
         await this.saveFullEmail(fullEmail, folder);
+        console.log('[EmailMessages] Email completo guardado - HTML:', fullEmail.html?.length || 0, 'Text:', fullEmail.text?.length || 0);
+        
         return fullEmail;
       }
-      return null;
+      return cached || null;
     } catch (error) {
-      console.error('[EmailMessages] Error getFullMessage:', error);
-      return null;
+      console.error('[EmailMessages] Error getFullMessage:', error.message);
+      // Intentar devolver lo que hay en caché
+      const cached = await this.getFullEmailFromDB(uid, folder);
+      return cached || null;
     }
   }
 
