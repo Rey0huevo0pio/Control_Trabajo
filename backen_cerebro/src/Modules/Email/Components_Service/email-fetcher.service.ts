@@ -241,8 +241,8 @@ export class EmailFetcherService {
             const validEmails = results
               .filter((email): email is EmailMessage => email !== null)
               .map((email) => {
-            // Enviar HTML completo (hasta 500KB) - el frontend decide qué mostrar
-            const MAX_HTML_LENGTH = 500000; // 500KB
+            // Enviar HTML completo (hasta 2MB) - el frontend decide qué mostrar
+            const MAX_HTML_LENGTH = 2000000; // 2MB - permitir correos muy largos
             if (email.html && email.html.length > MAX_HTML_LENGTH) {
               console.log(
                 `⚠️ [EmailFetcher] HTML muy grande para UID:${email.uid} (${email.html.length} chars), truncando a ${MAX_HTML_LENGTH}`,
@@ -250,15 +250,15 @@ export class EmailFetcherService {
               email.html = email.html.substring(0, MAX_HTML_LENGTH);
             }
             
-            // Limitar text a 2000 caracteres para previews
-            const MAX_TEXT_LENGTH = 2000;
+            // Limitar text a 50000 caracteres para previews
+            const MAX_TEXT_LENGTH = 50000;
             if (email.text && email.text.length > MAX_TEXT_LENGTH) {
               email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
             }
             
             // Agregar información de threading (para conversaciones)
             // Usar el Message-ID como thread ID base
-            const threadInfo = this.extractThreadInfo(parsedEmail);
+            const threadInfo = this.extractThreadInfo(email);
             email.threadId = threadInfo.threadId;
             email.inReplyTo = threadInfo.inReplyTo;
             email.references = threadInfo.references;

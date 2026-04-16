@@ -61,12 +61,28 @@ export class EmailParserService {
     let html = '';
     let text = '';
 
+    // Prioridad 1: HTML completo
     if (parsed.html) {
       html =
         typeof parsed.html === 'string' ? parsed.html : parsed.html.toString();
-    } else if (parsed.text) {
+    }
+
+    // Prioridad 2:Texto plano - siempre extraer si existe
+    if (parsed.text) {
       text =
         typeof parsed.text === 'string' ? parsed.text : parsed.text.toString();
+    }
+
+    // Si no hay HTML pero hay textAsHtml (algunos servidores usan esto)
+    if (!html && parsed.textAsHtml) {
+      html =
+        typeof parsed.textAsHtml === 'string' ? parsed.textAsHtml.toString() : parsed.textAsHtml.toString();
+    }
+
+    // Si tenemos html, también podemos obtenir text desde el html si no hay text
+    if (html && !text) {
+      // Crear text básico desde HTML
+      text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     }
 
     return { html, text };

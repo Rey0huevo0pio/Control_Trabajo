@@ -6,6 +6,39 @@
 
 ---
 
+## 2026-04-16 - CORRECCIONES SISTEMA DE CORREOS
+
+### 🔧 Problemas Corregidos
+
+**Problema 1: Contenido de correos truncado**
+- El contenido HTML de los correos se truncaba a 50,000 caracteres
+- Causaba que los correos largos no mostraran todo el contenido
+- **Solución:** Aumentado `MAX_HTML_LENGTH` de 50,000 a 2,000,000 (2MB)
+
+**Problema 2: Solo 50 correos descargados**
+- Al actualizar/listar correos, solo se mostraban 50
+- **Solución:** Aumentado límite de 50 a 500 correos
+
+**Problema 3: Mensajes de respuesta no visibles**
+- Los correos con hilos/conversaciones no mostraban todo el contenido
+- **Solución:** Mejorado `extractBody` en email-parser para manejar más casos
+
+### 📁 Archivos Modificados
+
+**Backend:**
+- `backen_cerebro/src/Modules/Email/Components_Service/email-fetcher.service.ts`
+  - Aumentado límite HTML de 50KB a 2MB
+  - Aumentado límite text de 2KB a 50KB
+  - Corregido bug con variable `parsedEmail` → `email`
+- `backen_cerebro/src/Modules/Email/Components_Service/email-parser.service.ts`
+  - Mejorado `extractBody` para manejar más tipos de contenido
+
+**Frontend:**
+- `Web-Flonten/src/services/emailMessages.service.js`
+  - Aumentado límite de correos de 50 a 500
+
+---
+
 ## 2026-04-06 - CREACIÓN DEL CEREBRO
 
 ### 🧠 Documentación Creada

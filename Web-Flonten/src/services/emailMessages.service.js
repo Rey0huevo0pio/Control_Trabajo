@@ -147,7 +147,7 @@ class EmailMessagesService {
         this.syncIncremental(folder, token, cachedEmails);
       }
       return {
-        emails: cachedEmails.slice(0, 50),
+        emails: cachedEmails.slice(0, 500),
         total: cachedEmails.length,
         fromCache: true,
         message: 'Cargado desde caché local',
@@ -171,7 +171,7 @@ class EmailMessagesService {
       console.log('[EmailMessages] Descargando correos...');
 
       const response = await api.get(EMAIL_MESSAGES_ENDPOINT, {
-        params: { folder, page, limit: 100 },
+        params: { folder, page, limit: 500 },
         headers: { Authorization: `Bearer ${token}` },
         timeout: 90000,
       });
