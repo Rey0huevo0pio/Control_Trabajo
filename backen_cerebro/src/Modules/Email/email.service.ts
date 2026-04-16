@@ -263,6 +263,7 @@ export class EmailService {
         folder,
         uids,
         usuarioId,
+        false, // truncateAttachments=false → enviar thumbnails completos
       );
 
       return {

@@ -67,8 +67,15 @@ export function EmailInboxView() {
     loadEmails();
   };
 
-  const openEmail = (email) => {
-    setSelectedEmail(email);
+  const openEmail = async (email) => {
+    // Obtener el email completo con adjuntos sin truncar
+    try {
+      const fullEmail = await emailMessagesService.getFullMessage(email.uid || email.id, 'INBOX');
+      setSelectedEmail(fullEmail || email); // Usar el completo, o fallback al de la lista
+    } catch (err) {
+      console.warn('[EmailInbox] Error obteniendo email completo, usando lista:', err);
+      setSelectedEmail(email); // Fallback al de la lista
+    }
   };
 
   const closeEmail = () => {

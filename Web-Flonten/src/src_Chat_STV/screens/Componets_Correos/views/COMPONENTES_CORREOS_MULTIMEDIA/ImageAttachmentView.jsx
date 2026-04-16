@@ -7,8 +7,12 @@
  *
  * QUÉ HACE:
  * - Muestra imágenes adjuntas con carga progresiva
- * - Soporta base64 y URLs
- * - Muestra placeholder mientras carga
+ * - Soporta base64 completo y URLs
+ * - Detecta thumbnails truncados del backend y muestra placeholder
+ *
+ * NOTA: El backend trunca thumbnails a 200 chars en la lista de emails.
+ * Solo se muestran imágenes cuando el contenido base64 tiene >500 chars
+ * o cuando viene como URL completa.
  *
  * ============================================================================
  */
@@ -19,27 +23,54 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
   const [error, setError] = useState(false);
 
   // Extraer datos del attachment o props directas
-  const attName = fileName || attachment?.fileName || 'Imagen';
+  const attName = fileName || attachment?.fileName || attachment?.filename || 'Imagen';
   const attSize = size || attachment?.size || 0;
-  const attContent = content || attachment?.content || attachment?.thumbnail;
-  const attMimeType = mimeType || attachment?.contentType || attachment?.mimeType || '';
+  // El contenido puede venir de diferentes campos según el backend
+  const attContent = content
+    || attachment?.content
+    || attachment?.thumbnail
+    || attachment?.base64
+    || attachment?.data
+    || attachment?.url
+    || attachment?.downloadUrl
+    || '';
+  const attMimeType = mimeType || attachment?.contentType || attachment?.mimeType || attachment?.type || '';
 
   const sizeKB = (attSize / 1024).toFixed(1);
   const sizeMB = (attSize / 1024 / 1024).toFixed(2);
   const displaySize = attSize > 1048576 ? `${sizeMB} MB` : `${sizeKB} KB`;
 
-  // Construir URI de imagen desde base64 o URL
-  const imageUri = attContent
-    ? (attContent.startsWith('data:') || attContent.startsWith('http'))
-      ? attContent
-      : `data:${attMimeType};base64,${attContent}`
-    : null;
-
   // Validar que el URI no esté truncado o corrupto
-  const isValidImage = imageUri && (
-    imageUri.startsWith('http') ||
-    (imageUri.startsWith('data:') && imageUri.length > 100)
-  );
+  // Un JPEG mínimo válido tiene al menos ~500 chars en base64
+  const MIN_BASE64_LENGTH = 500;
+
+  let imageUri = null;
+  let isValidImage = false;
+  const isTruncated = attContent.length > 0 && attContent.length < MIN_BASE64_LENGTH;
+
+  if (attContent) {
+    // Si es URL completa
+    if (attContent.startsWith('http')) {
+      imageUri = attContent;
+      isValidImage = true;
+    }
+    // Si es data URI
+    else if (attContent.startsWith('data:')) {
+      imageUri = attContent;
+      isValidImage = attContent.length > MIN_BASE64_LENGTH;
+    }
+    // Si es base64 puro (sin prefix)
+    else if (attContent.length > MIN_BASE64_LENGTH) {
+      imageUri = `data:${attMimeType};base64,${attContent}`;
+      isValidImage = true;
+    }
+  }
+
+  // Extension de la imagen para el icono
+  const getExtension = () => {
+    const parts = attName.split('.');
+    return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'IMG';
+  };
 
   return (
     <div style={{
@@ -48,6 +79,7 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
       backgroundColor: '#F2F2F7',
     }}>
       {isValidImage ? (
+        /* ✅ Imagen válida - mostrar */
         <div style={{ position: 'relative' }}>
           <img
             src={imageUri}
@@ -67,18 +99,12 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
           {loading && (
             <div style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', justifyContent: 'center', alignItems: 'center',
               backgroundColor: 'rgba(0,0,0,0.1)',
             }}>
               <div style={{
-                width: 32,
-                height: 32,
+                width: 32, height: 32,
                 border: '3px solid rgba(255,255,255,0.3)',
                 borderTop: '3px solid #007AFF',
                 borderRadius: '50%',
@@ -95,14 +121,9 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
           {error && (
             <div style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
+              top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', flexDirection: 'column',
+              justifyContent: 'center', alignItems: 'center',
               backgroundColor: 'rgba(0,0,0,0.5)',
             }}>
               <span style={{ fontSize: 40 }}>⚠️</span>
@@ -113,31 +134,64 @@ export function ImageAttachmentView({ attachment, fileName, size, content, mimeT
           )}
         </div>
       ) : (
-        /* Placeholder si no hay contenido */
+        /* 📋 Placeholder - Imagen truncada o no disponible */
         <div style={{
-          minHeight: 150,
+          minHeight: 160,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 16,
+          padding: '24px 16px',
+          background: 'linear-gradient(135deg, #E5E5EA 0%, #F2F2F7 100%)',
         }}>
-          <span style={{ fontSize: 40 }}>🖼️</span>
+          {/* Icono de imagen grande */}
+          <div style={{
+            width: 64, height: 64, borderRadius: 16,
+            backgroundColor: 'rgba(0,122,255,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 32 }}>🖼️</span>
+          </div>
+
+          {/* Nombre del archivo */}
           <p style={{
-            margin: '8px 0 0',
+            margin: '0 0 4px',
             fontSize: 14,
-            color: '#8E8E93',
+            fontWeight: 600,
+            color: '#1A1A1A',
             textAlign: 'center',
+            maxWidth: 200,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}>
             {attName}
           </p>
+
+          {/* Extensión y tamaño */}
           <p style={{
-            margin: '4px 0 0',
+            margin: '0 0 8px',
             fontSize: 12,
-            color: '#C7C7CC',
+            color: '#8E8E93',
           }}>
-            {displaySize} • {attMimeType}
+            {getExtension()} • {displaySize}
           </p>
+
+          {/* Indicador de truncado */}
+          {isTruncated && (
+            <div style={{
+              marginTop: 8,
+              padding: '6px 12px',
+              backgroundColor: 'rgba(255,149,0,0.1)',
+              borderRadius: 6,
+              fontSize: 11,
+              color: '#FF9500',
+              fontWeight: 500,
+            }}>
+              ⚠️ Vista previa no disponible
+            </div>
+          )}
         </div>
       )}
     </div>

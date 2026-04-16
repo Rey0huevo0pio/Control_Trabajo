@@ -106,6 +106,7 @@ export class EmailFetcherService {
     folder: string,
     uids: number[],
     usuarioId: string,
+    truncateAttachments = true, // NUEVO: false para vista completa de email
   ): Promise<EmailMessage[]> {
     if (uids.length === 0) {
       return [];
@@ -251,6 +252,7 @@ export class EmailFetcherService {
                 }
                 
                 // NO enviar contenido de adjuntos en la lista (solo metadata)
+                // Pero SÍ enviar thumbnails completos para vista individual (truncateAttachments=false)
                 if (email.attachments && email.attachments.length > 0) {
                   email.attachments = email.attachments.map((att: any) => ({
                     fileName: att.fileName || att.filename || 'archivo',
@@ -258,8 +260,10 @@ export class EmailFetcherService {
                     size: att.size || 0,
                     isImage: att.isImage || false,
                     isPDF: att.isPDF || false,
-                    thumbnail: att.thumbnail ? att.thumbnail.substring(0, 200) : undefined,  // Truncar thumbnail
-                    // NO incluir 'content' que es el archivo completo en base64
+                    thumbnail: truncateAttachments
+                      ? (att.thumbnail ? att.thumbnail.substring(0, 200) : undefined)  // Truncar para lista
+                      : (att.thumbnail || undefined),  // Completo para vista individual
+                    content: truncateAttachments ? undefined : (att.content || undefined),  // Solo en vista individual
                   }));
                 }
                 
