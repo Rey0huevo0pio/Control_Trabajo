@@ -169,6 +169,7 @@ export const EmailMainScreen = () => {
         maxWidth: 1600,
         margin: '0 auto',
         width: '100%',
+        overflow: 'hidden',
       }}>
         {/* Sidebar */}
         {sidebarOpen && (
@@ -192,7 +193,7 @@ export const EmailMainScreen = () => {
         )}
 
         {/* Vista seleccionada */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
           {renderView()}
         </div>
       </div>

@@ -135,8 +135,10 @@ export function EmailContentViewer({ email, onBack }) {
     <div style={{
       backgroundColor: 'white',
       borderRadius: 16,
-      overflow: 'hidden',
       boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* ==========================================
           HEADER DEL CORREO (Tipo Gmail)
@@ -340,7 +342,7 @@ export function EmailContentViewer({ email, onBack }) {
       {/* ==========================================
           CONTENIDO DEL CORREO
       ========================================== */}
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
         <HtmlEmailRenderer
           html={email.html}
           text={email.text}

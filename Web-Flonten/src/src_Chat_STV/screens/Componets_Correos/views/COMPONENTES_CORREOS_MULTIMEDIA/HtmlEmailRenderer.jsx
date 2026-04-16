@@ -67,9 +67,7 @@ export function HtmlEmailRenderer({ html, text }) {
     <div style={{
       backgroundColor: 'white',
       borderRadius: 12,
-      margin: 8,
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      overflow: 'hidden',
     }}>
       <div
         ref={containerRef}
