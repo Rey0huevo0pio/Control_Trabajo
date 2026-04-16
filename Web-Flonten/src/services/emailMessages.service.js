@@ -171,9 +171,9 @@ class EmailMessagesService {
       console.log('[EmailMessages] Descargando correos...');
 
       const response = await api.get(EMAIL_MESSAGES_ENDPOINT, {
-        params: { folder, page, limit: 20 },
+        params: { folder, page, limit: 100 },
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 60000,
+        timeout: 90000,
       });
 
       console.log('[EmailMessages] Response:', response.status, response.data);

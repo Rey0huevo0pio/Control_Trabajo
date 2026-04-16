@@ -236,17 +236,10 @@ export class EmailFetcherService {
             const validEmails = results
               .filter((email): email is EmailMessage => email !== null)
               .map((email) => {
-                // Limitar HTML a 50KB para la lista (evitar OutOfMemory)
-                const MAX_HTML_LENGTH = 50000;
-                if (email.html && email.html.length > MAX_HTML_LENGTH) {
-                  console.log(
-                    `⚠️ [EmailFetcher] Truncating HTML for UID:${email.uid} from ${email.html.length} to ${MAX_HTML_LENGTH}`,
-                  );
-                  email.html = email.html.substring(0, MAX_HTML_LENGTH) + '...[contenido truncado para vista de lista. Abrir email para ver completo]';
-                }
-                
-                // Limitar text a 500 caracteres
-                const MAX_TEXT_LENGTH = 500;
+                // NO truncar HTML - enviar completo para ambos casos
+                // El frontend decide qué mostrar según el contexto
+                // Limitar text a 1000 caracteres
+                const MAX_TEXT_LENGTH = 1000;
                 if (email.text && email.text.length > MAX_TEXT_LENGTH) {
                   email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
                 }
