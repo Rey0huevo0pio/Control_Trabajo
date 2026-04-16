@@ -26,7 +26,7 @@ const decodeEmailSubject = (subject) => {
   if (!subject) return 'Sin asunto';
   if (!subject.startsWith('=?')) return subject;
   try {
-    return subject.replace(/=\?([^\?]+)\?([BQ])\?([^\?]*)\?=/gi, (match, charset, encoding, text) => {
+    return subject.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (match, charset, encoding, text) => {
       if (encoding.toUpperCase() === 'B') {
         return atob(text.replace(/-/g, '+').replace(/_/g, '/'));
       } else if (encoding.toUpperCase() === 'Q') {

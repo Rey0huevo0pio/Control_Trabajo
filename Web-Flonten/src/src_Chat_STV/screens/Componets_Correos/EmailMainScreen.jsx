@@ -15,7 +15,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EmailInboxView } from './views/EmailInboxView';
+import EmailInboxView from './views/EmailInboxView';
 import { ComposeEmailView } from './views/ComposeEmailView';
 import { EmailSidebar } from './sidebar/EmailSidebar';
 

@@ -1,28 +1,31 @@
 /**
  * ============================================================================
- * 📧 HTML EMAIL RENDERER - Renderizador de correos HTML (Web)
- * ============================================================================
- *
- * ADAPTADO DE: C_Ticket_Apk_STV/.../HtmlEmailRenderer.tsx
- *
- * QUÉ HACE:
- * - Renderiza contenido HTML de correos electrónicos
- * - Si no hay HTML, muestra texto plano formateado
- * - Aplica estilos profesionales tipo Gmail/Outlook
- *
+ * 📧 HTML EMAIL RENDERER - Visor completo de contenido HTML
  * ============================================================================
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 export function HtmlEmailRenderer({ html, text }) {
   const containerRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (containerRef.current) {
-      setIsLoading(false);
+    if (containerRef.current && html) {
+      // Aplicar estilos a los elementos dentro del contenedor
+      const container = containerRef.current;
+      const tables = container.querySelectorAll('table');
+      tables.forEach(table => {
+        table.style.maxWidth = '100%';
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+      });
+      
+      const imgs = container.querySelectorAll('img');
+      imgs.forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+      });
     }
-  }, []);
+  }, [html]);
 
   if ((!html || html.trim() === '') && (!text || text.trim() === '')) {
     return (
@@ -31,7 +34,6 @@ export function HtmlEmailRenderer({ html, text }) {
         textAlign: 'center',
         backgroundColor: '#F2F2F7',
         borderRadius: 12,
-        margin: 8,
       }}>
         <span style={{ fontSize: 24 }}>📭</span>
         <p style={{ margin: '8px 0 0', fontSize: 14, color: '#8E8E93' }}>
@@ -46,19 +48,20 @@ export function HtmlEmailRenderer({ html, text }) {
       <div style={{
         backgroundColor: 'white',
         borderRadius: 12,
-        margin: 8,
         padding: 16,
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
       }}>
-        <p style={{
-          fontSize: 15,
+        <pre style={{
+          fontSize: 14,
           lineHeight: 1.6,
           color: '#1A1A1A',
           whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
           margin: 0,
+          fontFamily: 'inherit',
         }}>
           {text}
-        </p>
+        </pre>
       </div>
     );
   }
@@ -68,20 +71,56 @@ export function HtmlEmailRenderer({ html, text }) {
       backgroundColor: 'white',
       borderRadius: 12,
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      overflow: 'hidden',
     }}>
       <div
         ref={containerRef}
+        className="email-html-content"
         style={{
           padding: 16,
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
           fontSize: 14,
           lineHeight: 1.6,
           color: '#1a1a1a',
-          wordWrap: 'break-word',
+          wordBreak: 'break-word',
           overflowWrap: 'break-word',
         }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
+      <style>{`
+        .email-html-content table {
+          max-width: 100% !important;
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin: 12px 0 !important;
+        }
+        .email-html-content table td, 
+        .email-html-content table th {
+          padding: 8px !important;
+          border: 1px solid #e0e0e0 !important;
+          word-break: break-word !important;
+        }
+        .email-html-content img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        .email-html-content a {
+          color: #007AFF !important;
+        }
+        .email-html-content blockquote {
+          border-left: 3px solid #e0e0e0 !important;
+          padding-left: 16px !important;
+          margin: 12px 0 !important;
+          color: #666 !important;
+        }
+        .email-html-content p {
+          margin: 8px 0 !important;
+        }
+        .email-html-content ul, .email-html-content ol {
+          padding-left: 24px !important;
+          margin: 8px 0 !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -20,6 +20,11 @@ export interface EmailMessage {
   seen: boolean;
   flagged: boolean;
   folder?: string;
+  // Thread/Conversation fields
+  threadId?: string;
+  inReplyTo?: string;
+  references?: string;
+  isReply?: boolean;
 }
 
 @Injectable()
@@ -236,13 +241,28 @@ export class EmailFetcherService {
             const validEmails = results
               .filter((email): email is EmailMessage => email !== null)
               .map((email) => {
-                // NO truncar HTML - enviar completo para ambos casos
-                // El frontend decide qué mostrar según el contexto
-                // Limitar text a 1000 caracteres
-                const MAX_TEXT_LENGTH = 1000;
-                if (email.text && email.text.length > MAX_TEXT_LENGTH) {
-                  email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
-                }
+            // Enviar HTML completo (hasta 500KB) - el frontend decide qué mostrar
+            const MAX_HTML_LENGTH = 500000; // 500KB
+            if (email.html && email.html.length > MAX_HTML_LENGTH) {
+              console.log(
+                `⚠️ [EmailFetcher] HTML muy grande para UID:${email.uid} (${email.html.length} chars), truncando a ${MAX_HTML_LENGTH}`,
+              );
+              email.html = email.html.substring(0, MAX_HTML_LENGTH);
+            }
+            
+            // Limitar text a 2000 caracteres para previews
+            const MAX_TEXT_LENGTH = 2000;
+            if (email.text && email.text.length > MAX_TEXT_LENGTH) {
+              email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
+            }
+            
+            // Agregar información de threading (para conversaciones)
+            // Usar el Message-ID como thread ID base
+            const threadInfo = this.extractThreadInfo(parsedEmail);
+            email.threadId = threadInfo.threadId;
+            email.inReplyTo = threadInfo.inReplyTo;
+            email.references = threadInfo.references;
+            email.isReply = !!threadInfo.inReplyTo;
                 
                 // NO enviar contenido de adjuntos en la lista (solo metadata)
                 // Pero SÍ enviar thumbnails completos para vista individual (truncateAttachments=false)
@@ -487,5 +507,36 @@ export class EmailFetcherService {
     );
 
     return allMessages as EmailMessage[];
+  }
+
+  // ==========================================
+  // EXTRAER INFO DE THREADING (Conversaciones)
+  // ==========================================
+  private extractThreadInfo(parsedEmail: any): { threadId: string; inReplyTo: string; references: string } {
+    const messageId = parsedEmail.messageId || '';
+    const inReplyTo = parsedEmail.inReplyTo || '';
+    const references = parsedEmail.references || '';
+    
+    // El threadId se forma del Message-ID original o del In-Reply-To
+    let threadId = messageId;
+    if (inReplyTo) {
+      // Si es una respuesta, usar el ID del correo al que responde
+      threadId = inReplyTo;
+    } else if (references) {
+      // Usar el primer reference como thread ID
+      const refList = references.match(/<[^>]+>/g);
+      if (refList && refList.length > 0) {
+        threadId = refList[0].replace(/<|>/g, '');
+      }
+    }
+    
+    // Limpiar el threadId
+    threadId = threadId.replace(/<|>/g, '');
+    
+    return {
+      threadId,
+      inReplyTo: inReplyTo.replace(/<|>/g, ''),
+      references: references.replace(/<|>/g, ','),
+    };
   }
 }
