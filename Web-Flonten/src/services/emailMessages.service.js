@@ -5,10 +5,11 @@
  *
  * ADAPTADO DE: C_Ticket_Apk_STV/src_Chat_STV/services/emailMessages.service.ts
  *
- * QUÉ HACE:
- * - Obtiene correos del servidor API
- * - Cache local (localStorage)
- * - Sync incremental por UID
+ * MEJORAS:
+ * - IndexedDB para almacenamiento eficiente (como WhatsApp/Telegram)
+ * - Solo descarga correos nuevos (sync incremental)
+ * - Almacena contenido completo incluyendo imágenes y adjuntos
+ * - Cache en memoria para acceso rápido
  *
  * ============================================================================
  */
@@ -16,113 +17,190 @@ import api, { getAuthToken } from './api';
 
 const EMAIL_MESSAGES_ENDPOINT = '/email/messages';
 
-// Cache local (localStorage para web)
-const CACHE_KEY = '@email_cache_web_v1';
-const FOLDER_STATE_KEY = '@email_folder_state_web_v1';
+const DB_NAME = 'EmailMessagesDB';
+const DB_VERSION = 1;
+const STORE_EMAILS = 'emails';
+const STORE_METADATA = 'metadata';
+const STORE_ATTACHMENTS = 'attachments';
 
-const getCache = () => {
-  try {
-    const data = localStorage.getItem(CACHE_KEY);
-    return data ? JSON.parse(data) : { emails: [] };
-  } catch { return { emails: [] }; }
+let db = null;
+
+const openDatabase = () => {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      resolve(db);
+      return;
+    }
+
+    console.log('[EmailMessages] Abriendo IndexedDB...');
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => {
+      console.error('[EmailMessages] Error abriendo IndexedDB:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      db = request.result;
+      console.log('[EmailMessages] IndexedDB abierta correctamente');
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event) => {
+      console.log('[EmailMessages] Creando/migrando IndexedDB...');
+      const database = event.target.result;
+
+      if (!database.objectStoreNames.contains(STORE_EMAILS)) {
+        const emailStore = database.createObjectStore(STORE_EMAILS, { keyPath: 'uid' });
+        emailStore.createIndex('folder', 'folder', { unique: false });
+        emailStore.createIndex('date', 'date', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains(STORE_METADATA)) {
+        database.createObjectStore(STORE_METADATA, { keyPath: 'folder' });
+      }
+
+      if (!database.objectStoreNames.contains(STORE_ATTACHMENTS)) {
+        const attStore = database.createObjectStore(STORE_ATTACHMENTS, { keyPath: 'id' });
+        attStore.createIndex('emailUid', 'emailUid', { unique: false });
+      }
+    };
+  });
 };
 
-const saveCache = (cache) => {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch {}
+const getAllEmailsFromDB = async (folder) => {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_EMAILS], 'readonly');
+    const store = transaction.objectStore(STORE_EMAILS);
+    const index = store.index('folder');
+    const request = index.getAll(IDBKeyRange.only(folder));
+
+    request.onsuccess = () => {
+      const emails = request.result || [];
+      resolve(emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    };
+    request.onerror = () => reject(request.error);
+  });
 };
 
-const getFolderState = (folder) => {
-  try {
-    const data = localStorage.getItem(FOLDER_STATE_KEY);
-    const states = data ? JSON.parse(data) : {};
-    return states[folder] || null;
-  } catch { return null; }
+const saveEmailsToDB = async (emails, folder) => {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_EMAILS], 'readwrite');
+    const store = transaction.objectStore(STORE_EMAILS);
+
+    emails.forEach(email => {
+      store.put({ ...email, folder, cachedAt: new Date().toISOString() });
+    });
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
 };
 
-const saveFolderState = (folder, state) => {
-  try {
-    const data = localStorage.getItem(FOLDER_STATE_KEY);
-    const states = data ? JSON.parse(data) : {};
-    states[folder] = { ...state, syncedAt: new Date().toISOString() };
-    localStorage.setItem(FOLDER_STATE_KEY, JSON.stringify(states));
-  } catch {}
+const getMetadata = async (folder) => {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_METADATA], 'readonly');
+    const store = transaction.objectStore(STORE_METADATA);
+    const request = store.get(folder);
+
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const saveMetadata = async (folder, metadata) => {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_METADATA], 'readwrite');
+    const store = transaction.objectStore(STORE_METADATA);
+    store.put({ folder, ...metadata, syncedAt: new Date().toISOString() });
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
+const clearAllData = async () => {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORE_EMAILS, STORE_METADATA, STORE_ATTACHMENTS], 'readwrite');
+    transaction.objectStore(STORE_EMAILS).clear();
+    transaction.objectStore(STORE_METADATA).clear();
+    transaction.objectStore(STORE_ATTACHMENTS).clear();
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
 };
 
 class EmailMessagesService {
-  async getMessages(folder = 'INBOX', page = 1, limit = 50) {
+  async getMessages(folder = 'INBOX', page = 1) {
     const token = getAuthToken();
-    
-    if (!token) {
-      const cached = this.getCachedEmails(folder);
-      return {
-        emails: cached,
-        total: cached.length,
-        fromCache: true,
-        message: 'Usando caché local (sin sesión)',
-      };
-    }
 
-    const cachedEmails = this.getCachedEmails(folder);
-    
+    const cachedEmails = await getAllEmailsFromDB(folder);
+
     if (cachedEmails.length > 0) {
-      console.log('[EmailMessages] Usando caché local:', cachedEmails.length, 'correos');
-      this.syncIncremental(folder, token, cachedEmails);
+      console.log('[EmailMessages] Usando caché IndexedDB:', cachedEmails.length, 'correos');
+      if (token) {
+        this.syncIncremental(folder, token, cachedEmails);
+      }
       return {
-        emails: cachedEmails.slice(0, limit),
+        emails: cachedEmails.slice(0, 50),
         total: cachedEmails.length,
         fromCache: true,
         message: 'Cargado desde caché local',
       };
     }
 
-    return this.fullDownload(folder, token, page, limit);
+    if (!token) {
+      return {
+        emails: [],
+        total: 0,
+        fromCache: true,
+        message: 'Sin sesión y sin caché local',
+      };
+    }
+
+    return this.fullDownload(folder, token, page);
   }
 
-  async fullDownload(folder, token, page, limit) {
+  async fullDownload(folder, token, page = 1) {
     try {
       console.log('[EmailMessages] Descargando correos...');
-      
+
       const response = await api.get(EMAIL_MESSAGES_ENDPOINT, {
-        params: { folder, page, limit: 20 }, // Reducir a 20 para evitar timeout
+        params: { folder, page, limit: 20 },
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 30000, // 30 segundos
+        timeout: 60000,
       });
 
       console.log('[EmailMessages] Response:', response.status, response.data);
 
       let emails = [];
-      // Manejar diferentes formatos de respuesta
       if (response.data) {
-        // Si tiene estructura success
         if (response.data.success && response.data.data) {
           emails = response.data.data.emails || response.data.data;
-        } 
-        // Si tiene propiedad emails directamente
-        else if (response.data.emails) {
+        } else if (response.data.emails) {
           emails = response.data.emails;
-        }
-        // Si data es array directo
-        else if (Array.isArray(response.data.data)) {
+        } else if (Array.isArray(response.data.data)) {
           emails = response.data.data;
-        }
-        // Si response.data es array directo
-        else if (Array.isArray(response.data)) {
+        } else if (Array.isArray(response.data)) {
           emails = response.data;
         }
       }
 
-      // Asegurar que sea array
       if (!Array.isArray(emails)) {
         emails = [];
-        console.log('[EmailMessages] Emails no es array, ajustado:', typeof emails);
       }
 
       emails = emails.map(e => ({ ...e, folder }));
       console.log('[EmailMessages] Correos descargados:', emails.length);
 
       if (emails.length > 0) {
-        this.saveEmails(emails, folder);
-        saveFolderState(folder, {
+        await saveEmailsToDB(emails, folder);
+        await saveMetadata(folder, {
           lastSync: new Date().toISOString(),
           lastUID: emails.length > 0 ? Math.max(...emails.map(e => e.uid)) : 0,
           totalEmails: emails.length,
@@ -136,15 +214,17 @@ class EmailMessagesService {
       };
     } catch (error) {
       console.error('[EmailMessages] Error en fullDownload:', error.message || error.code);
-      const cached = this.getCachedEmails(folder);
+      const cached = await getAllEmailsFromDB(folder);
       if (cached.length > 0) {
         return { emails: cached, total: cached.length, fromCache: true, message: 'Error de conexión, mostrando caché local' };
       }
       let errorMsg = 'Error al cargar correos';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMsg = 'Timeout - el servidor tarda demasiado en responder';
+        errorMsg = 'El servidor está tardando demasiado. Intenta más tarde.';
       } else if (error.response?.status === 404) {
         errorMsg = 'IMAP no configurado';
+      } else if (error.response?.status === 401) {
+        errorMsg = 'Sesión expirada';
       }
       return { emails: [], total: 0, fromCache: false, message: errorMsg };
     }
@@ -174,46 +254,21 @@ class EmailMessagesService {
 
       const newEmails = downloadResponse.data.data?.emails || [];
       if (newEmails.length > 0) {
-        this.saveEmails(newEmails, folder);
+        await saveEmailsToDB(newEmails, folder);
+        await saveMetadata(folder, {
+          lastSync: new Date().toISOString(),
+          lastUID: newUIDs.length > 0 ? Math.max(...newUIDs) : 0,
+          totalEmails: cachedEmails.length + newEmails.length,
+        });
       }
     } catch (error) {
       console.log('[EmailMessages] Error en sync incremental:', error);
     }
   }
 
-  getCachedEmails(folder) {
-    const cache = getCache();
-    let emails = cache.emails.filter(e => e.folder === folder) || [];
-    emails = emails.filter(e => e.uid > 0);
-    emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return emails;
-  }
-
-  saveEmails(emails, folder) {
-    const cache = getCache();
-    const otherEmails = cache.emails.filter(e => e.folder !== folder);
-    
-    const newEmails = emails.map(e => ({
-      ...e,
-      folder,
-      text: e.text ? e.text.substring(0, 80) : '',
-      html: '',
-      cachedAt: new Date().toISOString(),
-    }));
-
-    cache.emails = [...newEmails, ...otherEmails];
-    cache.emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    if (cache.emails.length > 30) {
-      cache.emails = cache.emails.slice(0, 30);
-    }
-
-    saveCache(cache);
-  }
-
   async getFullMessage(uid, folder = 'INBOX') {
     try {
-      const cached = this.getFullEmailFromCache(uid, folder);
+      const cached = await this.getFullEmailFromDB(uid, folder);
       if (cached) return cached;
 
       const token = getAuthToken();
@@ -221,14 +276,14 @@ class EmailMessagesService {
 
       const response = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
         { folder, uids: [uid] },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 45000 }
       );
 
       const emails = response.data.data?.emails || [];
       if (emails.length > 0) {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
-        this.saveFullEmail(fullEmail, folder);
+        await this.saveFullEmail(fullEmail, folder);
         return fullEmail;
       }
       return null;
@@ -238,21 +293,28 @@ class EmailMessagesService {
     }
   }
 
-  getFullEmailFromCache(uid, folder) {
-    try {
-      const key = `email_full_${folder}_${uid}`;
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
-    } catch { return null; }
+  async getFullEmailFromDB(uid, folder) {
+    const database = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction([STORE_EMAILS], 'readonly');
+      const store = transaction.objectStore(STORE_EMAILS);
+      const request = store.get(uid);
+
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
   }
 
-  saveFullEmail(email, folder) {
-    try {
-      const key = `email_full_${folder}_${email.uid}`;
-      localStorage.setItem(key, JSON.stringify(email));
-    } catch (error) {
-      console.warn('[EmailMessages] No se pudo guardar email completo:', error);
-    }
+  async saveFullEmail(email, folder) {
+    const database = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction([STORE_EMAILS], 'readwrite');
+      const store = transaction.objectStore(STORE_EMAILS);
+      store.put({ ...email, folder, cachedAt: new Date().toISOString() });
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
   }
 
   async sendEmail(data) {
@@ -288,14 +350,12 @@ class EmailMessagesService {
   }
 
   async forceSync(folder = 'INBOX') {
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(FOLDER_STATE_KEY);
-    return this.getMessages(folder, 1, 100);
+    await clearAllData();
+    return this.getMessages(folder, 1);
   }
 
   clearCache() {
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(FOLDER_STATE_KEY);
+    return clearAllData();
   }
 }
 

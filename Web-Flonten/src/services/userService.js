@@ -12,7 +12,7 @@
  * 
  * ============================================================================
  */
-import api, { getAuthToken } from './api';
+import api from './api';
 
 const USERS_ENDPOINT = '/users';
 

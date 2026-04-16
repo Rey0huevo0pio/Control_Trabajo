@@ -22,6 +22,23 @@ import { ImageAttachmentView } from './ImageAttachmentView';
 // ==========================================
 // UTILIDADES
 // ==========================================
+const decodeEmailSubject = (subject) => {
+  if (!subject) return 'Sin asunto';
+  if (!subject.startsWith('=?')) return subject;
+  try {
+    return subject.replace(/=\?([^\?]+)\?([BQ])\?([^\?]*)\?=/gi, (match, charset, encoding, text) => {
+      if (encoding.toUpperCase() === 'B') {
+        return atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+      } else if (encoding.toUpperCase() === 'Q') {
+        return text.replace(/_/g, ' ').replace(/=([A-F0-9]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+      }
+      return text;
+    });
+  } catch {
+    return subject;
+  }
+};
+
 const getInitials = (from) => {
   if (!from) return '?';
   const parts = from.split(' ').filter(p => !p.includes('<'));
@@ -156,7 +173,7 @@ export function EmailContentViewer({ email, onBack }) {
               color: '#1A1A1A',
               lineHeight: 1.3,
             }}>
-              {email.subject || 'Sin asunto'}
+              {decodeEmailSubject(email.subject) || 'Sin asunto'}
             </h2>
           </div>
 

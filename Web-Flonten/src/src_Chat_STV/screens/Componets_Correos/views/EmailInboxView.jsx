@@ -118,9 +118,40 @@ export function EmailInboxView() {
     return match ? from.substring(0, from.indexOf('<')).trim() : from || '';
   };
 
+  const decodeEmailSubject = (subject) => {
+    if (!subject) return 'Sin asunto';
+    if (!subject.startsWith('=?')) return subject;
+    try {
+      const decoded = subject.replace(/=\?([^\?]+)\?([BQ])\?([^\?]*)\?=/gi, (match, charset, encoding, text) => {
+        if (encoding.toUpperCase() === 'B') {
+          return atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+        } else if (encoding.toUpperCase() === 'Q') {
+          return text.replace(/_/g, ' ').replace(/=([A-F0-9]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+        }
+        return text;
+      });
+      return decoded;
+    } catch {
+      return subject;
+    }
+  };
+
+  const cleanEmailText = (text) => {
+    if (!text) return '';
+    let cleaned = text
+      .replace(/--_[^\n]+/g, '')
+      .replace(/Content-[^\n]+/g, '')
+      .replace(/^\s*$/gm, '')
+      .trim();
+    if (cleaned.length > 120) {
+      cleaned = cleaned.substring(0, 120) + '...';
+    }
+    return cleaned;
+  };
+
   const getTextPreview = (email) => {
     if (email.text && email.text.length > 0 && email.text !== 'Sin contenido') {
-      return email.text.substring(0, 120);
+      return cleanEmailText(email.text);
     }
     if (email.html) {
       const textFromHtml = email.html
@@ -424,7 +455,7 @@ export function EmailInboxView() {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}>
-                    {email.subject || 'Sin asunto'}
+                    {decodeEmailSubject(email.subject) || 'Sin asunto'}
                   </div>
 
                   {/* Preview + Adjuntos */}

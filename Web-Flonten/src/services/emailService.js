@@ -18,7 +18,7 @@ export const emailService = {
       });
 
       return response.data.data || response.data;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -43,7 +43,7 @@ export const emailService = {
       });
 
       return response.data.data || response.data;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
