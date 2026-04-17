@@ -240,6 +240,8 @@ export class EmailParserService {
         debug: false,
         // Don't escape HTML inside messages
         escapeHTML: false,
+        // Forzar UTF-8 para caracteres españoles
+        defaultInputCharset: 'utf-8',
       };
 
       // Parsear el buffer con simpleParser

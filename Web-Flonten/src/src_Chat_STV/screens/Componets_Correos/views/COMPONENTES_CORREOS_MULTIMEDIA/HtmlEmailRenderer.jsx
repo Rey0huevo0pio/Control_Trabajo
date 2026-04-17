@@ -15,12 +15,24 @@ export function HtmlEmailRenderer({ html, text }) {
     textLength: text?.length,
   });
 
+  // Forzar charset UTF-8 en el contenido HTML
+  const fixCharset = (content) => {
+    if (!content) return '';
+    // Si tiene iso-8859-1, cambiar a utf-8
+    let fixed = content.replace(/charset=iso-8859-1/gi, 'charset=utf-8');
+    // Agregar meta charset si no existe
+    if (!fixed.includes('<meta charset')) {
+      fixed = fixed.replace(/<head>/i, '<head><meta charset="UTF-8">');
+    }
+    return fixed;
+  };
+
   // Crear Blob URL
   const blobUrl = useMemo(() => {
     if (!html || html.trim() === '') return null;
     
-    // Usar el HTML original tal cual
-    const finalContent = html.trim();
+    // Corregir charset para soportar español
+    const finalContent = fixCharset(html.trim());
     
     console.log('[HtmlEmailRenderer] 🔍 blobUrl - creating with length:', finalContent.length);
     
