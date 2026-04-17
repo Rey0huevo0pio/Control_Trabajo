@@ -1,86 +1,44 @@
-/**
- * ============================================================================
- * 🏠 HOME SCREEN - Pantalla Principal (Web)
- * ============================================================================
- * 
- * QUÉ HACE:
- * - Dashboard principal después de login
- * - Muestra módulos disponibles (Instalaciones, Tickets, Chat, Archivero)
- * - Mismo diseño que el móvil adaptado para web
- * 
- * CONEXIONES:
- * - Mobile: C_Ticket_Apk_STV/src/screens/P_Principal/HomeScreen.tsx
- * - Navigation: Navega a cada módulo
- * - Store: useAuthStore (user info, permisos)
- * 
- * ============================================================================
- */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton } from '../../components/design-system';
 
-// Módulos disponibles (mismos que el móvil)
 const modules = [
   {
-    id: 'instalaciones',
-    name: 'Instalaciones',
-    icon: '🏢',
+    id: 'solicitudes',
+    name: 'Solicitudes',
+    icon: '📝',
     color: '#007AFF',
-    route: '/instalaciones',
-    description: 'Gestión de instalaciones y áreas',
+    route: '/compras/solicitudes',
+    description: 'Crear y gestionar solicitudes de compra',
   },
   {
-    id: 'tickets',
-    name: 'Tickets IT',
-    icon: '🎫',
-    color: '#FF9500',
-    route: '/tickets',
-    description: 'Sistema de tickets de soporte',
-  },
-  {
-    id: 'chat',
-    name: 'Chat',
-    icon: '💬',
+    id: 'ordenes',
+    name: 'Órdenes de Compra',
+    icon: '📋',
     color: '#5856D6',
-    route: '/chat',
-    description: 'Mensajería empresarial',
+    route: '/compras/ordenes',
+    description: 'Ver órdenes de compra realizadas',
   },
   {
-    id: 'archivero',
-    name: 'Archivero',
-    icon: '📁',
+    id: 'proveedores',
+    name: 'Proveedores',
+    icon: '🏪',
     color: '#34C759',
-    route: '/archivero',
-    description: 'Gestión documental',
+    route: '/compras/proveedores',
+    description: 'Gestión de proveedores',
   },
   {
-    id: 'usuarios',
-    name: 'Usuarios',
-    icon: '👥',
-    color: '#FF2D55',
-    route: '/usuarios',
-    description: 'Gestión de usuarios',
-  },
-  {
-    id: 'reportes',
-    name: 'Reportes',
-    icon: '📊',
-    color: '#5AC8FA',
-    route: '/reportes',
-    description: 'Reportes y métricas',
-  },
-  {
-    id: 'compras',
-    name: 'Compras',
-    icon: '🛒',
-    color: '#AF52DE',
-    route: '/compras',
-    description: 'Gestión de compras y solicitudes',
+    id: 'presupuesto',
+    name: 'Presupuesto',
+    icon: '💰',
+    color: '#FF9500',
+    route: '/compras/presupuesto',
+    description: 'Control de presupuesto',
   },
 ];
 
-export const HomeScreen = () => {
+export const ComprasHomeScreen = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
@@ -91,7 +49,6 @@ export const HomeScreen = () => {
 
   return (
     <ScreenLayout padding="0">
-      {/* Header */}
       <div
         style={{
           backgroundColor: '#007AFF',
@@ -102,16 +59,16 @@ export const HomeScreen = () => {
         <HStack justify="space-between">
           <Stack gap="8px">
             <Text variant="h3" color="white">
-              ¡Hola, {user?.nombre}!
+              Módulo de Compras
             </Text>
             <Text variant="bodySmall" color="rgba(255,255,255,0.8)">
-              Rol: {user?.rol?.toUpperCase()} | {user?.departamento || 'Sin departamento'}
+              Bienvenido, {user?.nombre} | {user?.departamento || 'Sin departamento'}
             </Text>
           </Stack>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <IconButton
-              icon={<span style={{ fontSize: 24 }}>🔔</span>}
-              onClick={() => console.log('Notificaciones')}
+              icon={<span style={{ fontSize: 24 }}>🏠</span>}
+              onClick={() => navigate('/')}
             />
             <IconButton
               icon={<span style={{ fontSize: 24 }}>🚪</span>}
@@ -121,16 +78,14 @@ export const HomeScreen = () => {
         </HStack>
       </div>
 
-      {/* Main Content */}
       <div style={{ padding: '32px' }}>
-        {/* Stats Section */}
         <Stack gap="24px" style={{ marginBottom: 40 }}>
           <Text variant="h4">Resumen</Text>
           <HStack gap="16px">
             {[
-              { label: 'Tickets Pendientes', value: '0', icon: '🎫' },
-              { label: 'Mensajes Nuevos', value: '0', icon: '💬' },
-              { label: 'Documentos', value: '0', icon: '📁' },
+              { label: 'Solicitudes Pendientes', value: '0', icon: '📝' },
+              { label: 'Órdenes Activas', value: '0', icon: '📋' },
+              { label: 'Proveedores', value: '0', icon: '🏪' },
             ].map((stat, index) => (
               <Card key={index} variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
                 <Stack gap="8px" align="center">
@@ -145,9 +100,8 @@ export const HomeScreen = () => {
           </HStack>
         </Stack>
 
-        {/* Modules Grid */}
         <Stack gap="24px">
-          <Text variant="h4">Módulos</Text>
+          <Text variant="h4">Secciones</Text>
           <div
             style={{
               display: 'grid',
@@ -206,4 +160,4 @@ export const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default ComprasHomeScreen;

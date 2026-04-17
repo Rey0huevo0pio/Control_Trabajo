@@ -68,6 +68,9 @@ import { RegistroAreaScreen } from '../src_Instalaciones_STV/screens/RegistroAre
 // Importar pantallas de Usuarios
 import { UserManagementScreen } from '../screens/Components_Usuarios';
 
+// Importar módulo de Compras
+import { ComprasHomeScreen } from '../src_A_Compras';
+
 /**
  * PlaceholderScreen - Para rutas sin implementar
  */
@@ -400,6 +403,49 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Módulos - Compras */}
+        <Route
+          path="/compras"
+          element={
+            <ProtectedRoute>
+              <ComprasHomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compras/solicitudes"
+          element={
+            <ProtectedRoute>
+              <PlaceholderScreen moduleName="Solicitudes de Compra" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compras/ordenes"
+          element={
+            <ProtectedRoute>
+              <PlaceholderScreen moduleName="Órdenes de Compra" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compras/proveedores"
+          element={
+            <ProtectedRoute>
+              <PlaceholderScreen moduleName="Proveedores" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compras/presupuesto"
+          element={
+            <ProtectedRoute>
+              <PlaceholderScreen moduleName="Presupuesto" />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/reportes"
           element={

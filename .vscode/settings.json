@@ -35,9 +35,9 @@
 
 /*______________Modulos src_/*____________*/
 "Web-Flonten/src/src_Archivero_STV":true,
-"Web-Flonten/src/src_Chat_STV":false,
+"Web-Flonten/src/src_Chat_STV":true,
 "Web-Flonten/src/src_P_Ticket_IT":true,
-"Web-Flonten/src/src_Instalaciones_STV":true,
+"Web-Flonten/src/src_Instalaciones_STV":false,
 
 /*________________________________________*/
 

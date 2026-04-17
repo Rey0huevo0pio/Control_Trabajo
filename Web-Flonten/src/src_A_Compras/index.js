@@ -1,0 +1,1 @@
+export { ComprasHomeScreen } from './screens/ComprasHomeScreen';
