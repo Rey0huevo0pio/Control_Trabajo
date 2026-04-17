@@ -15,6 +15,7 @@ export const GoogleSheetsManager = ({ onClose }) => {
     createSpreadsheet,
     deleteSpreadsheet,
     shareSpreadsheet,
+    downloadSpreadsheet,
   } = useGoogleSheets();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -23,6 +24,7 @@ export const GoogleSheetsManager = ({ onClose }) => {
   const [newSheetTitle, setNewSheetTitle] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
@@ -80,6 +82,18 @@ export const GoogleSheetsManager = ({ onClose }) => {
   const openShareModal = (sheet) => {
     setSelectedSheet(sheet);
     setShowShareModal(true);
+  };
+
+  const handleDownload = async (sheet) => {
+    setDownloadingId(sheet.id);
+    try {
+      await downloadSpreadsheet(sheet.id, sheet.name);
+    } catch (err) {
+      console.error('Error descargando:', err);
+      alert('Error al descargar archivo');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -174,6 +188,12 @@ export const GoogleSheetsManager = ({ onClose }) => {
                         </Text>
                       </Stack>
                       <HStack gap="8px">
+                        <IconButton
+                          icon={<span style={{ fontSize: 20 }}>📥</span>}
+                          onClick={() => handleDownload(sheet)}
+                          title="Descargar Excel"
+                          disabled={downloadingId === sheet.id}
+                        />
                         <IconButton
                           icon={<span style={{ fontSize: 20 }}>🔗</span>}
                           onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${sheet.id}`, '_blank')}

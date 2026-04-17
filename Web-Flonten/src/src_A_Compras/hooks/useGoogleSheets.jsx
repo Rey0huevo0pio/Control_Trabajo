@@ -140,6 +140,19 @@ export const GoogleSheetsProvider = ({ children }) => {
     }
   }, [accessToken]);
 
+  const downloadSpreadsheet = useCallback(async (spreadsheetId, title) => {
+    if (!accessToken) throw new Error('No autenticado');
+    setLoading(true);
+    try {
+      await googleSheetsApi.downloadSpreadsheet(accessToken, spreadsheetId, title);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken]);
+
   useEffect(() => { initGis(); }, [initGis]);
 
   return (
@@ -155,6 +168,7 @@ export const GoogleSheetsProvider = ({ children }) => {
       createSpreadsheet,
       deleteSpreadsheet,
       shareSpreadsheet,
+      downloadSpreadsheet,
     }}>
       {children}
     </GoogleSheetsContext.Provider>

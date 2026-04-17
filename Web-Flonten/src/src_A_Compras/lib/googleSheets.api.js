@@ -5,6 +5,7 @@
 import axios from 'axios';
 
 const GOOGLE_SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+const GOOGLE_DRIVE_API = 'https://www.googleapis.com/drive/v3';
 
 const api = axios.create({
   headers: {
@@ -18,7 +19,7 @@ export const googleSheetsApi = {
    */
   listSpreadsheets: async (accessToken) => {
     const response = await api.get(
-      'https://www.googleapis.com/drive/v3/files',
+      `${GOOGLE_DRIVE_API}/files`,
       {
         params: {
           q: "mimeType='application/vnd.google-apps.spreadsheet'",
@@ -31,6 +32,79 @@ export const googleSheetsApi = {
       }
     );
     return response.data.files;
+  },
+
+  /**
+   * Descargar archivo de Google Drive como Excel
+   */
+  downloadAsExcel: async (accessToken, fileId, fileName) => {
+    const response = await api.get(
+      `${GOOGLE_DRIVE_API}/files/${fileId}/export`,
+      {
+        params: {
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        responseType: 'blob',
+      }
+    );
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${fileName}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return true;
+  },
+
+  /**
+   * Descargar directamente desde Google Sheets
+   */
+  downloadSpreadsheet: async (accessToken, spreadsheetId, title) => {
+    const response = await api.get(
+      `${GOOGLE_SHEETS_API}/${spreadsheetId}/export`,
+      {
+        params: {
+          format: 'xlsx',
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        responseType: 'blob',
+      }
+    );
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${title}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return true;
+  },
+
+  /**
+   * Obtener contenido de una hoja como JSON
+   */
+  getSheetData: async (accessToken, spreadsheetId, range = 'Sheet1!A1:Z1000') => {
+    const response = await api.get(
+      `${GOOGLE_SHEETS_API}/${spreadsheetId}/values/${range}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
   },
 
   /**
@@ -129,7 +203,7 @@ export const googleSheetsApi = {
    */
   deleteSpreadsheet: async (accessToken, spreadsheetId) => {
     const response = await api.delete(
-      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}`,
+      `${GOOGLE_DRIVE_API}/files/${spreadsheetId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -164,7 +238,7 @@ export const googleSheetsApi = {
    */
   shareSpreadsheet: async (accessToken, spreadsheetId, email, role = 'writer') => {
     const response = await api.post(
-      `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+      `${GOOGLE_DRIVE_API}/files/${spreadsheetId}/permissions`,
       {
         type: 'user',
         role,
