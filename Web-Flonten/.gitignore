@@ -2,7 +2,7 @@
 .env
 .env.local
 .env.*.local
-
+.env
 # Google OAuth credentials
 client_secret_*.json
 
