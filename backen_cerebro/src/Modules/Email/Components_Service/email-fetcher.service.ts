@@ -245,8 +245,8 @@ export class EmailFetcherService {
             console.log(`📧 [EmailFetcher] 🔍 UID:${email.uid} - html: ${email.html?.length || 0} chars, text: ${email.text?.length || 0} chars`);
             console.log(`   📧 HTML preview: ${email.html?.substring(0, 200) || 'VACÍO'}`);
             
-            // Enviar HTML completo (hasta 2MB) - el frontend decide qué mostrar
-            const MAX_HTML_LENGTH = 2000000; // 2MB - permitir correos muy largos
+            // Enviar HTML completo (hasta 5MB) - el frontend decide qué mostrar
+            const MAX_HTML_LENGTH = 5000000; // 5MB - permitir correos muy largos con muchas imágenes
             if (email.html && email.html.length > MAX_HTML_LENGTH) {
               console.log(
                 `⚠️ [EmailFetcher] HTML muy grande para UID:${email.uid} (${email.html.length} chars), truncando a ${MAX_HTML_LENGTH}`,
@@ -254,8 +254,8 @@ export class EmailFetcherService {
               email.html = email.html.substring(0, MAX_HTML_LENGTH);
             }
             
-            // Limitar text a 50000 caracteres para previews
-            const MAX_TEXT_LENGTH = 50000;
+            // Limitar text a 500KB para previews (antes era 50KB)
+            const MAX_TEXT_LENGTH = 500000;
             if (email.text && email.text.length > MAX_TEXT_LENGTH) {
               email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
             }

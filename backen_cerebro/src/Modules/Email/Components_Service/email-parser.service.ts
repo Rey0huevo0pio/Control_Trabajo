@@ -348,7 +348,7 @@ export class EmailParserService {
           ? mimeBoundary
           : bufferStr.length;
 
-    cutPoint = Math.min(cutPoint, 10000); // Máximo 10KB de texto
+    cutPoint = Math.min(cutPoint, 100000); // Máximo 100KB de texto (antes 10KB)
     return bufferStr.substring(0, cutPoint).trim();
   }
 }

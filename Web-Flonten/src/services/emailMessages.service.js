@@ -283,14 +283,13 @@ class EmailMessagesService {
   // eslint-disable-next-line no-unused-vars
   async getFullMessage(uid, folder = 'INBOX') {
     try {
-      const cached = await this.getFullEmailFromDB(uid, folder);
-      if (cached && cached.html && cached.html.length > 100) {
-        return cached;
+      const token = getAuthToken();
+      if (!token) {
+        const cached = await this.getFullEmailFromDB(uid, folder);
+        return cached || null;
       }
 
-      const token = getAuthToken();
-      if (!token) return cached || null;
-
+      // SIEMPRE descargar del servidor para obtener contenido completo
       const response = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
         { folder, uids: [uid] },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
@@ -303,6 +302,9 @@ class EmailMessagesService {
         await this.saveFullEmail(fullEmail, folder);
         return fullEmail;
       }
+      
+      // Si no hay respuesta del servidor, intentar con caché
+      const cached = await this.getFullEmailFromDB(uid, folder);
       return cached || null;
     } catch (error) {
       console.error('[EmailMessages] Error getFullMessage:', error.message);

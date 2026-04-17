@@ -68,11 +68,8 @@ export function EmailInboxView() {
   };
 
   const openEmail = async (email) => {
-    if (email.html && email.html.length > 100) {
-      setSelectedEmail(email);
-      return;
-    }
-    
+    // SIEMPRE descargar el mensaje completo desde el servidor
+    // No usar el contenido de la lista (puede estar truncado)
     try {
       const fullEmail = await emailMessagesService.getFullMessage(email.uid || email.id, 'INBOX');
       
