@@ -18,11 +18,9 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
 
 export const ChatHomeScreen = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   const mainOptions = [

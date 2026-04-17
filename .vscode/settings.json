@@ -25,7 +25,23 @@
 "README.md":true,
 "REDISENO_IOS_USUARIOS.md":true,
 "ddess.html":true,
-".kilocodemodes": true
+".kilocodemodes": true,
+".qodo":true,
+".zencoder":true,
+".zenflow":true,
+"Web-Flonten/README.md":true,
+"web-flonten/package-lock.json":true,
+"C_Ticket_Apk_STV":true,
+
+/*______________Modulos src_/*____________*/
+"Web-Flonten/src/src_Archivero_STV":true,
+"Web-Flonten/src/src_Chat_STV":false,
+"Web-Flonten/src/src_P_Ticket_IT":true,
+"Web-Flonten/src/src_Instalaciones_STV":true,
+
+/*________________________________________*/
+
+/*______________Backend src_/*____________*/
 
 
 
