@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton } from '../../components/design-system';
+import { GoogleSheetsManager } from '../components/GoogleSheetsManager';
 
 const modules = [
   {
@@ -36,15 +37,32 @@ const modules = [
     route: '/compras/presupuesto',
     description: 'Control de presupuesto',
   },
+  {
+    id: 'excel',
+    name: 'Excel / Sheets',
+    icon: '📊',
+    color: '#1D6F42',
+    route: '/compras/excel',
+    description: 'Gestionar archivos de Excel y Google Sheets',
+  },
 ];
 
 export const ComprasHomeScreen = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const [showSheetsManager, setShowSheetsManager] = React.useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleModuleClick = (module) => {
+    if (module.id === 'excel') {
+      setShowSheetsManager(true);
+    } else {
+      navigate(module.route);
+    }
   };
 
   return (
@@ -85,7 +103,7 @@ export const ComprasHomeScreen = () => {
             {[
               { label: 'Solicitudes Pendientes', value: '0', icon: '📝' },
               { label: 'Órdenes Activas', value: '0', icon: '📋' },
-              { label: 'Proveedores', value: '0', icon: '🏪' },
+              { label: 'Archivos Excel', value: '0', icon: '📊' },
             ].map((stat, index) => (
               <Card key={index} variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
                 <Stack gap="8px" align="center">
@@ -113,7 +131,7 @@ export const ComprasHomeScreen = () => {
               <Card
                 key={module.id}
                 variant="outlined"
-                onClick={() => navigate(module.route)}
+                onClick={() => handleModuleClick(module)}
                 style={{
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
@@ -156,6 +174,10 @@ export const ComprasHomeScreen = () => {
           </div>
         </Stack>
       </div>
+
+      {showSheetsManager && (
+        <GoogleSheetsManager onClose={() => setShowSheetsManager(false)} />
+      )}
     </ScreenLayout>
   );
 };
