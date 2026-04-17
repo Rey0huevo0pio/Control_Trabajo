@@ -74,10 +74,10 @@ export const instalacionApi = {
   /**
    * Crear un área en una instalación
    */
-  createArea: async (instalacionId, data) => {
-    const response = await api.post(`/instalaciones/${instalacionId}/areas`, data);
-    return response.data;
-  },
+   createArea: async (data) => {
+     const response = await api.post('/instalaciones/areas', data);
+     return response.data;
+   },
 
   /**
    * Obtener un área por ID
