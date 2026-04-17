@@ -4,7 +4,7 @@
  */
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.68.117:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://guru-lit-handed-pork.trycloudflare.com/api';
 
 const api = axios.create({
   baseURL: API_URL,

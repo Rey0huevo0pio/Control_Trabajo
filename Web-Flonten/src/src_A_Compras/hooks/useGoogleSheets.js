@@ -46,7 +46,7 @@ export const useGoogleSheets = () => {
         }
       }
     } catch (err) {
-      console.log('GAPI no disponible, usando método alternativo');
+      // GAPI no disponible, usando método alternativo
     }
   }, []);
 
@@ -59,7 +59,7 @@ export const useGoogleSheets = () => {
     setLoading(true);
     try {
       const popup = window.open(
-        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&response_type=token&scope=${encodeURIComponent(SCOPES)}`,
+        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=token&scope=${encodeURIComponent(SCOPES)}`,
         'Google Sign In',
         'width=500,height=600'
       );
@@ -68,14 +68,13 @@ export const useGoogleSheets = () => {
         try {
           if (popup.closed) {
             clearInterval(checkAuth);
-            const hash = window.location.hash;
+            const hash = popup.location.hash;
             if (hash.includes('access_token')) {
               const params = new URLSearchParams(hash.substring(1));
               const token = params.get('access_token');
               if (token) {
                 setAccessToken(token);
                 setIsSignedIn(true);
-                window.location.hash = '';
               }
             }
             setLoading(false);

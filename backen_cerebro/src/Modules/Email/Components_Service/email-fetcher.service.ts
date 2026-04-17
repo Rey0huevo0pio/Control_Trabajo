@@ -164,7 +164,7 @@ export class EmailFetcherService {
                   uid = msgAttrs.uid;
                   attrs = msgAttrs;
                   attrsReceived = true;
-                  
+
                   // Si ya tenemos body, procesar
                   if (bodyReceived && chunks.length > 0) {
                     processEmail();
@@ -176,10 +176,10 @@ export class EmailFetcherService {
                   stream.on('data', (chunk: Buffer) => {
                     chunks.push(chunk);
                   });
-                  
+
                   stream.once('end', () => {
                     bodyReceived = true;
-                    
+
                     // Si ya tenemos attributes, procesar
                     if (attrsReceived && chunks.length > 0) {
                       processEmail();
@@ -191,12 +191,13 @@ export class EmailFetcherService {
                 const processEmail = async () => {
                   try {
                     const fullBuffer = Buffer.concat(chunks);
-                    const parsedEmail = await this.parserService.parseEmailFromBuffer(
-                      fullBuffer,
-                      uid,
-                      folder,
-                      attrs,
-                    );
+                    const parsedEmail =
+                      await this.parserService.parseEmailFromBuffer(
+                        fullBuffer,
+                        uid,
+                        folder,
+                        attrs,
+                      );
                     resolveMsg(parsedEmail);
                   } catch (err) {
                     console.log('❌ [EmailFetcher] Process error:', err);
@@ -208,7 +209,9 @@ export class EmailFetcherService {
                 setTimeout(() => {
                   if (chunks.length > 0 && !attrsReceived) {
                     // Si tenemos chunks pero no attributes, intentar parsear sin UID
-                    console.log(`⚠️ [EmailFetcher] Timeout for message, parsing without UID`);
+                    console.log(
+                      `⚠️ [EmailFetcher] Timeout for message, parsing without UID`,
+                    );
                     bodyReceived = true;
                     if (chunks.length > 0) {
                       processEmail();
@@ -219,7 +222,7 @@ export class EmailFetcherService {
                     resolveMsg(null);
                   }
                 }, 5000);
-              })
+              }),
             );
           });
 
@@ -233,41 +236,45 @@ export class EmailFetcherService {
             console.log(
               `📧 [EmailFetcher] Waiting for ${messagePromises.length} messages to be processed...`,
             );
-            
+
             // Esperar a que todos los mensajes se procesen
             const results = await Promise.all(messagePromises);
-            
+
             // Filtrar resultados válidos y LIMITAR tamaño de HTML
             const validEmails = results
               .filter((email): email is EmailMessage => email !== null)
               .map((email) => {
-            // DEBUG: Log detallado del contenido
-            console.log(`📧 [EmailFetcher] 🔍 UID:${email.uid} - html: ${email.html?.length || 0} chars, text: ${email.text?.length || 0} chars`);
-            console.log(`   📧 HTML preview: ${email.html?.substring(0, 200) || 'VACÍO'}`);
-            
-            // Enviar HTML completo (hasta 5MB) - el frontend decide qué mostrar
-            const MAX_HTML_LENGTH = 5000000; // 5MB - permitir correos muy largos con muchas imágenes
-            if (email.html && email.html.length > MAX_HTML_LENGTH) {
-              console.log(
-                `⚠️ [EmailFetcher] HTML muy grande para UID:${email.uid} (${email.html.length} chars), truncando a ${MAX_HTML_LENGTH}`,
-              );
-              email.html = email.html.substring(0, MAX_HTML_LENGTH);
-            }
-            
-            // Limitar text a 500KB para previews (antes era 50KB)
-            const MAX_TEXT_LENGTH = 500000;
-            if (email.text && email.text.length > MAX_TEXT_LENGTH) {
-              email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
-            }
-            
-            // Agregar información de threading (para conversaciones)
-            // Usar el Message-ID como thread ID base
-            const threadInfo = this.extractThreadInfo(email);
-            email.threadId = threadInfo.threadId;
-            email.inReplyTo = threadInfo.inReplyTo;
-            email.references = threadInfo.references;
-            email.isReply = !!threadInfo.inReplyTo;
-                
+                // DEBUG: Log detallado del contenido
+                console.log(
+                  `📧 [EmailFetcher] 🔍 UID:${email.uid} - html: ${email.html?.length || 0} chars, text: ${email.text?.length || 0} chars`,
+                );
+                console.log(
+                  `   📧 HTML preview: ${email.html?.substring(0, 200) || 'VACÍO'}`,
+                );
+
+                // Enviar HTML completo (hasta 5MB) - el frontend decide qué mostrar
+                const MAX_HTML_LENGTH = 5000000; // 5MB - permitir correos muy largos con muchas imágenes
+                if (email.html && email.html.length > MAX_HTML_LENGTH) {
+                  console.log(
+                    `⚠️ [EmailFetcher] HTML muy grande para UID:${email.uid} (${email.html.length} chars), truncando a ${MAX_HTML_LENGTH}`,
+                  );
+                  email.html = email.html.substring(0, MAX_HTML_LENGTH);
+                }
+
+                // Limitar text a 500KB para previews (antes era 50KB)
+                const MAX_TEXT_LENGTH = 500000;
+                if (email.text && email.text.length > MAX_TEXT_LENGTH) {
+                  email.text = email.text.substring(0, MAX_TEXT_LENGTH) + '...';
+                }
+
+                // Agregar información de threading (para conversaciones)
+                // Usar el Message-ID como thread ID base
+                const threadInfo = this.extractThreadInfo(email);
+                email.threadId = threadInfo.threadId;
+                email.inReplyTo = threadInfo.inReplyTo;
+                email.references = threadInfo.references;
+                email.isReply = !!threadInfo.inReplyTo;
+
                 // NO enviar contenido de adjuntos en la lista (solo metadata)
                 // Pero SÍ enviar thumbnails completos para vista individual (truncateAttachments=false)
                 if (email.attachments && email.attachments.length > 0) {
@@ -278,18 +285,24 @@ export class EmailFetcherService {
                     isImage: att.isImage || false,
                     isPDF: att.isPDF || false,
                     thumbnail: truncateAttachments
-                      ? (att.thumbnail ? att.thumbnail.substring(0, 200) : undefined)  // Truncar para lista
-                      : (att.thumbnail || undefined),  // Completo para vista individual
-                    content: truncateAttachments ? undefined : (att.content || undefined),  // Solo en vista individual
+                      ? att.thumbnail
+                        ? att.thumbnail.substring(0, 200)
+                        : undefined // Truncar para lista
+                      : att.thumbnail || undefined, // Completo para vista individual
+                    content: truncateAttachments
+                      ? undefined
+                      : att.content || undefined, // Solo en vista individual
                   }));
                 }
-                
+
                 return email;
               });
-            
+
             // ✅ ORDENAR POR FECHA DESCENDENTE (más reciente primero)
-            validEmails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            
+            validEmails.sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+            );
+
             console.log(
               `📧 [EmailFetcher] Completed. ${validEmails.length} emails parsed out of ${messagePromises.length}`,
             );
@@ -372,7 +385,7 @@ export class EmailFetcherService {
               }
 
               const fetch = imapConnection.fetch(results, {
-                bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],  // Incluir TEXT para preview
+                bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'], // Incluir TEXT para preview
                 struct: false,
                 envelope: true,
               });
@@ -426,10 +439,12 @@ export class EmailFetcherService {
                       // Extraer solo preview de texto (primeros 200 chars)
                       const textEnd = buffer.indexOf('Content-Type: text/html');
                       const cutPoint = textEnd > 0 ? textEnd : buffer.length;
-                      const previewLength = Math.min(cutPoint, 300);  // Limitar a 300 chars
+                      const previewLength = Math.min(cutPoint, 300); // Limitar a 300 chars
                       textBuffer = buffer.substring(0, previewLength).trim();
                       // Eliminar caracteres de control
-                      textBuffer = textBuffer.replace(/[\x00-\x1F\x7F-\x9F]/g, '').trim();
+                      textBuffer = textBuffer
+                        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+                        .trim();
                     }
                   });
                 });
@@ -437,12 +452,12 @@ export class EmailFetcherService {
                 msg.once('end', () => {
                   emails.push({
                     id: `email_${uid}_${Date.now()}`,
-                    uid: uid,  // ✅ UID CORRECTO del servidor IMAP
+                    uid: uid, // ✅ UID CORRECTO del servidor IMAP
                     from: headers.from || 'Desconocido',
                     to: headers.to || '',
                     subject: headers.subject || 'Sin asunto',
                     date: headers.date ? new Date(headers.date) : new Date(),
-                    text: textBuffer || '',  // Preview del texto (vacío si no hay)
+                    text: textBuffer || '', // Preview del texto (vacío si no hay)
                     html: '',
                     attachments: [],
                     seen: true,
@@ -461,7 +476,10 @@ export class EmailFetcherService {
                 imapConnection.end();
 
                 // ✅ ORDENAR POR FECHA DESCENDENTE (más reciente primero)
-                emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                emails.sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime(),
+                );
 
                 console.log(
                   `📧 [EmailFetcher] Legacy completed. ${emails.length} emails parsed, sorted by date (newest first)`,
@@ -516,11 +534,15 @@ export class EmailFetcherService {
   // ==========================================
   // EXTRAER INFO DE THREADING (Conversaciones)
   // ==========================================
-  private extractThreadInfo(parsedEmail: any): { threadId: string; inReplyTo: string; references: string } {
+  private extractThreadInfo(parsedEmail: any): {
+    threadId: string;
+    inReplyTo: string;
+    references: string;
+  } {
     const messageId = parsedEmail.messageId || '';
     const inReplyTo = parsedEmail.inReplyTo || '';
     const references = parsedEmail.references || '';
-    
+
     // El threadId se forma del Message-ID original o del In-Reply-To
     let threadId = messageId;
     if (inReplyTo) {
@@ -533,10 +555,10 @@ export class EmailFetcherService {
         threadId = refList[0].replace(/<|>/g, '');
       }
     }
-    
+
     // Limpiar el threadId
     threadId = threadId.replace(/<|>/g, '');
-    
+
     return {
       threadId,
       inReplyTo: inReplyTo.replace(/<|>/g, ''),

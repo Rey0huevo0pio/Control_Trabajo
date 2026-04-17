@@ -157,15 +157,15 @@ export class EmailService {
         getEmailsDto.folder || 'INBOX',
         usuarioId,
       );
-      
+
       const allUIDs = uidsResult || [];
       const limit = getEmailsDto.limit || 100;
       const page = getEmailsDto.page || 1;
-      
+
       // Obtener los UIDs para esta página
       const startIdx = (page - 1) * limit;
       const pageUIDs = allUIDs.slice(startIdx, startIdx + limit);
-      
+
       // Obtener los correos con HTML completo
       const result = await this.fetcherService.getMessagesByUIDs(
         {

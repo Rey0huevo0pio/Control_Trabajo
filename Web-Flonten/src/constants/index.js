@@ -24,7 +24,7 @@
 // ============================================================================
 // API CONFIGURATION
 // ============================================================================
-export const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.68.117:3000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://guru-lit-handed-pork.trycloudflare.com/api';
 export const API_TIMEOUT = 30000; // 30 segundos - necesario para IMAP
 
 // ============================================================================

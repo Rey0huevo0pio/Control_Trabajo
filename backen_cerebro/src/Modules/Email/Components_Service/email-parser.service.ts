@@ -76,13 +76,18 @@ export class EmailParserService {
     // Si no hay HTML pero hay textAsHtml (algunos servidores usan esto)
     if (!html && parsed.textAsHtml) {
       html =
-        typeof parsed.textAsHtml === 'string' ? parsed.textAsHtml.toString() : parsed.textAsHtml.toString();
+        typeof parsed.textAsHtml === 'string'
+          ? parsed.textAsHtml.toString()
+          : parsed.textAsHtml.toString();
     }
 
     // Si tenemos html, también podemos obtener text desde el html si no hay text
     if (html && !text) {
       // Crear text básico desde HTML
-      text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      text = html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
 
     // NUEVO: Si NO hay HTML pero SÍ hay text, convertir texto a HTML básico
@@ -203,7 +208,7 @@ export class EmailParserService {
       return email;
     } catch (error) {
       console.error('❌ [EmailParser] Error parsing email from stream:', error);
-      
+
       // Retornar email vacía en caso de error
       return {
         uid,
@@ -248,7 +253,9 @@ export class EmailParserService {
       const parsed = await simpleParser(buffer, parserOptions);
 
       // DEBUG: Verificar qué tiene parsed
-      console.log(`📧 [EmailParser] 🔍 UID:${uid} - raw html: ${parsed.html?.length || 0}, raw text: ${parsed.text?.length || 0}, textAsHtml: ${parsed.textAsHtml?.length || 0}`);
+      console.log(
+        `📧 [EmailParser] 🔍 UID:${uid} - raw html: ${parsed.html?.length || 0}, raw text: ${parsed.text?.length || 0}, textAsHtml: ${parsed.textAsHtml?.length || 0}`,
+      );
 
       // Construir el objeto de email
       const email = this.buildEmailObject(parsed, uid, folder, attrs);
@@ -260,7 +267,7 @@ export class EmailParserService {
       return email;
     } catch (error) {
       console.error('❌ [EmailParser] Error parsing email from buffer:', error);
-      
+
       // Retornar email vacía en caso de error
       return {
         uid,

@@ -78,13 +78,13 @@ async function bootstrap() {
   // ==========================================================================
   // CORS - Comunicación con Frontend
   // ==========================================================================
-  // ⚠️ IMPORTANTE: Configuración abierta para DESARROLLO
-  // El frontend (C_Ticket_Apk_STV) necesita CORS para hacer requests
-  //
-  // PARA PRODUCCIÓN: Restringir origin a URLs específicas del frontend
-  // Ejemplo: origin: ['https://tudominio.com', 'https://app.tudominio.com']
+  // Configuración para permitir el dominio de Cloudflared del frontend
   app.enableCors({
-    origin: true, // Permitir todas las origins (para desarrollo)
+    origin: [
+      'https://men-smooth-fired-decades.trycloudflare.com',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
