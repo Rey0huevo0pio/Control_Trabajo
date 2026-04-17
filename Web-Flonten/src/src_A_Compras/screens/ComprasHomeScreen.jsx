@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton } from '../../components/design-system';
+import { GoogleSheetsProvider } from '../hooks/useGoogleSheets.jsx';
 import { GoogleSheetsManager } from '../components/GoogleSheetsManager';
 
 const modules = [
@@ -66,119 +67,121 @@ export const ComprasHomeScreen = () => {
   };
 
   return (
-    <ScreenLayout padding="0">
-      <div
-        style={{
-          backgroundColor: '#007AFF',
-          padding: '24px 32px',
-          color: 'white',
-        }}
-      >
-        <HStack justify="space-between">
-          <Stack gap="8px">
-            <Text variant="h3" color="white">
-              Módulo de Compras
-            </Text>
-            <Text variant="bodySmall" color="rgba(255,255,255,0.8)">
-              Bienvenido, {user?.nombre} | {user?.departamento || 'Sin departamento'}
-            </Text>
-          </Stack>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <IconButton
-              icon={<span style={{ fontSize: 24 }}>🏠</span>}
-              onClick={() => navigate('/')}
-            />
-            <IconButton
-              icon={<span style={{ fontSize: 24 }}>🚪</span>}
-              onClick={handleLogout}
-            />
-          </div>
-        </HStack>
-      </div>
-
-      <div style={{ padding: '32px' }}>
-        <Stack gap="24px" style={{ marginBottom: 40 }}>
-          <Text variant="h4">Resumen</Text>
-          <HStack gap="16px">
-            {[
-              { label: 'Solicitudes Pendientes', value: '0', icon: '📝' },
-              { label: 'Órdenes Activas', value: '0', icon: '📋' },
-              { label: 'Archivos Excel', value: '0', icon: '📊' },
-            ].map((stat, index) => (
-              <Card key={index} variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
-                <Stack gap="8px" align="center">
-                  <span style={{ fontSize: 32 }}>{stat.icon}</span>
-                  <Text variant="h2">{stat.value}</Text>
-                  <Text variant="caption" color="#8E8E93">
-                    {stat.label}
-                  </Text>
-                </Stack>
-              </Card>
-            ))}
+    <GoogleSheetsProvider>
+      <ScreenLayout padding="0">
+        <div
+          style={{
+            backgroundColor: '#007AFF',
+            padding: '24px 32px',
+            color: 'white',
+          }}
+        >
+          <HStack justify="space-between">
+            <Stack gap="8px">
+              <Text variant="h3" color="white">
+                Módulo de Compras
+              </Text>
+              <Text variant="bodySmall" color="rgba(255,255,255,0.8)">
+                Bienvenido, {user?.nombre} | {user?.departamento || 'Sin departamento'}
+              </Text>
+            </Stack>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <IconButton
+                icon={<span style={{ fontSize: 24 }}>🏠</span>}
+                onClick={() => navigate('/')}
+              />
+              <IconButton
+                icon={<span style={{ fontSize: 24 }}>🚪</span>}
+                onClick={handleLogout}
+              />
+            </div>
           </HStack>
-        </Stack>
+        </div>
 
-        <Stack gap="24px">
-          <Text variant="h4">Secciones</Text>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 20,
-            }}
-          >
-            {modules.map((module) => (
-              <Card
-                key={module.id}
-                variant="outlined"
-                onClick={() => handleModuleClick(module)}
-                style={{
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <Stack gap="12px">
-                  <HStack gap="12px">
-                    <div
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 16,
-                        backgroundColor: module.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 28,
-                      }}
-                    >
-                      {module.icon}
-                    </div>
-                    <Stack gap="4px" style={{ flex: 1 }}>
-                      <Text variant="h5">{module.name}</Text>
-                      <Text variant="bodySmall" color="#8E8E93">
-                        {module.description}
-                      </Text>
-                    </Stack>
-                  </HStack>
-                </Stack>
-              </Card>
-            ))}
-          </div>
-        </Stack>
-      </div>
+        <div style={{ padding: '32px' }}>
+          <Stack gap="24px" style={{ marginBottom: 40 }}>
+            <Text variant="h4">Resumen</Text>
+            <HStack gap="16px">
+              {[
+                { label: 'Solicitudes Pendientes', value: '0', icon: '📝' },
+                { label: 'Órdenes Activas', value: '0', icon: '📋' },
+                { label: 'Archivos Excel', value: '0', icon: '📊' },
+              ].map((stat, index) => (
+                <Card key={index} variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
+                  <Stack gap="8px" align="center">
+                    <span style={{ fontSize: 32 }}>{stat.icon}</span>
+                    <Text variant="h2">{stat.value}</Text>
+                    <Text variant="caption" color="#8E8E93">
+                      {stat.label}
+                    </Text>
+                  </Stack>
+                </Card>
+              ))}
+            </HStack>
+          </Stack>
 
-      {showSheetsManager && (
-        <GoogleSheetsManager onClose={() => setShowSheetsManager(false)} />
-      )}
-    </ScreenLayout>
+          <Stack gap="24px">
+            <Text variant="h4">Secciones</Text>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: 20,
+              }}
+            >
+              {modules.map((module) => (
+                <Card
+                  key={module.id}
+                  variant="outlined"
+                  onClick={() => handleModuleClick(module)}
+                  style={{
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <Stack gap="12px">
+                    <HStack gap="12px">
+                      <div
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 16,
+                          backgroundColor: module.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 28,
+                        }}
+                      >
+                        {module.icon}
+                      </div>
+                      <Stack gap="4px" style={{ flex: 1 }}>
+                        <Text variant="h5">{module.name}</Text>
+                        <Text variant="bodySmall" color="#8E8E93">
+                          {module.description}
+                        </Text>
+                      </Stack>
+                    </HStack>
+                  </Stack>
+                </Card>
+              ))}
+            </div>
+          </Stack>
+        </div>
+
+        {showSheetsManager && (
+          <GoogleSheetsManager onClose={() => setShowSheetsManager(false)} />
+        )}
+      </ScreenLayout>
+    </GoogleSheetsProvider>
   );
 };
 

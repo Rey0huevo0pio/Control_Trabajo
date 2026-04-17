@@ -16,10 +16,21 @@ export const GoogleSheetsProvider = ({ children }) => {
   const loadSpreadsheets = useCallback(async (token) => {
     if (!token) return;
     setLoading(true);
+    console.log('Iniciando carga de spreadsheets...');
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout de red')), 15000)
+    );
+    
     try {
-      const files = await googleSheetsApi.listSpreadsheets(token);
-      setSpreadsheets(files);
+      const files = await Promise.race([
+        googleSheetsApi.listSpreadsheets(token),
+        timeoutPromise
+      ]);
+      console.log('Archivos obtenidos:', files);
+      setSpreadsheets(files || []);
     } catch (err) {
+      console.error('Error cargando spreadsheets:', err.message || err);
       if (err.response?.status === 401) {
         setIsSignedIn(false);
         setAccessToken(null);
@@ -50,10 +61,12 @@ export const GoogleSheetsProvider = ({ children }) => {
 
   const signIn = useCallback(() => {
     if (!window.google?.accounts?.oauth2) {
+      console.error('Google OAuth no disponible');
       setError('Google OAuth no disponible. Recarga la página.');
       return;
     }
 
+    console.log('Iniciando OAuth...');
     setLoading(true);
     setError(null);
 
@@ -61,12 +74,15 @@ export const GoogleSheetsProvider = ({ children }) => {
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
       callback: (response) => {
+        console.log('OAuth response:', response);
         if (response.access_token) {
+          console.log('Token recibido, iniciando carga...');
           setAccessToken(response.access_token);
           setIsSignedIn(true);
           setLoading(false);
           loadSpreadsheets(response.access_token);
         } else if (response.error) {
+          console.error('OAuth error:', response.error);
           setError(response.error);
           setLoading(false);
         }

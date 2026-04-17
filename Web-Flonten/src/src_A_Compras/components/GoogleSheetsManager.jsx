@@ -24,11 +24,16 @@ export const GoogleSheetsManager = ({ onClose }) => {
   const [shareEmail, setShareEmail] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   useEffect(() => {
-    if (isSignedIn && accessToken) {
+    console.log('Estado - isSignedIn:', isSignedIn, 'accessToken:', !!accessToken, 'loading:', loading, 'spreadsheets:', spreadsheets.length);
+    if (isSignedIn && accessToken && !loading && !initialLoadDone) {
+      console.log('Llamando loadSpreadsheets...');
+      setInitialLoadDone(true);
       loadSpreadsheets();
     }
-  }, [isSignedIn, accessToken, loadSpreadsheets]);
+  }, [isSignedIn, accessToken, loading, initialLoadDone, loadSpreadsheets]);
 
   const handleCreate = async () => {
     if (!newSheetTitle.trim()) return;
