@@ -1,0 +1,35 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/*.log": true,
+    "mi_carpeta_privada": true,
+    "Nuetro_render_html_mail_1.md":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Nuetro_render_html_mail_1.html":true,   
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Nuetro_render_html_mail_1":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Nuetro_render_html_mail_2":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Nuetro_render_html_mail_2.html":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Render_contenido_completo":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Render_contenido_completo.html":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Render_contenido_completo_2":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Render_contenido_completo2.html":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Render_contenido_completo_2.html":true,
+"Web-Flonten/src/src_Chat_STV/screens/Componets_Correos/views/COMPONENTES_CORREOS_MULTIMEDIA/Nuetro_render_html_mail_1.md":true,
+"DIAGNOSTICO_AUTH.md":true,
+"DIAGNOSTICO_AUTH.html":true,
+"DIAGNOSTICO_CURL.md":true,
+"DIAGNOSTICO_UID0.md":true,
+"Ejemplo_Correo.md":true,
+"INTEGRACION_COMPLETA.md":true,
+"README.md":true,
+"REDISENO_IOS_USUARIOS.md":true,
+"ddess.html":true,
+".kilocodemodes": true
+
+
+
+
+
+}
+}

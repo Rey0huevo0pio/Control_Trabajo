@@ -79,10 +79,39 @@ export class EmailParserService {
         typeof parsed.textAsHtml === 'string' ? parsed.textAsHtml.toString() : parsed.textAsHtml.toString();
     }
 
-    // Si tenemos html, también podemos obtenir text desde el html si no hay text
+    // Si tenemos html, también podemos obtener text desde el html si no hay text
     if (html && !text) {
       // Crear text básico desde HTML
       text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    // NUEVO: Si NO hay HTML pero SÍ hay text, convertir texto a HTML básico
+    if (!html && text) {
+      html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      padding: 16px;
+      margin: 0;
+      background-color: #ffffff;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+<pre>${text}</pre>
+</body>
+</html>`;
     }
 
     return { html, text };
