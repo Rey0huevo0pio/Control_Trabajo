@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Card, Button, Stack, HStack, IconButton, Input } from '../../components/design-system';
-import { useGoogleSheets } from '../hooks/useGoogleSheets';
+import { useGoogleSheets } from '../hooks/useGoogleSheets.jsx';
 
 export const GoogleSheetsManager = ({ onClose }) => {
   const {

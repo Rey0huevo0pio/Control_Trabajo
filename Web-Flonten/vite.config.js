@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'men-smooth-fired-decades.trycloudflare.com'
+      'exclusive-predictions-purse-allen.trycloudflare.com'
     ]
   },
   resolve: {

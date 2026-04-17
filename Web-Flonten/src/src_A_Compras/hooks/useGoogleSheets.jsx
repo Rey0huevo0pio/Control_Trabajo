@@ -1,0 +1,152 @@
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { googleSheetsApi } from '../lib/googleSheets.api';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+
+const GoogleSheetsContext = createContext(null);
+
+export const GoogleSheetsProvider = ({ children }) => {
+  const [accessToken, setAccessToken] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [spreadsheets, setSpreadsheets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const loadSpreadsheets = useCallback(async (token) => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const files = await googleSheetsApi.listSpreadsheets(token);
+      setSpreadsheets(files);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setIsSignedIn(false);
+        setAccessToken(null);
+        setError('Sesión expirada. Inicia sesión nuevamente.');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const initGis = useCallback(() => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google Client ID no configurado');
+      return;
+    }
+    if (window.google?.accounts?.oauth2) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => console.log('GIS loaded');
+    script.onerror = () => setError('No se pudo cargar Google Identity Services');
+    document.head.appendChild(script);
+  }, []);
+
+  const signIn = useCallback(() => {
+    if (!window.google?.accounts?.oauth2) {
+      setError('Google OAuth no disponible. Recarga la página.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
+      callback: (response) => {
+        if (response.access_token) {
+          setAccessToken(response.access_token);
+          setIsSignedIn(true);
+          setLoading(false);
+          loadSpreadsheets(response.access_token);
+        } else if (response.error) {
+          setError(response.error);
+          setLoading(false);
+        }
+      },
+    });
+
+    client.requestAccessToken({ prompt: 'consent' });
+  }, [loadSpreadsheets]);
+
+  const signOut = useCallback(() => {
+    if (accessToken && window.google?.accounts?.oauth2) {
+      window.google.accounts.oauth2.revoke(accessToken, () => {});
+    }
+    setAccessToken(null);
+    setIsSignedIn(false);
+    setSpreadsheets([]);
+  }, [accessToken]);
+
+  const createSpreadsheet = useCallback(async (title) => {
+    if (!accessToken) throw new Error('No autenticado');
+    setLoading(true);
+    try {
+      const spreadsheet = await googleSheetsApi.createSpreadsheet(accessToken, title);
+      await loadSpreadsheets(accessToken);
+      return spreadsheet;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, loadSpreadsheets]);
+
+  const deleteSpreadsheet = useCallback(async (spreadsheetId) => {
+    if (!accessToken) throw new Error('No autenticado');
+    setLoading(true);
+    try {
+      await googleSheetsApi.deleteSpreadsheet(accessToken, spreadsheetId);
+      await loadSpreadsheets(accessToken);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, loadSpreadsheets]);
+
+  const shareSpreadsheet = useCallback(async (spreadsheetId, email) => {
+    if (!accessToken) throw new Error('No autenticado');
+    try {
+      return await googleSheetsApi.shareSpreadsheet(accessToken, spreadsheetId, email);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, [accessToken]);
+
+  useEffect(() => { initGis(); }, [initGis]);
+
+  return (
+    <GoogleSheetsContext.Provider value={{
+      accessToken,
+      isSignedIn,
+      spreadsheets,
+      loading,
+      error,
+      signIn,
+      signOut,
+      loadSpreadsheets: () => loadSpreadsheets(accessToken),
+      createSpreadsheet,
+      deleteSpreadsheet,
+      shareSpreadsheet,
+    }}>
+      {children}
+    </GoogleSheetsContext.Provider>
+  );
+};
+
+export const useGoogleSheets = () => {
+  const context = useContext(GoogleSheetsContext);
+  if (!context) throw new Error('useGoogleSheets debe usarse dentro de GoogleSheetsProvider');
+  return context;
+};
