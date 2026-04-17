@@ -49,7 +49,7 @@ export const DetalleInstalacionScreen = () => {
 
   const handleCrearArea = () => {
     if (instalacion) {
-      navigate(`/instalaciones/${instalacionId}/registro-area`);
+      navigate(`/instalaciones/${instalacionId}/area/nueva`);
     }
   };
 

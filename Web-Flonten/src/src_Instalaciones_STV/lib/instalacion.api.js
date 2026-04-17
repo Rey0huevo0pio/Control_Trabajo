@@ -66,10 +66,10 @@ export const instalacionApi = {
   /**
    * Obtener áreas de una instalación
    */
-  getAreasByInstalacion: async (instalacionId) => {
-    const response = await api.get(`/instalaciones/${instalacionId}/areas`);
-    return response.data;
-  },
+   getAreasByInstalacion: async (instalacionId) => {
+     const response = await api.get(`/instalaciones/instalacion/${instalacionId}/areas`);
+     return response.data;
+   },
 
   /**
    * Crear un área en una instalación

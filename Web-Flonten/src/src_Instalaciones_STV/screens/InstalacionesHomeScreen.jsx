@@ -44,7 +44,7 @@ export const InstalacionesHomeScreen = () => {
   }, []);
 
   const handleCreateInstalacion = () => {
-    navigate('/instalaciones/registro');
+    navigate('/instalaciones/nueva');
   };
 
   const handleVerDetalle = (instalacionId) => {
@@ -52,7 +52,7 @@ export const InstalacionesHomeScreen = () => {
   };
 
   const handleCrearArea = (instalacionId) => {
-    navigate(`/instalaciones/${instalacionId}/registro-area`);
+    navigate(`/instalaciones/${instalacionId}/area/nueva`);
   };
 
   if (loading) {
