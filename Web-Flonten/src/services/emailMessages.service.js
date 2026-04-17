@@ -18,7 +18,7 @@ import api, { getAuthToken } from './api';
 const EMAIL_MESSAGES_ENDPOINT = '/email/messages';
 
 const DB_NAME = 'EmailMessagesDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Aumentada para soportar más datos
 const STORE_EMAILS = 'emails';
 const STORE_METADATA = 'metadata';
 const STORE_ATTACHMENTS = 'attachments';
@@ -317,7 +317,7 @@ class EmailMessagesService {
     }
   }
 
-  async getFullEmailFromDB(uid, folder) {
+  async getFullEmailFromDB(uid) {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
       const transaction = database.transaction([STORE_EMAILS], 'readonly');
