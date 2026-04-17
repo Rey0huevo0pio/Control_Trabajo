@@ -8,6 +8,13 @@ import React, { useRef, useEffect } from 'react';
 export function HtmlEmailRenderer({ html, text }) {
   const containerRef = useRef(null);
 
+  // DEBUG: Ver qué llega exactamente al renderer
+  console.log('[HtmlEmailRenderer] 🔍 Renderizando:', {
+    htmlLength: html?.length,
+    htmlStart: html?.substring(0, 500),
+    textLength: text?.length,
+  });
+
   useEffect(() => {
     if (containerRef.current && html) {
       // Aplicar estilos a los elementos dentro del contenedor
@@ -71,7 +78,8 @@ export function HtmlEmailRenderer({ html, text }) {
       backgroundColor: 'white',
       borderRadius: 12,
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      overflow: 'hidden',
+      overflowX: 'auto',
+      minHeight: '200px',
     }}>
       <div
         ref={containerRef}
@@ -84,10 +92,19 @@ export function HtmlEmailRenderer({ html, text }) {
           color: '#1a1a1a',
           wordBreak: 'break-word',
           overflowWrap: 'break-word',
+          minWidth: '100%',
         }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <style>{`
+        .email-html-content {
+          display: block !important;
+          visibility: visible !important;
+        }
+        .email-html-content * {
+          max-width: 100% !important;
+          word-break: break-word !important;
+        }
         .email-html-content table {
           max-width: 100% !important;
           width: 100% !important;
@@ -107,18 +124,27 @@ export function HtmlEmailRenderer({ html, text }) {
         .email-html-content a {
           color: #007AFF !important;
         }
-        .email-html-content blockquote {
+        .email-html-content blockquote, .email-html-content .gmail_quote, .email-html-content .quote {
+          display: block !important;
           border-left: 3px solid #e0e0e0 !important;
           padding-left: 16px !important;
           margin: 12px 0 !important;
           color: #666 !important;
+          visibility: visible !important;
         }
         .email-html-content p {
           margin: 8px 0 !important;
         }
+        .email-html-content div {
+          display: block !important;
+          visibility: visible !important;
+        }
         .email-html-content ul, .email-html-content ol {
           padding-left: 24px !important;
           margin: 8px 0 !important;
+        }
+        .email-html-content span {
+          display: inline !important;
         }
       `}</style>
     </div>

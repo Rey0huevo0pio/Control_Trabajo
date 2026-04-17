@@ -28,6 +28,7 @@ const getFileIcon = (mimeType) => {
   return '📎';
 };
 
+// eslint-disable-next-line no-unused-vars
 const getFileIconColor = (mimeType) => {
   if (!mimeType) return '#8E8E93';
   const mt = mimeType.toLowerCase();

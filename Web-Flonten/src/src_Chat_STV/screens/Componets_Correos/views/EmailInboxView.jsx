@@ -81,7 +81,7 @@ export function EmailInboxView() {
       } else {
         setSelectedEmail(email);
       }
-    } catch (_err) {
+    } catch {
       setSelectedEmail(email);
     }
   };
