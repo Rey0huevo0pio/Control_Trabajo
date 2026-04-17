@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import { googleSheetsApi } from '../lib/googleSheets.api';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
 
 const GoogleSheetsContext = createContext(null);
 
@@ -140,11 +140,11 @@ export const GoogleSheetsProvider = ({ children }) => {
     }
   }, [accessToken]);
 
-  const downloadSpreadsheet = useCallback(async (spreadsheetId, title) => {
+  const downloadSpreadsheet = useCallback(async (spreadsheetId, title, mimeType) => {
     if (!accessToken) throw new Error('No autenticado');
     setLoading(true);
     try {
-      await googleSheetsApi.downloadSpreadsheet(accessToken, spreadsheetId, title);
+      await googleSheetsApi.downloadSpreadsheet(accessToken, spreadsheetId, title, mimeType);
     } catch (err) {
       setError(err.message);
       throw err;

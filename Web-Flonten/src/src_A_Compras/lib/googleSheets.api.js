@@ -15,16 +15,17 @@ const api = axios.create({
 
 export const googleSheetsApi = {
   /**
-   * Listar hojas de cálculo del usuario
+   * Listar hojas de cálculo del usuario (Google Sheets + Excel)
    */
   listSpreadsheets: async (accessToken) => {
     const response = await api.get(
       `${GOOGLE_DRIVE_API}/files`,
       {
         params: {
-          q: "mimeType='application/vnd.google-apps.spreadsheet'",
-          fields: 'files(id, name, createdTime, modifiedTime)',
+          q: "mimeType contains 'spreadsheet' or mimeType contains '/vnd.ms-excel' or mimeType contains 'officedocument.spreadsheet'",
+          fields: 'files(id, name, mimeType, createdTime, modifiedTime, webViewLink)',
           orderBy: 'modifiedTime desc',
+          pageSize: 100,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -64,30 +65,36 @@ export const googleSheetsApi = {
   },
 
   /**
-   * Descargar directamente desde Google Sheets
+   * Descargar archivo - detecta el tipo mime
    */
-  downloadSpreadsheet: async (accessToken, spreadsheetId, title) => {
-    const response = await api.get(
-      `${GOOGLE_SHEETS_API}/${spreadsheetId}/export`,
-      {
-        params: {
-          format: 'xlsx',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        responseType: 'blob',
-      }
-    );
+  downloadSpreadsheet: async (accessToken, spreadsheetId, title, mimeType) => {
+    let url, format;
     
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    if (mimeType?.includes('google-apps')) {
+      url = `${GOOGLE_SHEETS_API}/${spreadsheetId}/export`;
+      format = 'xlsx';
+    } else {
+      url = `${GOOGLE_DRIVE_API}/files/${spreadsheetId}`;
+    }
+
+    const response = await api.get(url, {
+      params: mimeType?.includes('google-apps') ? { format } : { alt: 'media' },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      responseType: 'blob',
+    });
+    
+    const blob = response.data;
+    const urlBlob = window.URL.createObjectURL(new Blob([blob]));
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${title}.xlsx`);
+    link.href = urlBlob;
+    const extension = mimeType?.includes('google-apps') ? 'xlsx' : 'xls';
+    link.setAttribute('download', `${title}.${extension}`);
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(urlBlob);
     
     return true;
   },

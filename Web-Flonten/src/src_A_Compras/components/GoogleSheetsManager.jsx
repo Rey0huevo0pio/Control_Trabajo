@@ -87,7 +87,7 @@ export const GoogleSheetsManager = ({ onClose }) => {
   const handleDownload = async (sheet) => {
     setDownloadingId(sheet.id);
     try {
-      await downloadSpreadsheet(sheet.id, sheet.name);
+      await downloadSpreadsheet(sheet.id, sheet.name, sheet.mimeType);
     } catch (err) {
       console.error('Error descargando:', err);
       alert('Error al descargar archivo');
