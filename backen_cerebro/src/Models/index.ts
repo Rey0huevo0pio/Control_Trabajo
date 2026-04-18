@@ -37,3 +37,10 @@ export {
   ChatPrivadoSchema,
   type ChatPrivadoDocument,
 } from './T_Chat_STV';
+
+// T_A_Compras
+export {
+  GoogleConnection,
+  GoogleConnectionSchema,
+  type GoogleConnectionDocument,
+} from './T_A_Compras';

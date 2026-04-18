@@ -6,6 +6,7 @@ import axios from 'axios';
 
 const GOOGLE_SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 const GOOGLE_DRIVE_API = 'https://www.googleapis.com/drive/v3';
+const GOOGLE_USERINFO_API = 'https://www.googleapis.com/oauth2/v2/userinfo';
 
 const api = axios.create({
   headers: {
@@ -14,6 +15,18 @@ const api = axios.create({
 });
 
 export const googleSheetsApi = {
+  /**
+   * Obtener información del usuario de Google
+   */
+  getUserInfo: async (accessToken) => {
+    const response = await api.get(GOOGLE_USERINFO_API, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
   /**
    * Listar hojas de cálculo del usuario (Google Sheets + Excel)
    */

@@ -54,6 +54,7 @@ import { TicketITModule } from './Modules/TicketIT/ticket-it.module'; // 🎫 Ti
 import { ChatModule } from './Modules/Chat/chat.module'; // 💬 Chat empresarial
 import { UploadsModule } from './Modules/Uploads/uploads.module'; // 📁 Subida de archivos
 import { EmailModule } from './Modules/Email/email.module'; // 📧 Envío de emails
+import { A_ComprasModule } from './Modules/A_Compras/a_compras.module'; // 🛒 Módulo de Compras
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { EmailModule } from './Modules/Email/email.module'; // 📧 Envío de em
     ChatModule,
     UploadsModule,
     EmailModule,
+    A_ComprasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { googleSheetsApi } from '../lib/googleSheets.api';
+import { compraApi } from '../lib/compra.api';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
@@ -73,13 +74,27 @@ export const GoogleSheetsProvider = ({ children }) => {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
-      callback: (response) => {
+      callback: async (response) => {
         console.log('OAuth response:', response);
         if (response.access_token) {
           console.log('Token recibido, iniciando carga...');
           setAccessToken(response.access_token);
           setIsSignedIn(true);
           setLoading(false);
+          
+          try {
+            const userInfo = await googleSheetsApi.getUserInfo(response.access_token);
+            await compraApi.saveGoogleConnection({
+              email: userInfo.email,
+              accessToken: response.access_token,
+              refreshToken: response.refresh_token || null,
+              tokenExpiry: null,
+            });
+            console.log('Conexión guardada en backend con email:', userInfo.email);
+          } catch (err) {
+            console.error('Error guardando conexión:', err);
+          }
+          
           loadSpreadsheets(response.access_token);
         } else if (response.error) {
           console.error('OAuth error:', response.error);
@@ -92,10 +107,18 @@ export const GoogleSheetsProvider = ({ children }) => {
     client.requestAccessToken({ prompt: 'consent' });
   }, [loadSpreadsheets]);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
     if (accessToken && window.google?.accounts?.oauth2) {
       window.google.accounts.oauth2.revoke(accessToken, () => {});
     }
+    
+    try {
+      await compraApi.disconnectGoogle();
+      console.log('Conexión eliminada del backend');
+    } catch (err) {
+      console.error('Error desconectando del backend:', err);
+    }
+    
     setAccessToken(null);
     setIsSignedIn(false);
     setSpreadsheets([]);
@@ -152,6 +175,22 @@ export const GoogleSheetsProvider = ({ children }) => {
       setLoading(false);
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    const loadSavedConnection = async () => {
+      try {
+        const status = await compraApi.getConnectionStatus();
+        if (status.connected && status.accessToken) {
+          setAccessToken(status.accessToken);
+          setIsSignedIn(true);
+          loadSpreadsheets(status.accessToken);
+        }
+      } catch (err) {
+        console.log('No hay conexión guardada o error:', err.message);
+      }
+    };
+    loadSavedConnection();
+  }, []);
 
   useEffect(() => { initGis(); }, [initGis]);
 
