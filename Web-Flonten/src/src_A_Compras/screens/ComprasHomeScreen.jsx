@@ -48,6 +48,14 @@ const modules = [
     route: '/compras/presupuesto',
     description: 'Analisis de gasto, partidas y presupuesto disponible.',
   },
+  {
+    id: 'inventario',
+    name: 'Inventario',
+    icon: 'IN',
+    color: '#0F766E',
+    route: '/compras/inventario',
+    description: 'Control de stock, entradas, salidas y reposicion.',
+  },
 ];
 
 const DASHBOARD_GRADIENT = 'radial-gradient(circle at top left, rgba(37, 99, 235, 0.22), transparent 35%), radial-gradient(circle at top right, rgba(124, 58, 237, 0.16), transparent 30%), linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%)';

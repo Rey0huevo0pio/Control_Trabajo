@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AREA_CONFIG = {
+export const AREA_CONFIG = {
   solicitudes: { id: 'solicitudes', label: 'Solicitudes', icon: 'SP', color: '#2563EB' },
   ordenes: { id: 'ordenes', label: 'Ordenes', icon: 'OC', color: '#7C3AED' },
   proveedores: { id: 'proveedores', label: 'Proveedores', icon: 'PR', color: '#059669' },
@@ -10,7 +10,7 @@ const AREA_CONFIG = {
   otros: { id: 'otros', label: 'Otros', icon: 'OT', color: '#64748B' },
 };
 
-const KEYWORD_MAP = [
+export const KEYWORD_MAP = [
   { key: 'solicitudes', keywords: ['solicitud', 'requisicion', 'request', 'compra'] },
   { key: 'ordenes', keywords: ['orden', 'oc', 'purchase order'] },
   { key: 'proveedores', keywords: ['proveedor', 'supplier', 'vendor'] },
@@ -19,14 +19,14 @@ const KEYWORD_MAP = [
   { key: 'reportes', keywords: ['reporte', 'dashboard', 'grafica', 'indicador'] },
 ];
 
-const normalizeText = (value) =>
+export const normalizeText = (value) =>
   String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
 
-const parseMoney = (value) => {
+export const parseMoney = (value) => {
   if (typeof value === 'number') return value;
   if (!value) return 0;
 
@@ -39,7 +39,7 @@ const parseMoney = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const detectArea = (sheet) => {
+export const detectArea = (sheet) => {
   const source = normalizeText(`${sheet?.name || ''} ${sheet?.mimeType || ''}`);
 
   for (const entry of KEYWORD_MAP) {
@@ -147,7 +147,7 @@ export const useComprasAnalytics = ({ spreadsheets = [], areasAsignadas = [], pr
     );
 
     const monthlyActivity = spreadsheets.reduce((acc, sheet) => {
-      const month = new Date(sheet.modifiedTime || sheet.createdTime || Date.now()).toLocaleDateString('es-MX', {
+      const month = new Date(sheet.modifiedTime || sheet.createdTime || new Date().toISOString()).toLocaleDateString('es-MX', {
         month: 'short',
         year: '2-digit',
       });
