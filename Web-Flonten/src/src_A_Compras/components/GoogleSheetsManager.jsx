@@ -13,7 +13,6 @@ const AVAILABLE_AREAS = [
 
 export const GoogleSheetsManager = ({ onClose }) => {
   const {
-    accessToken,
     isSignedIn,
     spreadsheets,
     loading,

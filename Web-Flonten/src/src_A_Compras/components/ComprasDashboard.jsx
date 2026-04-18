@@ -142,22 +142,23 @@ export const AreaSummaryGrid = ({ items = [] }) => (
 );
 
 export const DonutChartCard = ({ title, subtitle, data = [] }) => {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  let accumulated = 0;
-
-  const segments = data.map((item, index) => {
+  const segments = data.reduce((acc, item, index) => {
+    const total = data.reduce((sum, i) => sum + i.value, 0);
     const percentage = total ? item.value / total : 0;
+    const prevTotal = acc.reduce((sum, i) => sum + i.percentage, 0);
     const dash = percentage * 282.74;
-    const offset = -accumulated * 282.74;
-    accumulated += percentage;
+    const offset = -prevTotal * 282.74;
 
-    return {
+    return [...acc, {
       ...item,
       color: item.color || CHART_COLORS[index % CHART_COLORS.length],
       dash,
       offset,
-    };
-  });
+      percentage,
+    }];
+  }, []);
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <ChartShell title={title} subtitle={subtitle}>
@@ -425,7 +426,7 @@ export const SpreadsheetPreviewPanel = ({
                       </span>
                     </HStack>
                     <Text variant="caption" color="#64748B">
-                      Modificado: {new Date(sheet.modifiedTime || sheet.createdTime || Date.now()).toLocaleDateString('es-MX')}
+                      Modificado: {new Date(sheet.modifiedTime || sheet.createdTime || new Date().toISOString()).toLocaleDateString('es-MX')}
                     </Text>
                   </Stack>
                 </Card>
