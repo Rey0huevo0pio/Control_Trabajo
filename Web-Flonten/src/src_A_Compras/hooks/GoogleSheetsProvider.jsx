@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback, createContext} from 'react';
+import { useState, useEffect, useCallback, createContext } from 'react';
 import { googleSheetsApi } from '../lib/googleSheets.api';
 import { compraApi } from '../lib/compra.api';
 import { spreadsheetsDB } from '../lib/spreadsheetsDB';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+const SCOPES = 'openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
 const TOKEN_KEY = 'google_sheets_token';
-const CACHE_DURATION = 1000 * 60 * 15; // 15 minutos
+const USER_EMAIL_KEY = 'google_sheets_email';
+const USER_NAME_KEY = 'google_sheets_name';
+const CACHE_DURATION = 1000 * 60 * 15;
 
 const GoogleSheetsContext = createContext(null);
 
@@ -20,6 +22,51 @@ export const GoogleSheetsProvider = ({ children }) => {
   const [areasAsignadas, setAreasAsignadas] = useState(['solicitudes', 'ordenes', 'presupuesto']);
   const [nombre, setNombre] = useState(null);
 
+  const syncConnectionToBackend = useCallback(async (token, fallbackAreas = areasAsignadas) => {
+    if (!token) return false;
+
+    try {
+      let email = localStorage.getItem(USER_EMAIL_KEY);
+      let userName = localStorage.getItem(USER_NAME_KEY);
+
+      if (!email) {
+        const userInfo = await googleSheetsApi.getUserInfo(token);
+        email = userInfo.email;
+        userName = userInfo.name || userInfo.email.split('@')[0];
+      }
+
+      if (!email) {
+        console.log('No se pudo sincronizar con backend: falta email de Google.');
+        return false;
+      }
+
+      setUserEmail(email);
+      setNombre(userName);
+      localStorage.setItem(USER_EMAIL_KEY, email);
+      localStorage.setItem(USER_NAME_KEY, userName || email.split('@')[0]);
+
+      await compraApi.saveGoogleConnection({
+        email,
+        accessToken: token,
+        refreshToken: null,
+        tokenExpiry: null,
+        nombre: userName,
+        scope: SCOPES,
+        areasAsignadas: fallbackAreas,
+      });
+
+      console.log('Conexion sincronizada con backend para:', email);
+      return true;
+    } catch (err) {
+      if (err.response?.status === 401) {
+        console.log('El token actual no permite leer userinfo. Se mantiene la sesion local hasta volver a iniciar sesion con Google.');
+        return false;
+      }
+      console.error('Error sincronizando conexion con backend:', err);
+      return false;
+    }
+  }, [areasAsignadas]);
+
   const loadSpreadsheets = useCallback(async (token, forceRefresh = false) => {
     if (!token) return;
     setLoading(true);
@@ -29,51 +76,51 @@ export const GoogleSheetsProvider = ({ children }) => {
       try {
         const cached = await spreadsheetsDB.getSpreadsheets();
         const cacheTime = await spreadsheetsDB.getCacheTimestamp();
-        
+
         if (cached.length > 0 && cacheTime) {
           const cacheAge = Date.now() - new Date(cacheTime).getTime();
           if (cacheAge < CACHE_DURATION) {
-            console.log('Cargando desde caché IndexedDB:', cached.length, 'archivos');
+            console.log('Cargando desde cache IndexedDB:', cached.length, 'archivos');
             setSpreadsheets(cached);
             setLoading(false);
             return;
           }
         }
       } catch (err) {
-        console.log('Error leyendo caché, solicitando a API:', err.message);
+        console.log('Error leyendo cache, solicitando a API:', err.message);
       }
     }
-    
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout de red')), 15000)
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout de red')), 15000),
     );
-    
+
     try {
       const files = await Promise.race([
         googleSheetsApi.listSpreadsheets(token),
-        timeoutPromise
+        timeoutPromise,
       ]);
       console.log('Archivos obtenidos de API:', files);
       setSpreadsheets(files || []);
-      
+
       if (files && files.length > 0) {
         await spreadsheetsDB.saveSpreadsheets(files);
         console.log('Datos guardados en IndexedDB');
       }
     } catch (err) {
       console.error('Error cargando spreadsheets:', err.message || err);
-      
+
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem(TOKEN_KEY);
         setIsSignedIn(false);
         setAccessToken(null);
-        setError('Sesión expirada. Inicia sesión nuevamente.');
+        setError('Sesion expirada. Inicia sesion nuevamente.');
       } else {
         const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
         if (cached.length > 0) {
-          console.log('Usando caché después de error:', cached.length, 'archivos');
+          console.log('Usando cache despues de error:', cached.length, 'archivos');
           setSpreadsheets(cached);
-          setError('Sin conexión. Usando datos en caché.');
+          setError('Sin conexion. Usando datos en cache.');
         } else {
           setError(err.message);
         }
@@ -102,7 +149,7 @@ export const GoogleSheetsProvider = ({ children }) => {
   const signIn = useCallback(() => {
     if (!window.google?.accounts?.oauth2) {
       console.error('Google OAuth no disponible');
-      setError('Google OAuth no disponible. Recarga la página.');
+      setError('Google OAuth no disponible. Recarga la pagina.');
       return;
     }
 
@@ -121,26 +168,13 @@ export const GoogleSheetsProvider = ({ children }) => {
           setAccessToken(response.access_token);
           setIsSignedIn(true);
           setLoading(false);
-          
+
           try {
-            const userInfo = await googleSheetsApi.getUserInfo(response.access_token);
-            setUserEmail(userInfo.email);
-            setNombre(userInfo.name || userInfo.email.split('@')[0]);
-            
-            await compraApi.saveGoogleConnection({
-              email: userInfo.email,
-              accessToken: response.access_token,
-              refreshToken: response.refresh_token || null,
-              tokenExpiry: null,
-              nombre: userInfo.name || userInfo.email.split('@')[0],
-              scope: 'compras',
-              areasAsignadas: ['solicitudes', 'ordenes', 'presupuesto'],
-            });
-            console.log('Conexión guardada en backend con email:', userInfo.email);
+            await syncConnectionToBackend(response.access_token, areasAsignadas);
           } catch (err) {
-            console.error('Error guardando conexión:', err);
+            console.error('Error guardando conexion:', err);
           }
-          
+
           loadSpreadsheets(response.access_token);
         } else if (response.error) {
           console.error('OAuth error:', response.error);
@@ -151,26 +185,30 @@ export const GoogleSheetsProvider = ({ children }) => {
     });
 
     client.requestAccessToken({ prompt: 'consent' });
-  }, [loadSpreadsheets]);
+  }, [areasAsignadas, loadSpreadsheets, syncConnectionToBackend]);
 
   const signOut = useCallback(async () => {
     if (accessToken && window.google?.accounts?.oauth2) {
       window.google.accounts.oauth2.revoke(accessToken, () => {});
     }
-    
+
     localStorage.removeItem(TOKEN_KEY);
     await spreadsheetsDB.clearSpreadsheets();
-    
+
     try {
       await compraApi.disconnectGoogle();
-      console.log('Conexión eliminada del backend');
+      console.log('Conexion eliminada del backend');
     } catch (err) {
       console.error('Error desconectando del backend:', err);
     }
-    
+
     setAccessToken(null);
     setIsSignedIn(false);
     setSpreadsheets([]);
+    setUserEmail(null);
+    setNombre(null);
+    localStorage.removeItem(USER_EMAIL_KEY);
+    localStorage.removeItem(USER_NAME_KEY);
   }, [accessToken]);
 
   const createSpreadsheet = useCallback(async (title) => {
@@ -229,9 +267,9 @@ export const GoogleSheetsProvider = ({ children }) => {
     setAreasAsignadas(nuevasAreas);
     try {
       await compraApi.updateAreas(nuevasAreas);
-      console.log('Áreas actualizadas en backend:', nuevasAreas);
+      console.log('Areas actualizadas en backend:', nuevasAreas);
     } catch (err) {
-      console.error('Error actualizando áreas:', err);
+      console.error('Error actualizando areas:', err);
     }
   }, []);
 
@@ -241,7 +279,31 @@ export const GoogleSheetsProvider = ({ children }) => {
       if (savedToken) {
         setAccessToken(savedToken);
         setIsSignedIn(true);
-        
+
+        try {
+          const status = await compraApi.getConnectionStatus();
+          if (status.connected) {
+            const backendEmail = status.email || null;
+            const backendNombre = status.nombre || null;
+            setUserEmail(backendEmail);
+            setNombre(backendNombre);
+            if (backendEmail) {
+              localStorage.setItem(USER_EMAIL_KEY, backendEmail);
+            }
+            if (backendNombre) {
+              localStorage.setItem(USER_NAME_KEY, backendNombre);
+            }
+            if (status.areasAsignadas?.length) {
+              setAreasAsignadas(status.areasAsignadas);
+            }
+          } else {
+            await syncConnectionToBackend(savedToken);
+          }
+        } catch (err) {
+          console.log('No se pudo validar/sincronizar la conexion en backend:', err.message);
+          await syncConnectionToBackend(savedToken);
+        }
+
         const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
         if (cached.length > 0) {
           console.log('Cargando desde IndexedDB al inicio:', cached.length, 'archivos');
@@ -252,7 +314,7 @@ export const GoogleSheetsProvider = ({ children }) => {
         }
         return;
       }
-      
+
       try {
         const status = await compraApi.getConnectionStatus();
         if (status.connected && status.accessToken) {
@@ -261,39 +323,50 @@ export const GoogleSheetsProvider = ({ children }) => {
           setIsSignedIn(true);
           setUserEmail(status.email);
           setNombre(status.nombre);
+          if (status.email) {
+            localStorage.setItem(USER_EMAIL_KEY, status.email);
+          }
+          if (status.nombre) {
+            localStorage.setItem(USER_NAME_KEY, status.nombre);
+          }
           if (status.areasAsignadas) {
             setAreasAsignadas(status.areasAsignadas);
           }
           loadSpreadsheets(status.accessToken);
         }
       } catch (err) {
-        console.log('No hay conexión guardada o error:', err.message);
+        console.log('No hay conexion guardada o error:', err.message);
       }
     };
-    loadSavedConnection();
-  }, [loadSpreadsheets]);
 
-  useEffect(() => { initGis(); }, [initGis]);
+    loadSavedConnection();
+  }, [loadSpreadsheets, syncConnectionToBackend]);
+
+  useEffect(() => {
+    initGis();
+  }, [initGis]);
 
   return (
-    <GoogleSheetsContext.Provider value={{
-      accessToken,
-      isSignedIn,
-      spreadsheets,
-      loading,
-      error,
-      signIn,
-      signOut,
-      loadSpreadsheets: (forceRefresh = false) => loadSpreadsheets(accessToken, forceRefresh),
-      createSpreadsheet,
-      deleteSpreadsheet,
-      shareSpreadsheet,
-      downloadSpreadsheet,
-      userEmail,
-      nombre,
-      areasAsignadas,
-      updateAreasAsignadas,
-    }}>
+    <GoogleSheetsContext.Provider
+      value={{
+        accessToken,
+        isSignedIn,
+        spreadsheets,
+        loading,
+        error,
+        signIn,
+        signOut,
+        loadSpreadsheets: (forceRefresh = false) => loadSpreadsheets(accessToken, forceRefresh),
+        createSpreadsheet,
+        deleteSpreadsheet,
+        shareSpreadsheet,
+        downloadSpreadsheet,
+        userEmail,
+        nombre,
+        areasAsignadas,
+        updateAreasAsignadas,
+      }}
+    >
       {children}
     </GoogleSheetsContext.Provider>
   );

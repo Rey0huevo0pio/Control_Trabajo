@@ -16,7 +16,7 @@
       "WebSearch(*)"
     ]
   },
-  "mode": "yolo",
+
   "autoApprove": true,
   "telemetry": {
     "enabled": false

@@ -28,12 +28,14 @@ export class GoogleSheetsService {
     });
 
     if (existingConnection) {
+      existingConnection.email = email;
       existingConnection.accessToken = accessToken;
       if (refreshToken) existingConnection.refreshToken = refreshToken;
       if (tokenExpiry) existingConnection.tokenExpiry = tokenExpiry;
       if (nombre) existingConnection.nombre = nombre;
       if (scope) existingConnection.scope = scope;
       if (areasAsignadas) existingConnection.areasAsignadas = areasAsignadas;
+      existingConnection.activo = true;
       existingConnection.ultimoAcceso = new Date();
       return existingConnection.save();
     }

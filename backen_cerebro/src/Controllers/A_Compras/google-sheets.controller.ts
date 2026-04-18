@@ -1,24 +1,19 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Delete,
   Body,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
-import { GoogleSheetsService } from './google-sheets.service';
 import { AuthGuard } from '@nestjs/passport';
-
-class SaveConnectionDto {
-  email: string;
-  accessToken: string;
-  refreshToken?: string;
-  tokenExpiry?: string;
-  nombre?: string;
-  scope?: string;
-  areasAsignadas?: string[];
-}
+import {
+  SaveGoogleConnectionDto,
+  UpdateGoogleAreasDto,
+  UpdateGoogleTokenDto,
+} from '../../DTOs/google-sheets.dto';
+import { GoogleSheetsService } from '../../Modules/A_Compras/google-sheets.service';
 
 class ConnectionStatusResponse {
   connected: boolean;
@@ -30,13 +25,13 @@ class ConnectionStatusResponse {
   ultimoAcceso?: Date;
 }
 
-@Controller('api/google-sheets')
+@Controller('google-sheets')
 @UseGuards(AuthGuard('jwt'))
 export class GoogleSheetsController {
   constructor(private readonly googleSheetsService: GoogleSheetsService) {}
 
   @Post('connect')
-  async saveConnection(@Request() req, @Body() dto: SaveConnectionDto) {
+  async saveConnection(@Request() req, @Body() dto: SaveGoogleConnectionDto) {
     const usuarioId = req.user?.userId || req.user?.sub;
     return this.googleSheetsService.saveConnection(
       usuarioId,
@@ -57,27 +52,20 @@ export class GoogleSheetsController {
   }
 
   @Post('token')
-  async updateToken(
-    @Request() req,
-    @Body()
-    body: { accessToken: string; refreshToken?: string; tokenExpiry?: string },
-  ) {
+  async updateToken(@Request() req, @Body() dto: UpdateGoogleTokenDto) {
     const usuarioId = req.user?.userId || req.user?.sub;
     return this.googleSheetsService.updateToken(
       usuarioId,
-      body.accessToken,
-      body.refreshToken,
-      body.tokenExpiry ? new Date(body.tokenExpiry) : undefined,
+      dto.accessToken,
+      dto.refreshToken,
+      dto.tokenExpiry ? new Date(dto.tokenExpiry) : undefined,
     );
   }
 
   @Post('areas')
-  async updateAreas(
-    @Request() req,
-    @Body() body: { areasAsignadas: string[] },
-  ) {
+  async updateAreas(@Request() req, @Body() dto: UpdateGoogleAreasDto) {
     const usuarioId = req.user?.userId || req.user?.sub;
-    return this.googleSheetsService.updateAreas(usuarioId, body.areasAsignadas);
+    return this.googleSheetsService.updateAreas(usuarioId, dto.areasAsignadas);
   }
 
   @Delete('disconnect')

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { GoogleSheetsController } from './google-sheets.controller';
 import { GoogleSheetsService } from './google-sheets.service';
+import { GoogleSheetsController } from '../../Controllers/A_Compras/google-sheets.controller';
 import {
   GoogleConnection,
   GoogleConnectionSchema,
