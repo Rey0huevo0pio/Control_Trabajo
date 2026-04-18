@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { GoogleConnection, GoogleConnectionDocument } from '../../../Models/T_A_Compras/google-connection.schema';
+import {
+  GoogleConnection,
+  GoogleConnectionDocument,
+} from '../../Models/T_A_Compras/google-connection.schema';
 
 @Injectable()
 export class GoogleSheetsService {
@@ -10,8 +13,16 @@ export class GoogleSheetsService {
     private googleConnectionModel: Model<GoogleConnectionDocument>,
   ) {}
 
-  async saveConnection(usuarioId: string, email: string, accessToken: string, refreshToken?: string, tokenExpiry?: Date) {
-    const existingConnection = await this.googleConnectionModel.findOne({ usuarioId });
+  async saveConnection(
+    usuarioId: string,
+    email: string,
+    accessToken: string,
+    refreshToken?: string,
+    tokenExpiry?: Date,
+  ) {
+    const existingConnection = await this.googleConnectionModel.findOne({
+      usuarioId,
+    });
 
     if (existingConnection) {
       existingConnection.accessToken = accessToken;
@@ -35,7 +46,10 @@ export class GoogleSheetsService {
   }
 
   async getConnection(usuarioId: string) {
-    const connection = await this.googleConnectionModel.findOne({ usuarioId, activo: true });
+    const connection = await this.googleConnectionModel.findOne({
+      usuarioId,
+      activo: true,
+    });
     if (!connection) {
       throw new NotFoundException('No hay conexión de Google configurada');
     }
@@ -43,11 +57,19 @@ export class GoogleSheetsService {
   }
 
   async isConnected(usuarioId: string): Promise<boolean> {
-    const connection = await this.googleConnectionModel.findOne({ usuarioId, activo: true });
+    const connection = await this.googleConnectionModel.findOne({
+      usuarioId,
+      activo: true,
+    });
     return !!connection;
   }
 
-  async updateToken(usuarioId: string, accessToken: string, refreshToken?: string, tokenExpiry?: Date) {
+  async updateToken(
+    usuarioId: string,
+    accessToken: string,
+    refreshToken?: string,
+    tokenExpiry?: Date,
+  ) {
     const connection = await this.getConnection(usuarioId);
     connection.accessToken = accessToken;
     if (refreshToken) connection.refreshToken = refreshToken;
@@ -66,7 +88,10 @@ export class GoogleSheetsService {
   }
 
   async getConnectionStatus(usuarioId: string) {
-    const connection = await this.googleConnectionModel.findOne({ usuarioId, activo: true });
+    const connection = await this.googleConnectionModel.findOne({
+      usuarioId,
+      activo: true,
+    });
     if (!connection) {
       return { connected: false };
     }

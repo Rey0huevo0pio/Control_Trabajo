@@ -27,6 +27,7 @@ export class GoogleConnection {
   ultimoAcceso: Date;
 }
 
-export const GoogleConnectionSchema = SchemaFactory.createForClass(GoogleConnection);
+export const GoogleConnectionSchema =
+  SchemaFactory.createForClass(GoogleConnection);
 
 GoogleConnectionSchema.index({ usuarioId: 1 }, { unique: true });

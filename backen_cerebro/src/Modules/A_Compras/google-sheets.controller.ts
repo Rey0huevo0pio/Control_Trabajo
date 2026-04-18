@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Body,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { GoogleSheetsService } from './google-sheets.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -39,7 +47,11 @@ export class GoogleSheetsController {
   }
 
   @Post('token')
-  async updateToken(@Request() req, @Body() body: { accessToken: string; refreshToken?: string; tokenExpiry?: string }) {
+  async updateToken(
+    @Request() req,
+    @Body()
+    body: { accessToken: string; refreshToken?: string; tokenExpiry?: string },
+  ) {
     const usuarioId = req.user?.userId || req.user?.sub;
     return this.googleSheetsService.updateToken(
       usuarioId,

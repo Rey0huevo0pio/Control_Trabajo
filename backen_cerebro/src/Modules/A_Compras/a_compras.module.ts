@@ -5,7 +5,7 @@ import { GoogleSheetsService } from './google-sheets.service';
 import {
   GoogleConnection,
   GoogleConnectionSchema,
-} from '../../../Models/T_A_Compras/google-connection.schema';
+} from '../../Models/T_A_Compras/google-connection.schema';
 
 @Module({
   imports: [
