@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Text, Card, Button, Stack, HStack, IconButton, Input } from '../../components/design-system';
 import { useGoogleSheets } from '../hooks/useGoogleSheets.js';
 
@@ -39,17 +39,6 @@ export const GoogleSheetsManager = ({ onClose }) => {
   const [shareEmail, setShareEmail] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
-
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
-
-  useEffect(() => {
-    console.log('Estado - isSignedIn:', isSignedIn, 'accessToken:', !!accessToken, 'loading:', loading, 'spreadsheets:', spreadsheets.length);
-    if (isSignedIn && accessToken && !loading && !initialLoadDone) {
-      console.log('Llamando loadSpreadsheets...');
-      setInitialLoadDone(true);
-      loadSpreadsheets();
-    }
-  }, [isSignedIn, accessToken, loading, initialLoadDone, loadSpreadsheets]);
 
   const handleCreate = async () => {
     if (!newSheetTitle.trim()) return;

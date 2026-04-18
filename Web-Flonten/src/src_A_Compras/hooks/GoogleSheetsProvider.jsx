@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext } from 'react';
+import { useState, useEffect, useCallback, createContext, useRef } from 'react';
 import { googleSheetsApi } from '../lib/googleSheets.api';
 import { compraApi } from '../lib/compra.api';
 import { spreadsheetsDB } from '../lib/spreadsheetsDB';
@@ -13,6 +13,7 @@ const CACHE_DURATION = 1000 * 60 * 15;
 const GoogleSheetsContext = createContext(null);
 
 export const GoogleSheetsProvider = ({ children }) => {
+  const hasInitializedRef = useRef(false);
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [spreadsheets, setSpreadsheets] = useState([]);
@@ -129,6 +130,10 @@ export const GoogleSheetsProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  const loadCurrentSpreadsheets = useCallback((forceRefresh = false) => {
+    return loadSpreadsheets(accessToken, forceRefresh);
+  }, [accessToken, loadSpreadsheets]);
 
   const initGis = useCallback(() => {
     if (!GOOGLE_CLIENT_ID) {
@@ -274,6 +279,9 @@ export const GoogleSheetsProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const loadSavedConnection = async () => {
       const savedToken = localStorage.getItem(TOKEN_KEY);
       if (savedToken) {
@@ -356,7 +364,7 @@ export const GoogleSheetsProvider = ({ children }) => {
         error,
         signIn,
         signOut,
-        loadSpreadsheets: (forceRefresh = false) => loadSpreadsheets(accessToken, forceRefresh),
+        loadSpreadsheets: loadCurrentSpreadsheets,
         createSpreadsheet,
         deleteSpreadsheet,
         shareSpreadsheet,
