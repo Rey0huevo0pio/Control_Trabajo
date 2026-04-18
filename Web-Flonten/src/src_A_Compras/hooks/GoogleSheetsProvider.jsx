@@ -247,7 +247,7 @@ export const GoogleSheetsProvider = ({ children }) => {
       }
     };
     loadSavedConnection();
-  }, []);
+  }, [loadSpreadsheets]);
 
   useEffect(() => { initGis(); }, [initGis]);
 
@@ -271,8 +271,4 @@ export const GoogleSheetsProvider = ({ children }) => {
   );
 };
 
-export const useGoogleSheets = () => {
-  const context = useContext(GoogleSheetsContext);
-  if (!context) throw new Error('useGoogleSheets debe usarse dentro de GoogleSheetsProvider');
-  return context;
-};
+export { GoogleSheetsContext };

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton } from '../../components/design-system';
-import { GoogleSheetsProvider } from '../hooks/useGoogleSheets.jsx';
+import { GoogleSheetsProvider } from '../hooks/GoogleSheetsProvider.jsx';
 import { GoogleSheetsManager } from '../components/GoogleSheetsManager';
 
 const modules = [
