@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Delete,
+  Patch,
   Body,
   UseGuards,
   Request,
@@ -15,11 +16,18 @@ class SaveConnectionDto {
   accessToken: string;
   refreshToken?: string;
   tokenExpiry?: string;
+  nombre?: string;
+  scope?: string;
+  areasAsignadas?: string[];
 }
 
 class ConnectionStatusResponse {
   connected: boolean;
   email?: string;
+  nombre?: string;
+  accessToken?: string;
+  scope?: string;
+  areasAsignadas?: string[];
   ultimoAcceso?: Date;
 }
 
@@ -37,6 +45,9 @@ export class GoogleSheetsController {
       dto.accessToken,
       dto.refreshToken,
       dto.tokenExpiry ? new Date(dto.tokenExpiry) : undefined,
+      dto.nombre,
+      dto.scope,
+      dto.areasAsignadas,
     );
   }
 
@@ -59,6 +70,15 @@ export class GoogleSheetsController {
       body.refreshToken,
       body.tokenExpiry ? new Date(body.tokenExpiry) : undefined,
     );
+  }
+
+  @Patch('areas')
+  async updateAreas(
+    @Request() req,
+    @Body() body: { areasAsignadas: string[] },
+  ) {
+    const usuarioId = req.user?.userId || req.user?.sub;
+    return this.googleSheetsService.updateAreas(usuarioId, body.areasAsignadas);
   }
 
   @Delete('disconnect')

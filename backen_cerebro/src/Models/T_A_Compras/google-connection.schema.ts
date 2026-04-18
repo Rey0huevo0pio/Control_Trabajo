@@ -11,6 +11,9 @@ export class GoogleConnection {
   @Prop({ required: true })
   email: string;
 
+  @Prop()
+  nombre: string;
+
   @Prop({ required: true })
   accessToken: string;
 
@@ -25,6 +28,12 @@ export class GoogleConnection {
 
   @Prop()
   ultimoAcceso: Date;
+
+  @Prop({ type: String, default: 'compras' })
+  scope: string;
+
+  @Prop({ type: [String], default: [] })
+  areasAsignadas: string[];
 }
 
 export const GoogleConnectionSchema =

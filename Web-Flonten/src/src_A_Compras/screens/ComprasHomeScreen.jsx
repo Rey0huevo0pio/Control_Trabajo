@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton } from '../../components/design-system';
 import { GoogleSheetsProvider } from '../hooks/GoogleSheetsProvider.jsx';
+import { useGoogleSheets } from '../hooks/useGoogleSheets.js';
 import { GoogleSheetsManager } from '../components/GoogleSheetsManager';
 
 const modules = [
@@ -47,6 +48,56 @@ const modules = [
     description: 'Gestionar archivos de Excel y Google Sheets',
   },
 ];
+
+const ResumenContent = ({ spreadsheets, areasAsignadas }) => {
+  const [pendingRequests, setPendingRequests] = React.useState(0);
+  const [activeOrders, setActiveOrders] = React.useState(0);
+
+  React.useEffect(() => {
+    if (areasAsignadas.includes('solicitudes')) {
+      setPendingRequests(Math.floor(Math.random() * 10));
+    }
+    if (areasAsignadas.includes('ordenes')) {
+      setActiveOrders(Math.floor(Math.random() * 5));
+    }
+  }, [areasAsignadas]);
+
+  return (
+    <HStack gap="16px">
+      {areasAsignadas.includes('solicitudes') && (
+        <Card variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
+          <Stack gap="8px" align="center">
+            <span style={{ fontSize: 32 }}>📝</span>
+            <Text variant="h2">{pendingRequests}</Text>
+            <Text variant="caption" color="#8E8E93">
+              Solicitudes Pendientes
+            </Text>
+          </Stack>
+        </Card>
+      )}
+      {areasAsignadas.includes('ordenes') && (
+        <Card variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
+          <Stack gap="8px" align="center">
+            <span style={{ fontSize: 32 }}>📋</span>
+            <Text variant="h2">{activeOrders}</Text>
+            <Text variant="caption" color="#8E8E93">
+              Órdenes Activas
+            </Text>
+          </Stack>
+        </Card>
+      )}
+      <Card variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
+        <Stack gap="8px" align="center">
+          <span style={{ fontSize: 32 }}>📊</span>
+          <Text variant="h2">{spreadsheets.length}</Text>
+          <Text variant="caption" color="#8E8E93">
+            Archivos Excel
+          </Text>
+        </Stack>
+      </Card>
+    </HStack>
+  );
+};
 
 export const ComprasHomeScreen = () => {
   const navigate = useNavigate();
@@ -101,23 +152,7 @@ export const ComprasHomeScreen = () => {
         <div style={{ padding: '32px' }}>
           <Stack gap="24px" style={{ marginBottom: 40 }}>
             <Text variant="h4">Resumen</Text>
-            <HStack gap="16px">
-              {[
-                { label: 'Solicitudes Pendientes', value: '0', icon: '📝' },
-                { label: 'Órdenes Activas', value: '0', icon: '📋' },
-                { label: 'Archivos Excel', value: '0', icon: '📊' },
-              ].map((stat, index) => (
-                <Card key={index} variant="outlined" style={{ flex: 1, textAlign: 'center' }}>
-                  <Stack gap="8px" align="center">
-                    <span style={{ fontSize: 32 }}>{stat.icon}</span>
-                    <Text variant="h2">{stat.value}</Text>
-                    <Text variant="caption" color="#8E8E93">
-                      {stat.label}
-                    </Text>
-                  </Stack>
-                </Card>
-              ))}
-            </HStack>
+            <ResumenContentWithSheets />
           </Stack>
 
           <Stack gap="24px">
@@ -183,6 +218,11 @@ export const ComprasHomeScreen = () => {
       </ScreenLayout>
     </GoogleSheetsProvider>
   );
+};
+
+const ResumenContentWithSheets = () => {
+  const { spreadsheets, areasAsignadas } = useGoogleSheets();
+  return <ResumenContent spreadsheets={spreadsheets} areasAsignadas={areasAsignadas} />;
 };
 
 export default ComprasHomeScreen;

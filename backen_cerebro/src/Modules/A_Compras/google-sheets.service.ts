@@ -19,6 +19,9 @@ export class GoogleSheetsService {
     accessToken: string,
     refreshToken?: string,
     tokenExpiry?: Date,
+    nombre?: string,
+    scope?: string,
+    areasAsignadas?: string[],
   ) {
     const existingConnection = await this.googleConnectionModel.findOne({
       usuarioId,
@@ -28,6 +31,9 @@ export class GoogleSheetsService {
       existingConnection.accessToken = accessToken;
       if (refreshToken) existingConnection.refreshToken = refreshToken;
       if (tokenExpiry) existingConnection.tokenExpiry = tokenExpiry;
+      if (nombre) existingConnection.nombre = nombre;
+      if (scope) existingConnection.scope = scope;
+      if (areasAsignadas) existingConnection.areasAsignadas = areasAsignadas;
       existingConnection.ultimoAcceso = new Date();
       return existingConnection.save();
     }
@@ -38,6 +44,9 @@ export class GoogleSheetsService {
       accessToken,
       refreshToken,
       tokenExpiry,
+      nombre: nombre || email.split('@')[0],
+      scope: scope || 'compras',
+      areasAsignadas: areasAsignadas || [],
       activo: true,
       ultimoAcceso: new Date(),
     });
@@ -78,6 +87,13 @@ export class GoogleSheetsService {
     return connection.save();
   }
 
+  async updateAreas(usuarioId: string, areasAsignadas: string[]) {
+    const connection = await this.getConnection(usuarioId);
+    connection.areasAsignadas = areasAsignadas;
+    connection.ultimoAcceso = new Date();
+    return connection.save();
+  }
+
   async deleteConnection(usuarioId: string) {
     const connection = await this.googleConnectionModel.findOne({ usuarioId });
     if (!connection) {
@@ -98,7 +114,10 @@ export class GoogleSheetsService {
     return {
       connected: true,
       email: connection.email,
+      nombre: connection.nombre,
       accessToken: connection.accessToken,
+      scope: connection.scope,
+      areasAsignadas: connection.areasAsignadas,
       ultimoAcceso: connection.ultimoAcceso,
     };
   }

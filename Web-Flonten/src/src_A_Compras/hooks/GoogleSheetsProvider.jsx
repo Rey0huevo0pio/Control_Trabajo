@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, createContext} from 'react';
 import { googleSheetsApi } from '../lib/googleSheets.api';
 import { compraApi } from '../lib/compra.api';
 import { spreadsheetsDB } from '../lib/spreadsheetsDB';
@@ -16,6 +16,9 @@ export const GoogleSheetsProvider = ({ children }) => {
   const [spreadsheets, setSpreadsheets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [areasAsignadas, setAreasAsignadas] = useState(['solicitudes', 'ordenes', 'presupuesto']);
+  const [nombre, setNombre] = useState(null);
 
   const loadSpreadsheets = useCallback(async (token, forceRefresh = false) => {
     if (!token) return;
@@ -121,11 +124,17 @@ export const GoogleSheetsProvider = ({ children }) => {
           
           try {
             const userInfo = await googleSheetsApi.getUserInfo(response.access_token);
+            setUserEmail(userInfo.email);
+            setNombre(userInfo.name || userInfo.email.split('@')[0]);
+            
             await compraApi.saveGoogleConnection({
               email: userInfo.email,
               accessToken: response.access_token,
               refreshToken: response.refresh_token || null,
               tokenExpiry: null,
+              nombre: userInfo.name || userInfo.email.split('@')[0],
+              scope: 'compras',
+              areasAsignadas: ['solicitudes', 'ordenes', 'presupuesto'],
             });
             console.log('Conexión guardada en backend con email:', userInfo.email);
           } catch (err) {
@@ -216,6 +225,16 @@ export const GoogleSheetsProvider = ({ children }) => {
     }
   }, [accessToken]);
 
+  const updateAreasAsignadas = useCallback(async (nuevasAreas) => {
+    setAreasAsignadas(nuevasAreas);
+    try {
+      await compraApi.updateAreas(nuevasAreas);
+      console.log('Áreas actualizadas en backend:', nuevasAreas);
+    } catch (err) {
+      console.error('Error actualizando áreas:', err);
+    }
+  }, []);
+
   useEffect(() => {
     const loadSavedConnection = async () => {
       const savedToken = localStorage.getItem(TOKEN_KEY);
@@ -240,6 +259,11 @@ export const GoogleSheetsProvider = ({ children }) => {
           localStorage.setItem(TOKEN_KEY, status.accessToken);
           setAccessToken(status.accessToken);
           setIsSignedIn(true);
+          setUserEmail(status.email);
+          setNombre(status.nombre);
+          if (status.areasAsignadas) {
+            setAreasAsignadas(status.areasAsignadas);
+          }
           loadSpreadsheets(status.accessToken);
         }
       } catch (err) {
@@ -265,6 +289,10 @@ export const GoogleSheetsProvider = ({ children }) => {
       deleteSpreadsheet,
       shareSpreadsheet,
       downloadSpreadsheet,
+      userEmail,
+      nombre,
+      areasAsignadas,
+      updateAreasAsignadas,
     }}>
       {children}
     </GoogleSheetsContext.Provider>

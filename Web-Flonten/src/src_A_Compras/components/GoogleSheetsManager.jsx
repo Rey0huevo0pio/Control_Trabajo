@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Text, Card, Button, Stack, HStack, IconButton, Input } from '../../components/design-system';
 import { useGoogleSheets } from '../hooks/useGoogleSheets.js';
 
+const AVAILABLE_AREAS = [
+  { id: 'solicitudes', name: 'Solicitudes', icon: '📝' },
+  { id: 'ordenes', name: 'Órdenes de Compra', icon: '📋' },
+  { id: 'presupuesto', name: 'Presupuesto', icon: '💰' },
+  { id: 'proveedores', name: 'Proveedores', icon: '🏪' },
+  { id: 'inventario', name: 'Inventario', icon: '📦' },
+  { id: 'reportes', name: 'Reportes', icon: '📊' },
+];
+
 export const GoogleSheetsManager = ({ onClose }) => {
   const {
     accessToken,
@@ -16,10 +25,15 @@ export const GoogleSheetsManager = ({ onClose }) => {
     deleteSpreadsheet,
     shareSpreadsheet,
     downloadSpreadsheet,
+    userEmail,
+    nombre,
+    areasAsignadas,
+    updateAreasAsignadas,
   } = useGoogleSheets();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAreasModal, setShowAreasModal] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState(null);
   const [newSheetTitle, setNewSheetTitle] = useState('');
   const [shareEmail, setShareEmail] = useState('');
@@ -151,12 +165,37 @@ export const GoogleSheetsManager = ({ onClose }) => {
           </Stack>
         ) : (
           <>
+            <div style={{ 
+              backgroundColor: '#F2F2F7', 
+              borderRadius: 12, 
+              padding: '12px 16px', 
+              marginBottom: 16,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Stack gap="4px">
+                <Text variant="bodySmall" color="#8E8E93">Cuenta de Google</Text>
+                <Text variant="body">{nombre || userEmail}</Text>
+                <Text variant="caption" color="#8E8E93">
+                  Áreas: {areasAsignadas.length > 0 ? areasAsignadas.join(', ') : 'Ninguna'}
+                </Text>
+              </Stack>
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowAreasModal(true)}
+                style={{ padding: '8px 16px' }}
+              >
+                ⚙️ Configurar
+              </Button>
+            </div>
+
             <HStack justify="space-between" style={{ marginBottom: 16 }}>
               <Text variant="bodySmall" color="#8E8E93">
                 {spreadsheets.length} archivo(s)
               </Text>
               <HStack gap="8px">
-                <Button variant="secondary" onClick={loadSpreadsheets} disabled={loading}>
+                <Button variant="secondary" onClick={() => loadSpreadsheets(false)} disabled={loading}>
                   Actualizar
                 </Button>
                 <Button onClick={() => setShowCreateModal(true)}>
@@ -315,6 +354,79 @@ export const GoogleSheetsManager = ({ onClose }) => {
               </Button>
               <Button onClick={handleShare} disabled={actionLoading || !shareEmail.trim()}>
                 {actionLoading ? 'Compartiendo...' : 'Compartir'}
+              </Button>
+            </HStack>
+          </div>
+        </div>
+      )}
+
+      {showAreasModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001,
+          }}
+          onClick={() => setShowAreasModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 24,
+              width: '90%',
+              maxWidth: 450,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text variant="h4" style={{ marginBottom: 8 }}>Configurar Áreas</Text>
+            <Text variant="bodySmall" color="#8E8E93" style={{ marginBottom: 16 }}>
+              Selecciona las áreas que tendrán acceso a los archivos de Google Sheets
+            </Text>
+            
+            <div style={{ display: 'grid', gap: 8, marginBottom: 20 }}>
+              {AVAILABLE_AREAS.map((area) => (
+                <label
+                  key={area.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px',
+                    borderRadius: 8,
+                    border: '1px solid #E5E5EA',
+                    cursor: 'pointer',
+                    backgroundColor: areasAsignadas.includes(area.id) ? '#F2F2F7' : '#FFFFFF',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={areasAsignadas.includes(area.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        updateAreasAsignadas([...areasAsignadas, area.id]);
+                      } else {
+                        updateAreasAsignadas(areasAsignadas.filter(a => a !== area.id));
+                      }
+                    }}
+                    style={{ width: 20, height: 20 }}
+                  />
+                  <span style={{ fontSize: 20 }}>{area.icon}</span>
+                  <Text variant="body">{area.name}</Text>
+                </label>
+              ))}
+            </div>
+            
+            <HStack justify="flex-end">
+              <Button onClick={() => setShowAreasModal(false)}>
+                Cerrar
               </Button>
             </HStack>
           </div>
