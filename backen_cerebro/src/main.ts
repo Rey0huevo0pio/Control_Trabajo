@@ -81,7 +81,7 @@ async function bootstrap() {
   // Configuración para permitir el dominio de Cloudflared del frontend
   app.enableCors({
     origin: [
-      'https://exclusive-predictions-purse-allen.trycloudflare.com',
+      'https://convenience-cakes-reviews-cigarette.trycloudflare.com',
       'http://localhost:5173',
       'http://localhost:3000',
     ],

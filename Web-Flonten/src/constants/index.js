@@ -24,7 +24,7 @@
 // ============================================================================
 // API CONFIGURATION
 // ============================================================================
-export const API_URL = import.meta.env.VITE_API_URL || 'https://answer-institute-lite-operator.trycloudflare.com/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://sphere-screw-courts-tried.trycloudflare.com/api';
 export const API_TIMEOUT = 30000; // 30 segundos - necesario para IMAP
 
 // ============================================================================

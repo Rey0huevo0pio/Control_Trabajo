@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'exclusive-predictions-purse-allen.trycloudflare.com'
+      'convenience-cakes-reviews-cigarette.trycloudflare.com'
     ]
   },
   resolve: {
