@@ -98,6 +98,7 @@ export class GoogleSheetsService {
     return {
       connected: true,
       email: connection.email,
+      accessToken: connection.accessToken,
       ultimoAcceso: connection.ultimoAcceso,
     };
   }

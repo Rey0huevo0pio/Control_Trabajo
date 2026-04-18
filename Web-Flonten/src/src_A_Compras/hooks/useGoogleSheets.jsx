@@ -4,11 +4,12 @@ import { compraApi } from '../lib/compra.api';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+const TOKEN_KEY = 'google_sheets_token';
 
 const GoogleSheetsContext = createContext(null);
 
 export const GoogleSheetsProvider = ({ children }) => {
-  const [accessToken, setAccessToken] = useState(null);
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [spreadsheets, setSpreadsheets] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,8 @@ export const GoogleSheetsProvider = ({ children }) => {
       setSpreadsheets(files || []);
     } catch (err) {
       console.error('Error cargando spreadsheets:', err.message || err);
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem(TOKEN_KEY);
         setIsSignedIn(false);
         setAccessToken(null);
         setError('Sesión expirada. Inicia sesión nuevamente.');
@@ -78,6 +80,7 @@ export const GoogleSheetsProvider = ({ children }) => {
         console.log('OAuth response:', response);
         if (response.access_token) {
           console.log('Token recibido, iniciando carga...');
+          localStorage.setItem(TOKEN_KEY, response.access_token);
           setAccessToken(response.access_token);
           setIsSignedIn(true);
           setLoading(false);
@@ -111,6 +114,8 @@ export const GoogleSheetsProvider = ({ children }) => {
     if (accessToken && window.google?.accounts?.oauth2) {
       window.google.accounts.oauth2.revoke(accessToken, () => {});
     }
+    
+    localStorage.removeItem(TOKEN_KEY);
     
     try {
       await compraApi.disconnectGoogle();
@@ -178,9 +183,18 @@ export const GoogleSheetsProvider = ({ children }) => {
 
   useEffect(() => {
     const loadSavedConnection = async () => {
+      const savedToken = localStorage.getItem(TOKEN_KEY);
+      if (savedToken) {
+        setAccessToken(savedToken);
+        setIsSignedIn(true);
+        loadSpreadsheets(savedToken);
+        return;
+      }
+      
       try {
         const status = await compraApi.getConnectionStatus();
         if (status.connected && status.accessToken) {
+          localStorage.setItem(TOKEN_KEY, status.accessToken);
           setAccessToken(status.accessToken);
           setIsSignedIn(true);
           loadSpreadsheets(status.accessToken);
