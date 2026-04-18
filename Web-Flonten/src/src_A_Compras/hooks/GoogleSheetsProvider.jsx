@@ -268,6 +268,46 @@ export const GoogleSheetsProvider = ({ children }) => {
     }
   }, [accessToken]);
 
+  const getSpreadsheetDetails = useCallback(async (spreadsheetId) => {
+    if (!accessToken) throw new Error('No autenticado');
+    return googleSheetsApi.getSpreadsheet(accessToken, spreadsheetId);
+  }, [accessToken]);
+
+  const getSpreadsheetValues = useCallback(async (spreadsheetId, range) => {
+    if (!accessToken) throw new Error('No autenticado');
+    return googleSheetsApi.getValues(accessToken, spreadsheetId, range);
+  }, [accessToken]);
+
+  const getSpreadsheetPreview = useCallback(async (spreadsheet) => {
+    if (!spreadsheet?.id) {
+      throw new Error('Archivo no valido');
+    }
+
+    if (!spreadsheet.mimeType?.includes('google-apps.spreadsheet')) {
+      throw new Error('La vista previa solo esta disponible para archivos nativos de Google Sheets.');
+    }
+
+    const details = await googleSheetsApi.getSpreadsheet(accessToken, spreadsheet.id);
+    const firstSheetTitle = details?.sheets?.[0]?.properties?.title;
+
+    if (!firstSheetTitle) {
+      return {
+        spreadsheet: details,
+        range: null,
+        values: [],
+      };
+    }
+
+    const range = `'${firstSheetTitle}'!A1:Z200`;
+    const valuesResponse = await googleSheetsApi.getValues(accessToken, spreadsheet.id, range);
+
+    return {
+      spreadsheet: details,
+      range,
+      values: valuesResponse?.values || [],
+    };
+  }, [accessToken]);
+
   const updateAreasAsignadas = useCallback(async (nuevasAreas) => {
     setAreasAsignadas(nuevasAreas);
     try {
@@ -369,6 +409,9 @@ export const GoogleSheetsProvider = ({ children }) => {
         deleteSpreadsheet,
         shareSpreadsheet,
         downloadSpreadsheet,
+        getSpreadsheetDetails,
+        getSpreadsheetValues,
+        getSpreadsheetPreview,
         userEmail,
         nombre,
         areasAsignadas,
