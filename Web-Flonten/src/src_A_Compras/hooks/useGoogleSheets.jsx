@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { googleSheetsApi } from '../lib/googleSheets.api';
 import { compraApi } from '../lib/compra.api';
+import { spreadsheetsDB } from '../lib/spreadsheetsDB';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
 const TOKEN_KEY = 'google_sheets_token';
+const CACHE_DURATION = 1000 * 60 * 15; // 15 minutos
 
 const GoogleSheetsContext = createContext(null);
 
@@ -15,10 +17,29 @@ export const GoogleSheetsProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadSpreadsheets = useCallback(async (token) => {
+  const loadSpreadsheets = useCallback(async (token, forceRefresh = false) => {
     if (!token) return;
     setLoading(true);
     console.log('Iniciando carga de spreadsheets...');
+
+    if (!forceRefresh) {
+      try {
+        const cached = await spreadsheetsDB.getSpreadsheets();
+        const cacheTime = await spreadsheetsDB.getCacheTimestamp();
+        
+        if (cached.length > 0 && cacheTime) {
+          const cacheAge = Date.now() - new Date(cacheTime).getTime();
+          if (cacheAge < CACHE_DURATION) {
+            console.log('Cargando desde caché IndexedDB:', cached.length, 'archivos');
+            setSpreadsheets(cached);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.log('Error leyendo caché, solicitando a API:', err.message);
+      }
+    }
     
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Timeout de red')), 15000)
@@ -29,17 +50,30 @@ export const GoogleSheetsProvider = ({ children }) => {
         googleSheetsApi.listSpreadsheets(token),
         timeoutPromise
       ]);
-      console.log('Archivos obtenidos:', files);
+      console.log('Archivos obtenidos de API:', files);
       setSpreadsheets(files || []);
+      
+      if (files && files.length > 0) {
+        await spreadsheetsDB.saveSpreadsheets(files);
+        console.log('Datos guardados en IndexedDB');
+      }
     } catch (err) {
       console.error('Error cargando spreadsheets:', err.message || err);
+      
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem(TOKEN_KEY);
         setIsSignedIn(false);
         setAccessToken(null);
         setError('Sesión expirada. Inicia sesión nuevamente.');
       } else {
-        setError(err.message);
+        const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
+        if (cached.length > 0) {
+          console.log('Usando caché después de error:', cached.length, 'archivos');
+          setSpreadsheets(cached);
+          setError('Sin conexión. Usando datos en caché.');
+        } else {
+          setError(err.message);
+        }
       }
     } finally {
       setLoading(false);
@@ -116,6 +150,7 @@ export const GoogleSheetsProvider = ({ children }) => {
     }
     
     localStorage.removeItem(TOKEN_KEY);
+    await spreadsheetsDB.clearSpreadsheets();
     
     try {
       await compraApi.disconnectGoogle();
@@ -187,7 +222,15 @@ export const GoogleSheetsProvider = ({ children }) => {
       if (savedToken) {
         setAccessToken(savedToken);
         setIsSignedIn(true);
-        loadSpreadsheets(savedToken);
+        
+        const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
+        if (cached.length > 0) {
+          console.log('Cargando desde IndexedDB al inicio:', cached.length, 'archivos');
+          setSpreadsheets(cached);
+          loadSpreadsheets(savedToken, true);
+        } else {
+          loadSpreadsheets(savedToken);
+        }
         return;
       }
       
@@ -217,7 +260,7 @@ export const GoogleSheetsProvider = ({ children }) => {
       error,
       signIn,
       signOut,
-      loadSpreadsheets: () => loadSpreadsheets(accessToken),
+      loadSpreadsheets: (forceRefresh = false) => loadSpreadsheets(accessToken, forceRefresh),
       createSpreadsheet,
       deleteSpreadsheet,
       shareSpreadsheet,
