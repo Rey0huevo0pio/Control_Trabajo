@@ -7,7 +7,9 @@ import { useComprasAnalytics, detectArea } from '../hooks/useComprasAnalytics.js
 import { GoogleSheetsManager } from './GoogleSheetsManager.jsx';
 import {
   BarChartCard,
+  ChartBuilderPanel,
   DonutChartCard,
+  ExcelEditorPanel,
   KpiCards,
   LineChartCard,
   SpreadsheetPreviewPanel,
@@ -37,6 +39,7 @@ const ModuleContent = ({ moduleConfig }) => {
   const [previewData, setPreviewData] = React.useState(null);
   const [previewLoading, setPreviewLoading] = React.useState(false);
   const [previewError, setPreviewError] = React.useState(null);
+  const [editorSaveData, setEditorSaveData] = React.useState(null);
 
   const moduleSheets = React.useMemo(
     () => getDefaultSheets(spreadsheets, moduleConfig.id),
@@ -276,6 +279,18 @@ const ModuleContent = ({ moduleConfig }) => {
             previewError={previewError}
             onRefresh={() => loadSpreadsheets(true)}
             onOpenManager={() => setShowSheetsManager(true)}
+          />
+
+          <ExcelEditorPanel
+            previewSummary={analytics.previewSummary}
+            onSave={setEditorSaveData}
+          />
+
+          <ChartBuilderPanel
+            previewSummary={analytics.previewSummary}
+            chartCols={editorSaveData?.chartCols || []}
+            title={moduleConfig.charts.barTitle}
+            subtitle={moduleConfig.charts.barSubtitle}
           />
 
           <div
