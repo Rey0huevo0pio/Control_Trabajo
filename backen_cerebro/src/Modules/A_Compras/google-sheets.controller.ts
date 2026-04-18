@@ -3,7 +3,6 @@ import {
   Post,
   Get,
   Delete,
-  Patch,
   Body,
   UseGuards,
   Request,
@@ -72,7 +71,7 @@ export class GoogleSheetsController {
     );
   }
 
-  @Patch('areas')
+  @Post('areas')
   async updateAreas(
     @Request() req,
     @Body() body: { areasAsignadas: string[] },

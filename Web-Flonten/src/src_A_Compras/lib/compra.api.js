@@ -50,7 +50,7 @@ export const compraApi = {
    * Actualizar áreas asignadas
    */
   updateAreas: async (areasAsignadas) => {
-    const response = await api.patch('/google-sheets/areas', { areasAsignadas });
+    const response = await api.post('/google-sheets/areas', { areasAsignadas });
     return response.data;
   },
 
