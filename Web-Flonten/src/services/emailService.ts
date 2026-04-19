@@ -5,10 +5,17 @@
  */
 import api, { getAuthToken } from './api';
 
-const EMAIL_CONFIG_ENDPOINT = '/email/config';
+interface EmailConfig {
+  id?: string;
+  email: string;
+  password?: string;
+  host: string;
+  port: number;
+  secure: boolean;
+}
 
 export const emailService = {
-  async getEmailConfig() {
+  async getEmailConfig(): Promise<EmailConfig | null> {
     try {
       const token = getAuthToken();
       if (!token) return null;
@@ -23,7 +30,7 @@ export const emailService = {
     }
   },
 
-  async saveEmailConfig(data) {
+  async saveEmailConfig(data: EmailConfig): Promise<any> {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
 
@@ -33,7 +40,7 @@ export const emailService = {
     return response.data;
   },
 
-  async getEmailConfigByUserId(userId) {
+  async getEmailConfigByUserId(userId: string): Promise<EmailConfig | null> {
     try {
       const token = getAuthToken();
       if (!token) return null;
@@ -48,7 +55,7 @@ export const emailService = {
     }
   },
 
-  async saveConfigForUser(userId, data) {
+  async saveConfigForUser(userId: string, data: EmailConfig): Promise<any> {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
 
@@ -58,7 +65,7 @@ export const emailService = {
     return response.data;
   },
 
-  async testConnection(data) {
+  async testConnection(data: EmailConfig): Promise<any> {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
 
@@ -68,7 +75,7 @@ export const emailService = {
     return response.data;
   },
 
-  async activateEmailConfig() {
+  async activateEmailConfig(): Promise<any> {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
 
@@ -78,7 +85,7 @@ export const emailService = {
     return response.data;
   },
 
-  async deleteEmailConfig() {
+  async deleteEmailConfig(): Promise<any> {
     const token = getAuthToken();
     if (!token) throw new Error('Sin sesión');
 
@@ -88,5 +95,7 @@ export const emailService = {
     return response.data;
   },
 };
+
+const EMAIL_CONFIG_ENDPOINT = '/email/config';
 
 export default emailService;

@@ -18,7 +18,6 @@
 import axios from 'axios';
 import { API_URL, API_TIMEOUT } from '../constants';
 
-// Crear instancia de Axios
 const api = axios.create({
   baseURL: API_URL,
   timeout: API_TIMEOUT,
@@ -27,16 +26,9 @@ const api = axios.create({
   },
 });
 
-// ============================================================================
-// INTERCEPTOR - Agregar token JWT a todos los requests
-// ============================================================================
-let authToken = null;
+let authToken: string | null = null;
 
-/**
- * Configurar token de autenticación
- * @param {string|null} token - Token JWT
- */
-export const setAuthToken = (token) => {
+export const setAuthToken = (token: string | null): void => {
   authToken = token;
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -45,19 +37,18 @@ export const setAuthToken = (token) => {
   }
 };
 
-/**
- * Obtener token actual
- */
-export const getAuthToken = () => authToken;
+export const getAuthToken = (): string | null => authToken;
 
-// ============================================================================
-// INTERCEPTOR DE RESPUESTA - Manejar errores 401
-// ============================================================================
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: import('axios').AxiosResponse) => response,
+  (error: import('axios').AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       setAuthToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');

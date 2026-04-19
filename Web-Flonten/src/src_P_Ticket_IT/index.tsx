@@ -35,7 +35,6 @@ export { TodosTicketsScreen } from './screens/TodosTicketsScreen';
 export { DetalleTicketScreen } from './screens/DetalleTicketScreen';
 export { ReportesTicketsScreen } from './screens/ReportesTicketsScreen';
 
-// Re-exportar tipos
 export { TicketStatus, TicketPrioridad, TicketRoutes, getStatusColor, getPrioridadColor, getStatusLabel, getPrioridadLabel } from './types';
 
 export default {

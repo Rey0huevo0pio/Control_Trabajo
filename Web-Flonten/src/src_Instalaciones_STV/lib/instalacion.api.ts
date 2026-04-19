@@ -13,7 +13,6 @@ const api = axios.create({
   },
 });
 
-// Interceptor para agregar token de auth
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -22,91 +21,86 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export interface Instalacion {
+  id: string;
+  nombre: string;
+  direccion: string;
+  ciudad?: string;
+  estado?: string;
+  pais?: string;
+  coordenadas?: {
+    lat: number;
+    lng: number;
+  };
+  activo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Area {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  piso?: string;
+  instalacionId: string;
+  coordenadas?: {
+    x: number;
+    y: number;
+  };
+}
+
 export const instalacionApi = {
-  /**
-   * Obtener todas las instalaciones activas
-   */
-  getActivas: async () => {
+  async getActivas(): Promise<any> {
     const response = await api.get('/instalaciones?activa=true');
     return response.data;
   },
 
-  /**
-   * Obtener todas las instalaciones
-   */
-  getAll: async () => {
+  async getAll(): Promise<any> {
     const response = await api.get('/instalaciones');
     return response.data;
   },
 
-  /**
-   * Obtener una instalación por ID
-   */
-  getById: async (id) => {
+  async getById(id: string): Promise<any> {
     const response = await api.get(`/instalaciones/${id}`);
     return response.data;
   },
 
-  /**
-   * Crear una nueva instalación
-   */
-  create: async (data) => {
+  async create(data: Partial<Instalacion>): Promise<any> {
     const response = await api.post('/instalaciones', data);
     return response.data;
   },
 
-  /**
-   * Actualizar una instalación
-   */
-  update: async (id, data) => {
+  async update(id: string, data: Partial<Instalacion>): Promise<any> {
     const response = await api.put(`/instalaciones/${id}`, data);
     return response.data;
   },
 
-  /**
-   * Obtener áreas de una instalación
-   */
-   getAreasByInstalacion: async (instalacionId) => {
-     const response = await api.get(`/instalaciones/instalacion/${instalacionId}/areas`);
-     return response.data;
-   },
+  async getAreasByInstalacion(instalacionId: string): Promise<any> {
+    const response = await api.get(`/instalaciones/instalacion/${instalacionId}/areas`);
+    return response.data;
+  },
 
-  /**
-   * Crear un área en una instalación
-   */
-   createArea: async (data) => {
-     const response = await api.post('/instalaciones/areas', data);
-     return response.data;
-   },
+  async createArea(data: Partial<Area>): Promise<any> {
+    const response = await api.post('/instalaciones/areas', data);
+    return response.data;
+  },
 
-  /**
-   * Obtener un área por ID
-   */
-  getAreaById: async (areaId) => {
+  async getAreaById(areaId: string): Promise<any> {
     const response = await api.get(`/areas/${areaId}`);
     return response.data;
   },
 
-  /**
-   * Actualizar un área
-   */
-  updateArea: async (areaId, data) => {
+  async updateArea(areaId: string, data: Partial<Area>): Promise<any> {
     const response = await api.put(`/areas/${areaId}`, data);
     return response.data;
   },
 
-  /**
-   * Eliminar un área
-   */
-  deleteArea: async (areaId) => {
+  async deleteArea(areaId: string): Promise<any> {
     const response = await api.delete(`/areas/${areaId}`);
     return response.data;
   },
 
-  /**
-   * Eliminar una instalación
-   */
-  delete: async (id) => {
+  async delete(id: string): Promise<any> {
     const response = await api.delete(`/instalaciones/${id}`);
     return response.data;
   },

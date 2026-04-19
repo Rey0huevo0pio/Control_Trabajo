@@ -20,10 +20,8 @@ import Input from './Input';
 
 const { Card, Stack, HStack, ScreenLayout, ScreenSection } = layoutExports;
 
-// Named exports
 export { Text, Button, IconButton, Card, Stack, HStack, ScreenLayout, ScreenSection, Input };
 
-// Default export con todos los componentes
 export default {
   Text,
   Button,

@@ -6,3 +6,5 @@ export const useGoogleSheets = () => {
   if (!context) throw new Error('useGoogleSheets debe usarse dentro de GoogleSheetsProvider');
   return context;
 };
+
+export default useGoogleSheets;

@@ -21,3 +21,5 @@ export { AttachmentPreview } from './AttachmentPreview';
 export { ImageAttachmentView } from './ImageAttachmentView';
 export { PdfAttachmentView } from './PdfAttachmentView';
 export { FileAttachmentView } from './FileAttachmentView';
+
+export default {};

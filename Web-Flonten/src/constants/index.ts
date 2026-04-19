@@ -21,67 +21,46 @@
  * ============================================================================
  */
 
-// ============================================================================
-// API CONFIGURATION
-// ============================================================================
 export const API_URL = import.meta.env.VITE_API_URL || 'https://sphere-screw-courts-tried.trycloudflare.com/api';
-export const API_TIMEOUT = 30000; // 30 segundos - necesario para IMAP
+export const API_TIMEOUT = 30000;
 
-// ============================================================================
-// ROLES (Mismos que el móvil)
-// ============================================================================
 export const ROLES = {
   VIGILANTE: 'vigilante',
   SUPERVISOR: 'supervisor',
   RH: 'rh',
   IT: 'it',
   ADMIN: 'admin',
-};
+} as const;
 
-// ============================================================================
-// PERMISOS (Mismos que el móvil)
-// ============================================================================
+export type Role = typeof ROLES[keyof typeof ROLES];
+
 export const PERMISSIONS = {
-  // Usuarios
   USUARIOS_VER: 'usuarios_ver',
   USUARIOS_CREAR: 'usuarios_crear',
   USUARIOS_EDITAR: 'usuarios_editar',
   USUARIOS_ELIMINAR: 'usuarios_eliminar',
-  
-  // Dashboard
   DASHBOARD_VER: 'dashboard_ver',
-  
-  // Reportes
   REPORTES_VER: 'reportes_ver',
   REPORTES_CREAR: 'reportes_crear',
   REPORTES_EXPORTAR: 'reportes_exportar',
-  
-  // Chat
   CHAT_VER: 'chat_ver',
   CHAT_ENVIAR: 'chat_enviar',
   CHAT_CREAR_GRUPO: 'chat_crear_grupo',
-  
-  // Tickets
   TICKETS_VER: 'tickets_ver',
   TICKETS_CREAR: 'tickets_crear',
   TICKETS_EDITAR: 'tickets_editar',
   TICKETS_ASIGNAR: 'tickets_asignar',
-  
-  // Archivero
   ARCHIVERO_VER: 'archivero_ver',
   ARCHIVERO_CREAR: 'archivero_crear',
   ARCHIVERO_SUBIR: 'archivero_subir',
-  
-  // Instalaciones
   INSTALACIONES_VER: 'instalaciones_ver',
   INSTALACIONES_CREAR: 'instalaciones_crear',
   INSTALACIONES_EDITAR: 'instalaciones_editar',
-};
+} as const;
 
-// ============================================================================
-// MAPEO DE ROLES A PERMISOS (Mismo que el móvil)
-// ============================================================================
-const _vigilantePerms = [
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+
+const _vigilantePerms: Permission[] = [
   PERMISSIONS.DASHBOARD_VER,
   PERMISSIONS.CHAT_VER,
   PERMISSIONS.CHAT_ENVIAR,
@@ -90,7 +69,7 @@ const _vigilantePerms = [
   PERMISSIONS.ARCHIVERO_VER,
 ];
 
-export const ROLE_PERMISSIONS = {
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [ROLES.VIGILANTE]: _vigilantePerms,
   [ROLES.SUPERVISOR]: [
     ..._vigilantePerms,
@@ -120,23 +99,19 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.ARCHIVERO_SUBIR,
     PERMISSIONS.INSTALACIONES_VER,
   ],
-  [ROLES.IT]: Object.values(PERMISSIONS), // IT tiene todos los permisos
-  [ROLES.ADMIN]: Object.values(PERMISSIONS), // Admin tiene todos los permisos
+  [ROLES.IT]: Object.values(PERMISSIONS),
+  [ROLES.ADMIN]: Object.values(PERMISSIONS),
 };
 
-// ============================================================================
-// CRUD PERMISSIONS
-// ============================================================================
 export const CRUD_PERMISSIONS = {
   create: 'create',
   read: 'read',
   update: 'update',
   delete: 'delete',
-};
+} as const;
 
-// ============================================================================
-// RUTAS DE NAVEGACIÓN
-// ============================================================================
+export type CrudPermission = typeof CRUD_PERMISSIONS[keyof typeof CRUD_PERMISSIONS];
+
 export const ROUTES = {
   LOGIN: '/login',
   HOME: '/',
@@ -147,4 +122,4 @@ export const ROUTES = {
   ARCHIVERO: '/archivero',
   REPORTES: '/reportes',
   CONFIGURACION: '/configuracion',
-};
+} as const;

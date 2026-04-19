@@ -10,8 +10,8 @@
  * 
  * CONEXIONES:
  * - Mobile: C_Ticket_Apk_STV/src/store/authStore.ts (mismo patrón)
- * - Services: auth.service.js (usa login/register)
- * - API: api.js (configura token)
+ * - Services: auth.service.ts (usa login/register)
+ * - API: api.ts (configura token)
  * - Components: Todos los componentes que necesitan auth
  * 
  * ESTADO:
@@ -30,18 +30,47 @@
  */
 import { create } from 'zustand';
 import { setAuthToken } from '../services/api';
-import { ROLE_PERMISSIONS } from '../constants';
+import { ROLE_PERMISSIONS, Permission } from '../constants';
 
-// ============================================================================
-// CARGAR ESTADO DESDE LOCALSTORAGE (Web-only)
-// ============================================================================
-const loadFromStorage = () => {
+export type Role = 'vigilante' | 'supervisor' | 'rh' | 'it' | 'admin';
+
+export interface User {
+  id: string;
+  Control_Usuario: string;
+  nombre: string;
+  apellido: string;
+  rol: Role;
+  activo: boolean;
+  telefono?: string;
+  email?: string;
+  permisos?: string[];
+}
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+interface AuthActions {
+  login: (user: User, token: string) => void;
+  logout: () => void;
+  getToken: () => string | null;
+  hasPermission: (permission: Permission) => boolean;
+  hasRole: (roles: string | string[]) => boolean;
+  setLoading: (loading: boolean) => void;
+}
+
+type AuthStore = AuthState & AuthActions;
+
+const loadFromStorage = (): { user: User; token: string; isAuthenticated: boolean } | null => {
   try {
     const user = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (user && token) {
       return {
-        user: JSON.parse(user),
+        user: JSON.parse(user) as User,
         token,
         isAuthenticated: true,
       };
@@ -54,37 +83,23 @@ const loadFromStorage = () => {
 
 const stored = loadFromStorage();
 
-// Sincronizar token con API al iniciar
 if (stored?.token) {
   setAuthToken(stored.token);
 }
 
-// ============================================================================
-// STORE
-// ============================================================================
-export const useAuthStore = create((set, get) => ({
-  // Estado inicial
+export const useAuthStore = create<AuthStore>((set, get) => ({
   user: stored?.user || null,
   token: stored?.token || null,
   isAuthenticated: stored?.isAuthenticated || false,
   isLoading: false,
 
-  // Actions
-  /**
-   * Iniciar sesión
-   * @param {Object} user - Datos del usuario
-   * @param {string} token - Token JWT
-   */
-  login: (user, token) => {
+  login: (user: User, token: string) => {
     setAuthToken(token);
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
     set({ user, token, isAuthenticated: true, isLoading: false });
   },
 
-  /**
-   * Cerrar sesión
-   */
   logout: () => {
     setAuthToken(null);
     localStorage.removeItem('user');
@@ -92,36 +107,21 @@ export const useAuthStore = create((set, get) => ({
     set({ user: null, token: null, isAuthenticated: false, isLoading: false });
   },
 
-  /**
-   * Obtener token actual
-   */
   getToken: () => get().token,
 
-  /**
-   * Verificar si tiene permiso
-   * @param {string} permission - Permiso a verificar
-   * @returns {boolean}
-   */
-  hasPermission: (permission) => {
+  hasPermission: (permission: Permission) => {
     const { user } = get();
     if (!user) return false;
     
-    // Si el usuario tiene permisos directos
     if (user.permisos && user.permisos.length > 0) {
       return user.permisos.includes(permission);
     }
     
-    // Si no, verificar por rol
-    const rolePerms = ROLE_PERMISSIONS[user.rol];
+    const rolePerms = ROLE_PERMISSIONS[user.rol as Role];
     return rolePerms?.includes(permission) || false;
   },
 
-  /**
-   * Verificar si tiene rol
-   * @param {string|string[]} roles - Rol o roles permitidos
-   * @returns {boolean}
-   */
-  hasRole: (roles) => {
+  hasRole: (roles: string | string[]) => {
     const { user } = get();
     if (!user) return false;
     
@@ -131,11 +131,9 @@ export const useAuthStore = create((set, get) => ({
     return user.rol === roles;
   },
 
-  /**
-   * Setear estado de carga
-   * @param {boolean} loading 
-   */
-  setLoading: (loading) => {
+  setLoading: (loading: boolean) => {
     set({ isLoading: loading });
   },
 }));
+
+export default useAuthStore;

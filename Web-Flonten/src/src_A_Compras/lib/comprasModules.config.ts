@@ -1,4 +1,39 @@
-export const comprasModulesConfig = {
+export interface ModuleOption {
+  title: string;
+  icon: string;
+  description: string;
+}
+
+export interface ModuleCharts {
+  pieTitle: string;
+  pieSubtitle: string;
+  barTitle: string;
+  barSubtitle: string;
+  lineTitle: string;
+  lineSubtitle: string;
+}
+
+export interface ModuleHero {
+  text: string;
+  helper: string;
+}
+
+export interface ModuleConfig {
+  id: string;
+  name: string;
+  icon: string;
+  iconShort: string;
+  color: string;
+  darkColor: string;
+  softColor: string;
+  subtitle: string;
+  description: string;
+  hero: ModuleHero;
+  options: ModuleOption[];
+  charts: ModuleCharts;
+}
+
+export const comprasModulesConfig: Record<string, ModuleConfig> = {
   solicitudes: {
     id: 'solicitudes',
     name: 'Solicitudes',

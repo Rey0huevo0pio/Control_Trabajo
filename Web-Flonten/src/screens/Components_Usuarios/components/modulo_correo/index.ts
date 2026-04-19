@@ -1,7 +1,8 @@
 /**
  * ============================================================================
- * 👤 COMPONENTS USUARIOS - Módulo de gestión de usuarios (Web)
+ * 📧 MODULO CORREO - Configuración de correo IMAP
  * ============================================================================
  */
-export { UserManagementScreen } from './UserManagementScreen';
-export * from './components';
+export { EmailConfigModal } from './EmailConfigModal';
+
+export default {};

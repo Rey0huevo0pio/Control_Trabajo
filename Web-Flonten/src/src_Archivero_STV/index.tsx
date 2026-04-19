@@ -22,7 +22,6 @@
  * ============================================================================
  */
 
-// Re-exportar pantallas
 export { ArchiveroHomeScreen } from './screens/ArchiveroHomeScreen';
 export { ArchiveroDetalleScreen } from './screens/ArchiveroDetalleScreen';
 export { CarpetaDetalleScreen } from './screens/CarpetaDetalleScreen';
@@ -30,7 +29,6 @@ export { CrearArchiveroScreen } from './screens/CrearArchiveroScreen';
 export { EscanearDocumentoScreen } from './screens/EscanearDocumentoScreen';
 export { GestionarMiembrosScreen } from './screens/GestionarMiembrosScreen';
 
-// Re-exportar tipos
 export { ArchivoTipo, Visibilidad, RolMiembro, FuenteEscaneo, ArchiveroRoutes } from './types';
 
 export default {

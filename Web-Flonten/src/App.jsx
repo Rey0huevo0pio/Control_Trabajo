@@ -25,7 +25,7 @@
  * 2. AppRouter verifica autenticación (ProtectedRoute)
  * 3. SI NO autenticado → LoginScreen
  * 4. SI autenticado → HomeScreen
- * 
+ *
  * PARA MODIFICAR:
  * - Agregar provider global: envolver dentro de TamaguiProvider
  * - Cambiar tema default: modificar defaultTheme en tamagui.config.ts

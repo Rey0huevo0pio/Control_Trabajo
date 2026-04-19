@@ -33,13 +33,10 @@ export { DetalleInstalacionScreen } from './screens/DetalleInstalacionScreen';
 export { RegistroInstalacionScreen } from './screens/RegistroInstalacionScreen';
 export { RegistroAreaScreen } from './screens/RegistroAreaScreen';
 
-// Re-exportar componentes
 export { InstalacionCard } from './components/InstalacionCard';
 
-// Re-exportar API
 export { instalacionApi } from './lib/instalacion.api';
 
-// Re-exportar tipos
 export { InstalacionRoutes } from './types';
 
 export default {

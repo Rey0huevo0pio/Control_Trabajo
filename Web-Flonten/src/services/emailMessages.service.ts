@@ -18,14 +18,50 @@ import api, { getAuthToken } from './api';
 const EMAIL_MESSAGES_ENDPOINT = '/email/messages';
 
 const DB_NAME = 'EmailMessagesDB';
-const DB_VERSION = 2; // Aumentada para soportar más datos
+const DB_VERSION = 2;
 const STORE_EMAILS = 'emails';
 const STORE_METADATA = 'metadata';
 const STORE_ATTACHMENTS = 'attachments';
 
-let db = null;
+let db: IDBDatabase | null = null;
 
-const openDatabase = () => {
+interface EmailMessage {
+  uid: number;
+  folder: string;
+  from: string;
+  to: string;
+  subject: string;
+  date: string;
+  text?: string;
+  html?: string;
+  attachments?: Attachment[];
+  cachedAt?: string;
+}
+
+interface Attachment {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  data?: string;
+}
+
+interface EmailMetadata {
+  folder: string;
+  lastSync?: string;
+  lastUID?: number;
+  totalEmails?: number;
+  syncedAt?: string;
+}
+
+interface GetMessagesResponse {
+  emails: EmailMessage[];
+  total: number;
+  fromCache?: boolean;
+  message?: string;
+}
+
+const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     if (db) {
       resolve(db);
@@ -45,9 +81,10 @@ const openDatabase = () => {
       resolve(db);
     };
 
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       console.log('[EmailMessages] Creando/migrando IndexedDB...');
-      const database = event.target.result;
+      const database = (event.target as IDBOpenDBRequest).result;
+      if (!database) return;
 
       if (!database.objectStoreNames.contains(STORE_EMAILS)) {
         const emailStore = database.createObjectStore(STORE_EMAILS, { keyPath: 'uid' });
@@ -67,9 +104,9 @@ const openDatabase = () => {
   });
 };
 
-const getAllEmailsFromDB = async (folder) => {
-  const database = await openDatabase();
-  return new Promise((resolve, reject) => {
+const getAllEmailsFromDB = (folder: string): Promise<EmailMessage[]> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
     const transaction = database.transaction([STORE_EMAILS], 'readonly');
     const store = transaction.objectStore(STORE_EMAILS);
     const index = store.index('folder');
@@ -83,9 +120,9 @@ const getAllEmailsFromDB = async (folder) => {
   });
 };
 
-const saveEmailsToDB = async (emails, folder) => {
-  const database = await openDatabase();
-  return new Promise((resolve, reject) => {
+const saveEmailsToDB = (emails: EmailMessage[], folder: string): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
     const transaction = database.transaction([STORE_EMAILS], 'readwrite');
     const store = transaction.objectStore(STORE_EMAILS);
 
@@ -98,10 +135,9 @@ const saveEmailsToDB = async (emails, folder) => {
   });
 };
 
-// eslint-disable-next-line no-unused-vars
-const getMetadata = async (folder) => {
-  const database = await openDatabase();
-  return new Promise((resolve, reject) => {
+const getMetadata = (folder: string): Promise<EmailMetadata | null> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
     const transaction = database.transaction([STORE_METADATA], 'readonly');
     const store = transaction.objectStore(STORE_METADATA);
     const request = store.get(folder);
@@ -111,9 +147,9 @@ const getMetadata = async (folder) => {
   });
 };
 
-const saveMetadata = async (folder, metadata) => {
-  const database = await openDatabase();
-  return new Promise((resolve, reject) => {
+const saveMetadata = (folder: string, metadata: Omit<EmailMetadata, 'folder'>): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
     const transaction = database.transaction([STORE_METADATA], 'readwrite');
     const store = transaction.objectStore(STORE_METADATA);
     store.put({ folder, ...metadata, syncedAt: new Date().toISOString() });
@@ -123,9 +159,9 @@ const saveMetadata = async (folder, metadata) => {
   });
 };
 
-const clearAllData = async () => {
-  const database = await openDatabase();
-  return new Promise((resolve, reject) => {
+const clearAllData = (): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
     const transaction = database.transaction([STORE_EMAILS, STORE_METADATA, STORE_ATTACHMENTS], 'readwrite');
     transaction.objectStore(STORE_EMAILS).clear();
     transaction.objectStore(STORE_METADATA).clear();
@@ -137,9 +173,8 @@ const clearAllData = async () => {
 };
 
 class EmailMessagesService {
-  async getMessages(folder = 'INBOX', page = 1) {
+  async getMessages(folder: string = 'INBOX', page: number = 1): Promise<GetMessagesResponse> {
     const token = getAuthToken();
-
     const cachedEmails = await getAllEmailsFromDB(folder);
 
     if (cachedEmails.length > 0) {
@@ -167,7 +202,7 @@ class EmailMessagesService {
     return this.fullDownload(folder, token, page);
   }
 
-  async fullDownload(folder, token, page = 1) {
+  async fullDownload(folder: string, token: string, page: number = 1): Promise<GetMessagesResponse> {
     try {
       console.log('[EmailMessages] Descargando correos...');
 
@@ -179,7 +214,7 @@ class EmailMessagesService {
 
       console.log('[EmailMessages] Response:', response.status, response.data);
 
-      let emails = [];
+      let emails: EmailMessage[] = [];
       if (response.data) {
         if (response.data.success && response.data.data) {
           emails = response.data.data.emails || response.data.data;
@@ -199,7 +234,6 @@ class EmailMessagesService {
       emails = emails.map(e => ({ ...e, folder }));
       console.log('[EmailMessages] Correos descargados:', emails.length);
       
-      // LOG: Verificar contenido del primer correo como ejemplo
       if (emails.length > 0) {
         const firstEmail = emails[0];
         console.log('[EmailMessages] 🔍 Primer correo análisis:', {
@@ -226,7 +260,7 @@ class EmailMessagesService {
         total: emails.length,
         message: response.data.message || 'Correos cargados desde servidor',
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[EmailMessages] Error en fullDownload:', error.message || error.code);
       const cached = await getAllEmailsFromDB(folder);
       if (cached.length > 0) {
@@ -244,14 +278,14 @@ class EmailMessagesService {
     }
   }
 
-  async syncIncremental(folder, token, cachedEmails) {
+  async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<void> {
     try {
       const uidsResponse = await api.get(`${EMAIL_MESSAGES_ENDPOINT}/uids`, {
         params: { folder },
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const serverUIDs = uidsResponse.data.data?.uids || [];
+      const serverUIDs: number[] = uidsResponse.data.data?.uids || [];
       if (serverUIDs.length === 0) return;
 
       const cachedUIDs = new Set(cachedEmails.map(e => e.uid));
@@ -266,7 +300,7 @@ class EmailMessagesService {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const newEmails = downloadResponse.data.data?.emails || [];
+      const newEmails: EmailMessage[] = downloadResponse.data.data?.emails || [];
       if (newEmails.length > 0) {
         await saveEmailsToDB(newEmails, folder);
         await saveMetadata(folder, {
@@ -280,19 +314,15 @@ class EmailMessagesService {
     }
   }
 
-  // eslint-disable-next-line no-unused-vars
-  async getFullMessage(uid, folder = 'INBOX') {
+  async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
     try {
-      // Primero verificar caché local
-      const cached = await this.getFullEmailFromDB(uid, folder);
+      const cached = await this.getFullEmailFromDB(uid);
       
-      // Si hay caché válida, usarla (evita solicitudes innecesarias al servidor)
       if (cached && cached.html && cached.html.length > 100) {
         console.log('[EmailMessages] Usando caché para UID:', uid);
         return cached;
       }
 
-      // Solo si no hay caché, descargar del servidor
       const token = getAuthToken();
       if (!token) return cached || null;
 
@@ -301,7 +331,7 @@ class EmailMessagesService {
         { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
       );
 
-      const emails = response.data.data?.emails || [];
+      const emails: EmailMessage[] = response.data.data?.emails || [];
       if (emails.length > 0) {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
@@ -309,15 +339,14 @@ class EmailMessagesService {
         return fullEmail;
       }
       return cached || null;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[EmailMessages] Error getFullMessage:', error.message);
-      // En caso de error, intentar con caché
-      const cached = await this.getFullEmailFromDB(uid, folder);
+      const cached = await this.getFullEmailFromDB(uid);
       return cached || null;
     }
   }
 
-  async getFullEmailFromDB(uid) {
+  async getFullEmailFromDB(uid: number): Promise<EmailMessage | null> {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
       const transaction = database.transaction([STORE_EMAILS], 'readonly');
@@ -329,7 +358,7 @@ class EmailMessagesService {
     });
   }
 
-  async saveFullEmail(email, folder) {
+  async saveFullEmail(email: EmailMessage, folder: string): Promise<void> {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
       const transaction = database.transaction([STORE_EMAILS], 'readwrite');
@@ -341,7 +370,7 @@ class EmailMessagesService {
     });
   }
 
-  async sendEmail(data) {
+  async sendEmail(data: any): Promise<any> {
     try {
       const token = getAuthToken();
       if (!token) return { success: false, error: 'No hay sesión' };
@@ -351,13 +380,13 @@ class EmailMessagesService {
       });
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[EmailMessages] Error sendEmail:', error);
       return { success: false, error: error.response?.data?.message || 'Error al enviar correo' };
     }
   }
 
-  async getFolders() {
+  async getFolders(): Promise<string[]> {
     try {
       const token = getAuthToken();
       if (!token) return [];
@@ -373,12 +402,12 @@ class EmailMessagesService {
     }
   }
 
-  async forceSync(folder = 'INBOX') {
+  async forceSync(folder: string = 'INBOX'): Promise<GetMessagesResponse> {
     await clearAllData();
     return this.getMessages(folder, 1);
   }
 
-  clearCache() {
+  clearCache(): Promise<void> {
     return clearAllData();
   }
 }

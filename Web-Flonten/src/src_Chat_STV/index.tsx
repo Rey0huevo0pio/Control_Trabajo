@@ -31,7 +31,6 @@ export { NewsBoardScreen } from './screens/NewsBoardScreen';
 export { ChatSearchScreen } from './screens/ChatSearchScreen';
 export { EmailMainScreen } from './screens/EmailMainScreen';
 
-// Re-exportar tipos
 export { ChatType, MessageStatus, MessageType, UserStatus, ChatRoutes } from './types';
 
 export default {

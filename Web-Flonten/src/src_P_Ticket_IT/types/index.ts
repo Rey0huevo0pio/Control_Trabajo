@@ -9,32 +9,32 @@ export const TicketStatus = {
   COMPLETADO: 'completado',
   CERRADO: 'cerrado',
   CANCELADO: 'cancelado',
-};
+} as const;
+
+export type TicketStatusValue = typeof TicketStatus[keyof typeof TicketStatus];
 
 export const TicketPrioridad = {
   BAJA: 'baja',
   MEDIA: 'media',
   ALTA: 'alta',
   URGENTE: 'urgente',
-};
+} as const;
 
-/**
- * TicketRoutes - Rutas del módulo Tickets
- */
+export type TicketPrioridadValue = typeof TicketPrioridad[keyof typeof TicketPrioridad];
+
 export const TicketRoutes = {
   TicketHome: '/tickets',
   CrearTicket: '/tickets/crear',
   MisTickets: '/tickets/mis-tickets',
   TodosTickets: '/tickets/todos',
   ReportesTickets: '/tickets/reportes',
-  DetalleTicket: (ticketId) => `/tickets/${ticketId}`,
-  EditarTicket: (ticketId) => `/tickets/${ticketId}/editar`,
+  DetalleTicket: (ticketId: string) => `/tickets/${ticketId}`,
+  EditarTicket: (ticketId: string) => `/tickets/${ticketId}/editar`,
 };
 
-/**
- * Helpers para colores de estado y prioridad
- */
-export const getStatusColor = (status) => {
+export type TicketRouteKey = keyof typeof TicketRoutes;
+
+export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'pendiente': return '#FF9500';
     case 'en_progreso': return '#5856D6';
@@ -45,7 +45,7 @@ export const getStatusColor = (status) => {
   }
 };
 
-export const getPrioridadColor = (prioridad) => {
+export const getPrioridadColor = (prioridad: string): string => {
   switch (prioridad) {
     case 'baja': return '#34C759';
     case 'media': return '#007AFF';
@@ -55,7 +55,7 @@ export const getPrioridadColor = (prioridad) => {
   }
 };
 
-export const getStatusLabel = (status) => {
+export const getStatusLabel = (status: string): string => {
   switch (status) {
     case 'pendiente': return 'Pendiente';
     case 'en_progreso': return 'En Progreso';
@@ -66,7 +66,7 @@ export const getStatusLabel = (status) => {
   }
 };
 
-export const getPrioridadLabel = (prioridad) => {
+export const getPrioridadLabel = (prioridad: string): string => {
   switch (prioridad) {
     case 'baja': return 'Baja';
     case 'media': return 'Media';

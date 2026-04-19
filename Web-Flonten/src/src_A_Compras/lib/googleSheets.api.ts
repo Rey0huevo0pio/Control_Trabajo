@@ -14,12 +14,47 @@ const api = axios.create({
   },
 });
 
+export interface GoogleUserInfo {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
+
+export interface SpreadsheetFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  createdTime?: string;
+  modifiedTime?: string;
+  webViewLink?: string;
+}
+
+export interface SheetData {
+  range?: string;
+  majorDimension?: string;
+  values?: (string | null)[][];
+}
+
+export interface SpreadsheetDetails {
+  spreadsheetId?: string;
+  properties?: {
+    title: string;
+    locale?: string;
+    timeZone?: string;
+  };
+  sheets?: Array<{
+    properties: {
+      sheetId: number;
+      title: string;
+      index: number;
+    };
+  }>;
+}
+
 export const googleSheetsApi = {
-  /**
-   * Obtener información del usuario de Google
-   */
-  getUserInfo: async (accessToken) => {
-    const response = await api.get(GOOGLE_USERINFO_API, {
+  getUserInfo: async (accessToken: string): Promise<GoogleUserInfo> => {
+    const response = await api.get<GoogleUserInfo>(GOOGLE_USERINFO_API, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -27,11 +62,8 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Listar hojas de cálculo del usuario (Google Sheets + Excel)
-   */
-  listSpreadsheets: async (accessToken) => {
-    const response = await api.get(
+  listSpreadsheets: async (accessToken: string): Promise<SpreadsheetFile[]> => {
+    const response = await api.get<{ files: SpreadsheetFile[] }>(
       `${GOOGLE_DRIVE_API}/files`,
       {
         params: {
@@ -48,10 +80,7 @@ export const googleSheetsApi = {
     return response.data.files;
   },
 
-  /**
-   * Descargar archivo de Google Drive como Excel
-   */
-  downloadAsExcel: async (accessToken, fileId, fileName) => {
+  downloadAsExcel: async (accessToken: string, fileId: string, fileName: string): Promise<boolean> => {
     const response = await api.get(
       `${GOOGLE_DRIVE_API}/files/${fileId}/export`,
       {
@@ -77,15 +106,12 @@ export const googleSheetsApi = {
     return true;
   },
 
-  /**
-   * Descargar archivo - detecta el tipo mime
-   */
-  downloadSpreadsheet: async (accessToken, spreadsheetId, title, mimeType) => {
-    let url, format;
+  downloadSpreadsheet: async (accessToken: string, spreadsheetId: string, title: string, mimeType?: string): Promise<boolean> => {
+    let url: string;
+    let format: string = 'xlsx';
     
     if (mimeType?.includes('google-apps')) {
       url = `${GOOGLE_SHEETS_API}/${spreadsheetId}/export`;
-      format = 'xlsx';
     } else {
       url = `${GOOGLE_DRIVE_API}/files/${spreadsheetId}`;
     }
@@ -112,11 +138,8 @@ export const googleSheetsApi = {
     return true;
   },
 
-  /**
-   * Obtener contenido de una hoja como JSON
-   */
-  getSheetData: async (accessToken, spreadsheetId, range = 'Sheet1!A1:Z1000') => {
-    const response = await api.get(
+  getSheetData: async (accessToken: string, spreadsheetId: string, range: string = 'Sheet1!A1:Z1000'): Promise<SheetData> => {
+    const response = await api.get<SheetData>(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}/values/${range}`,
       {
         headers: {
@@ -127,11 +150,8 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Crear una nueva hoja de cálculo
-   */
-  createSpreadsheet: async (accessToken, title, sheets = ['Sheet1']) => {
-    const response = await api.post(
+  createSpreadsheet: async (accessToken: string, title: string, sheets: string[] = ['Sheet1']): Promise<SpreadsheetDetails> => {
+    const response = await api.post<SpreadsheetDetails>(
       GOOGLE_SHEETS_API,
       {
         properties: { title },
@@ -148,11 +168,8 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Obtener detalles de una hoja de cálculo
-   */
-  getSpreadsheet: async (accessToken, spreadsheetId) => {
-    const response = await api.get(
+  getSpreadsheet: async (accessToken: string, spreadsheetId: string): Promise<SpreadsheetDetails> => {
+    const response = await api.get<SpreadsheetDetails>(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}`,
       {
         headers: {
@@ -163,11 +180,8 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Obtener valores de una hoja
-   */
-  getValues: async (accessToken, spreadsheetId, range) => {
-    const response = await api.get(
+  getValues: async (accessToken: string, spreadsheetId: string, range: string): Promise<SheetData> => {
+    const response = await api.get<SheetData>(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}/values/${range}`,
       {
         headers: {
@@ -178,10 +192,7 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Actualizar valores en una hoja
-   */
-  updateValues: async (accessToken, spreadsheetId, range, values) => {
+  updateValues: async (accessToken: string, spreadsheetId: string, range: string, values: (string | number)[][]): Promise<any> => {
     const response = await api.put(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}/values/${range}`,
       {
@@ -196,10 +207,7 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Agregar una nueva hoja a un spreadsheet
-   */
-  addSheet: async (accessToken, spreadsheetId, sheetTitle) => {
+  addSheet: async (accessToken: string, spreadsheetId: string, sheetTitle: string): Promise<any> => {
     const response = await api.post(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}:batchUpdate`,
       {
@@ -218,10 +226,7 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Eliminar una hoja de cálculo
-   */
-  deleteSpreadsheet: async (accessToken, spreadsheetId) => {
+  deleteSpreadsheet: async (accessToken: string, spreadsheetId: string): Promise<any> => {
     const response = await api.delete(
       `${GOOGLE_DRIVE_API}/files/${spreadsheetId}`,
       {
@@ -233,10 +238,7 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Eliminar una hoja específica de un spreadsheet
-   */
-  deleteSheet: async (accessToken, spreadsheetId, sheetId) => {
+  deleteSheet: async (accessToken: string, spreadsheetId: string, sheetId: number): Promise<any> => {
     const response = await api.post(
       `${GOOGLE_SHEETS_API}/${spreadsheetId}:batchUpdate`,
       {
@@ -253,10 +255,7 @@ export const googleSheetsApi = {
     return response.data;
   },
 
-  /**
-   * Compartir spreadsheet
-   */
-  shareSpreadsheet: async (accessToken, spreadsheetId, email, role = 'writer') => {
+  shareSpreadsheet: async (accessToken: string, spreadsheetId: string, email: string, role: string = 'writer'): Promise<any> => {
     const response = await api.post(
       `${GOOGLE_DRIVE_API}/files/${spreadsheetId}/permissions`,
       {

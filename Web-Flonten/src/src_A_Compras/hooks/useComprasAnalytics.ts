@@ -1,6 +1,13 @@
 import React from 'react';
 
-export const AREA_CONFIG = {
+export interface AreaConfig {
+  id: string;
+  label: string;
+  icon: string;
+  color: string;
+}
+
+export const AREA_CONFIG: Record<string, AreaConfig> = {
   solicitudes: { id: 'solicitudes', label: 'Solicitudes', icon: 'SP', color: '#2563EB' },
   ordenes: { id: 'ordenes', label: 'Ordenes', icon: 'OC', color: '#7C3AED' },
   proveedores: { id: 'proveedores', label: 'Proveedores', icon: 'PR', color: '#059669' },
@@ -10,7 +17,12 @@ export const AREA_CONFIG = {
   otros: { id: 'otros', label: 'Otros', icon: 'OT', color: '#64748B' },
 };
 
-export const KEYWORD_MAP = [
+export interface KeywordEntry {
+  key: string;
+  keywords: string[];
+}
+
+export const KEYWORD_MAP: KeywordEntry[] = [
   { key: 'solicitudes', keywords: ['solicitud', 'requisicion', 'request', 'compra'] },
   { key: 'ordenes', keywords: ['orden', 'oc', 'purchase order'] },
   { key: 'proveedores', keywords: ['proveedor', 'supplier', 'vendor'] },
@@ -19,14 +31,14 @@ export const KEYWORD_MAP = [
   { key: 'reportes', keywords: ['reporte', 'dashboard', 'grafica', 'indicador'] },
 ];
 
-export const normalizeText = (value) =>
+export const normalizeText = (value: string | number | null | undefined): string =>
   String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
 
-export const parseMoney = (value) => {
+export const parseMoney = (value: string | number | null | undefined): number => {
   if (typeof value === 'number') return value;
   if (!value) return 0;
 
@@ -39,7 +51,15 @@ export const parseMoney = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const detectArea = (sheet) => {
+export interface SheetInfo {
+  name?: string;
+  mimeType?: string;
+  modifiedTime?: string;
+  createdTime?: string;
+}
+
+export const detectArea = (sheet: SheetInfo | null | undefined): string => {
+  if (!sheet) return 'otros';
   const source = normalizeText(`${sheet?.name || ''} ${sheet?.mimeType || ''}`);
 
   for (const entry of KEYWORD_MAP) {
@@ -51,7 +71,41 @@ export const detectArea = (sheet) => {
   return 'otros';
 };
 
-const summarizePreviewRows = (previewData) => {
+export interface PreviewData {
+  values?: (string | null)[][];
+}
+
+export interface ColumnTotal {
+  label: string;
+  value: number;
+  populated: number;
+}
+
+export interface CategoryDistribution {
+  label: string;
+  value: number;
+}
+
+export interface TimelineEntry {
+  label: string;
+  value: number;
+}
+
+export interface TableData {
+  headers: string[];
+  rows: Record<string, string | number>[];
+}
+
+export interface PreviewSummary {
+  rowCount: number;
+  columnCount: number;
+  totalsByColumn: ColumnTotal[];
+  categoryDistribution: CategoryDistribution[];
+  timelineData: TimelineEntry[];
+  table: TableData;
+}
+
+const summarizePreviewRows = (previewData: PreviewData | null): PreviewSummary => {
   if (!previewData?.values?.length) {
     return {
       rowCount: 0,
@@ -68,7 +122,7 @@ const summarizePreviewRows = (previewData) => {
   const rows = rawRows
     .filter((row) => row.some((cell) => String(cell || '').trim() !== ''))
     .map((row) =>
-      headers.reduce((acc, header, index) => {
+      headers.reduce<Record<string, string | number>>((acc, header, index) => {
         acc[header] = row[index] ?? '';
         return acc;
       }, {}),
@@ -76,7 +130,7 @@ const summarizePreviewRows = (previewData) => {
 
   const numericColumns = headers
     .map((header) => {
-      const total = rows.reduce((sum, row) => sum + parseMoney(row[header]), 0);
+      const total = rows.reduce<number>((sum, row) => sum + parseMoney(row[header]), 0);
       const populated = rows.filter((row) => parseMoney(row[header]) !== 0).length;
 
       return {
@@ -92,7 +146,7 @@ const summarizePreviewRows = (previewData) => {
   const candidateCategoryHeader =
     headers.find((header) => /(estatus|estado|categoria|tipo|area|proveedor)/i.test(header)) || headers[0];
 
-  const categoryMap = rows.reduce((acc, row) => {
+  const categoryMap = rows.reduce<Record<string, number>>((acc, row) => {
     const label = String(row[candidateCategoryHeader] || 'Sin dato').trim() || 'Sin dato';
     acc[label] = (acc[label] || 0) + 1;
     return acc;
@@ -100,12 +154,12 @@ const summarizePreviewRows = (previewData) => {
 
   const categoryDistribution = Object.entries(categoryMap)
     .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => (b.value as number) - (a.value as number))
     .slice(0, 6);
 
   const candidateDateHeader = headers.find((header) => /(fecha|date|periodo|mes)/i.test(header));
   const timelineData = candidateDateHeader
-    ? rows.reduce((acc, row) => {
+    ? rows.reduce<Record<string, number>>((acc, row) => {
         const label = String(row[candidateDateHeader] || 'Sin fecha').trim() || 'Sin fecha';
         acc[label] = (acc[label] || 0) + 1;
         return acc;
@@ -127,7 +181,23 @@ const summarizePreviewRows = (previewData) => {
   };
 };
 
-export const useComprasAnalytics = ({ spreadsheets = [], areasAsignadas = [], previewData = null }) => {
+export interface UseComprasAnalyticsProps {
+  spreadsheets?: SheetInfo[];
+  areasAsignadas?: string[];
+  previewData?: PreviewData | null;
+}
+
+export interface UseComprasAnalyticsResult {
+  areaCards: (AreaConfig & { count: number })[];
+  areaDistribution: (AreaConfig & { value: number })[];
+  monthlyActivity: TimelineEntry[];
+  previewSummary: PreviewSummary;
+  totalFiles: number;
+  googleSheetsCount: number;
+  excelCount: number;
+}
+
+export const useComprasAnalytics = ({ spreadsheets = [], areasAsignadas = [], previewData = null }: UseComprasAnalyticsProps): UseComprasAnalyticsResult => {
   return React.useMemo(() => {
     const areaDistribution = Object.values(
       spreadsheets.reduce((acc, sheet) => {
@@ -143,7 +213,7 @@ export const useComprasAnalytics = ({ spreadsheets = [], areasAsignadas = [], pr
 
         acc[area.id].value += 1;
         return acc;
-      }, {}),
+      }, {} as Record<string, AreaConfig & { value: number }>),
     );
 
     const monthlyActivity = spreadsheets.reduce((acc, sheet) => {
@@ -153,7 +223,7 @@ export const useComprasAnalytics = ({ spreadsheets = [], areasAsignadas = [], pr
       });
       acc[month] = (acc[month] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     const previewSummary = summarizePreviewRows(previewData);
     const visibleAreas = (areasAsignadas.length ? areasAsignadas : Object.keys(AREA_CONFIG))
