@@ -3,7 +3,7 @@ import { googleSheetsApi } from '../lib/googleSheets.api';
 import { compraApi } from '../lib/compra.api';
 import { spreadsheetsDB } from '../lib/spreadsheetsDB';
 
-const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
 const TOKEN_KEY = 'google_sheets_token';
 const USER_EMAIL_KEY = 'google_sheets_email';
