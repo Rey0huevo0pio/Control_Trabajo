@@ -383,7 +383,7 @@ export const ExcelEditorPanel = ({ previewSummary, onSave }) => {
   if (!headers.length)
     return (
       <Card variant="outlined">
-        <EmptyState text="Selecciona un Google Sheet para habilitar el editor." />
+        <EmptyState text="Selecciona un archivo (Google Sheets o Excel) para habilitar el editor." />
       </Card>
     );
 
@@ -870,7 +870,7 @@ export const SpreadsheetPreviewPanel = ({
               </div>
             </Stack>
           ) : (
-            <EmptyState text="Selecciona un Google Sheet para ver una vista previa de su contenido." />
+            <EmptyState text="Selecciona un archivo (Google Sheets o Excel) para ver una vista previa." />
           )}
         </Card>
       </div>

@@ -4,7 +4,7 @@ import { compraApi } from '../lib/compra.api';
 import { spreadsheetsDB } from '../lib/spreadsheetsDB';
 
 const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
-const SCOPES = 'openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+const SCOPES = 'openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.readonly';
 const TOKEN_KEY = 'google_sheets_token';
 const USER_EMAIL_KEY = 'google_sheets_email';
 const USER_NAME_KEY = 'google_sheets_name';
@@ -283,29 +283,91 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
       throw new Error('Archivo no valido');
     }
 
-    if (!spreadsheet.mimeType?.includes('google-apps.spreadsheet')) {
-      throw new Error('La vista previa solo esta disponible para archivos nativos de Google Sheets.');
-    }
+    const isGoogleSheet = spreadsheet.mimeType?.includes('google-apps.spreadsheet');
+    const isExcel = spreadsheet.mimeType?.includes('officedocument.spreadsheet') || 
+                 spreadsheet.mimeType?.includes('vnd.ms-excel') ||
+                 spreadsheet.name?.match(/\.(xlsx|xls|xlsm)$/i);
 
-    const details = await googleSheetsApi.getSpreadsheet(accessToken, spreadsheet.id);
-    const firstSheetTitle = details?.sheets?.[0]?.properties?.title;
+    if (isGoogleSheet) {
+      const details = await googleSheetsApi.getSpreadsheet(accessToken, spreadsheet.id);
+      const firstSheetTitle = details?.sheets?.[0]?.properties?.title;
 
-    if (!firstSheetTitle) {
+      if (!firstSheetTitle) {
+        return {
+          spreadsheet: details,
+          range: null,
+          values: [],
+          table: { headers: [], rows: [] },
+          rowCount: 0,
+          columnCount: 0,
+          categoryDistribution: [],
+          isExcel: false,
+        };
+      }
+
+      const range = `'${firstSheetTitle}'!A1:Z200`;
+      const valuesResponse = await googleSheetsApi.getValues(accessToken, spreadsheet.id, range);
+      const rawValues = valuesResponse?.values || [];
+      const headers = rawValues[0] || [];
+      const dataRows = rawValues.slice(1);
+
+      const tableRows = dataRows.slice(0, 200).map(row => {
+        const obj: any = {};
+        headers.forEach((h, i) => {
+          obj[h] = row[i] ?? '';
+        });
+        return obj;
+      });
+
+      const categoryCol = headers.find(h => /categoria|area|tipo|grupo/i.test(h));
+      const categoryDistribution = categoryCol
+        ? tableRows.reduce((acc, row) => {
+            const cat = String(row[categoryCol] || 'Sin categoría');
+            acc[cat] = (acc[cat] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        : {};
+
       return {
         spreadsheet: details,
-        range: null,
-        values: [],
+        range,
+        values: rawValues,
+        table: {
+          headers,
+          rows: tableRows,
+        },
+        rowCount: dataRows.length,
+        columnCount: headers.length,
+        categoryDistribution: Object.entries(categoryDistribution).map(([label, value]) => ({ label, value })),
+        isExcel: false,
       };
     }
 
-    const range = `'${firstSheetTitle}'!A1:Z200`;
-    const valuesResponse = await googleSheetsApi.getValues(accessToken, spreadsheet.id, range);
+    if (isExcel) {
+      try {
+        const excelData = await googleSheetsApi.getExcelContent(accessToken, spreadsheet.id);
+        return {
+          spreadsheet: { properties: { title: spreadsheet.name } },
+          range: null,
+          values: [],
+          table: {
+            headers: excelData.headers,
+            rows: excelData.rows.slice(0, 200),
+          },
+          rowCount: excelData.rows.length,
+          columnCount: excelData.headers.length,
+          categoryDistribution: [],
+          isExcel: true,
+        };
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          throw new Error('No tienes permisos para abrir este archivo Excel. Solicita acceso al propietario o usa un archivo propio.');
+        }
+        throw err;
+      }
+    }
 
-    return {
-      spreadsheet: details,
-      range,
-      values: valuesResponse?.values || [],
-    };
+    throw new Error('Tipo de archivo no soportado para vista previa.');
   }, [accessToken]);
 
   const updateAreasAsignadas = useCallback(async (nuevasAreas) => {

@@ -106,6 +106,44 @@ export const googleSheetsApi = {
     return true;
   },
 
+  getExcelContent: async (accessToken: string, fileId: string): Promise<{ headers: string[]; rows: any[] }> => {
+    const response = await api.get(
+      `${GOOGLE_DRIVE_API}/files/${fileId}`,
+      {
+        params: { alt: 'media' },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        responseType: 'blob',
+      }
+    );
+
+    const blob = response.data as Blob;
+    const arrayBuffer = await blob.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+
+    const XLSX = await import('xlsx');
+    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+    if (!jsonData.length) {
+      return { headers: [], rows: [] };
+    }
+
+    const headers = jsonData[0].map((h, i) => String(h) || `Columna_${i + 1}`);
+    const rows = jsonData.slice(1).map(row => {
+      const obj: any = {};
+      headers.forEach((h, i) => {
+        obj[h] = row[i] ?? '';
+      });
+      return obj;
+    });
+
+    return { headers, rows };
+  },
+
   downloadSpreadsheet: async (accessToken: string, spreadsheetId: string, title: string, mimeType?: string): Promise<boolean> => {
     let url: string;
     let format: string = 'xlsx';
