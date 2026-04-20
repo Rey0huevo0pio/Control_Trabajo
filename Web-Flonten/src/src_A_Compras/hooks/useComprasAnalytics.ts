@@ -176,7 +176,7 @@ const summarizePreviewRows = (previewData: PreviewData | null): PreviewSummary =
       .slice(0, 8),
     table: {
       headers,
-      rows: rows.slice(0, 8),
+      rows,
     },
   };
 };
