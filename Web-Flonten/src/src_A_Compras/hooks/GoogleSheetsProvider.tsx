@@ -283,10 +283,20 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
       throw new Error('Archivo no valido');
     }
 
-    const isGoogleSheet = spreadsheet.mimeType?.includes('google-apps.spreadsheet');
+    // Mejorar detección: usar webViewLink además de mimeType
+    // Si el enlace es de docs.google.com/spreadsheets, es Google Sheets aunque el mimeType diga otra cosa
+    // Si el enlace es de drive.google.com/file, es un archivo original (Excel, etc.)
+    const webViewLink = spreadsheet.webViewLink || '';
+    const isGoogleSheetLink = webViewLink.includes('docs.google.com/spreadsheets');
+    const isDriveFileLink = webViewLink.includes('drive.google.com/file');
+    
+    // Determinar tipo de archivo con múltiples señales
+    const isGoogleSheet = spreadsheet.mimeType?.includes('google-apps.spreadsheet') || isGoogleSheetLink;
     const isExcel = spreadsheet.mimeType?.includes('officedocument.spreadsheet') || 
                  spreadsheet.mimeType?.includes('vnd.ms-excel') ||
-                 spreadsheet.name?.match(/\.(xlsx|xls|xlsm)$/i);
+                 spreadsheet.mimeType?.includes('openxmlformats') ||
+                 spreadsheet.name?.match(/\.(xlsx|xls|xlsm|xlsb)$/i) ||
+                 (isDriveFileLink && !isGoogleSheetLink);
 
     if (isGoogleSheet) {
       const details = await googleSheetsApi.getSpreadsheet(accessToken, spreadsheet.id);
@@ -361,9 +371,12 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
         };
       } catch (err: any) {
         if (err.response?.status === 403) {
-          throw new Error('No tienes permisos para abrir este archivo Excel. Solicita acceso al propietario o usa un archivo propio.');
+          throw new Error('No tienes permisos para ver este archivo. Solicita acceso al propietario o conviertelo a Google Sheets.');
         }
-        throw err;
+        if (err.response?.status === 404) {
+          throw new Error('Archivo no encontrado. Puede que haya sido eliminado o movido.');
+        }
+        throw new Error(`Error leyendo Excel: ${err.message || 'Formato no compatible'}`);
       }
     }
 

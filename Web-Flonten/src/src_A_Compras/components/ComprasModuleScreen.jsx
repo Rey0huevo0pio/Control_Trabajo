@@ -64,10 +64,22 @@ const ModuleContent = ({ moduleConfig }) => {
         return current;
       }
 
-      return (
-        moduleSheets.find((sheet) => sheet.mimeType?.includes('google-apps.spreadsheet')) ||
-        moduleSheets[0]
+      const isExcel = (sheet) => {
+        const webViewLink = sheet.webViewLink || '';
+        const isGoogleSheetLink = webViewLink.includes('docs.google.com/spreadsheets');
+        const isDriveFileLink = webViewLink.includes('drive.google.com/file');
+        
+        return sheet.mimeType?.includes('officedocument.spreadsheet') ||
+               sheet.mimeType?.includes('vnd.ms-excel') ||
+               sheet.name?.match(/\.(xlsx|xls|xlsm|xlsb)$/i) ||
+               (isDriveFileLink && !isGoogleSheetLink);
+      };
+
+      const excelSheet = moduleSheets.find(
+        (sheet) => sheet.mimeType?.includes('google-apps.spreadsheet') || isExcel(sheet)
       );
+
+      return excelSheet || moduleSheets[0];
     });
   }, [moduleSheets]);
 

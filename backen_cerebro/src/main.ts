@@ -81,7 +81,7 @@ async function bootstrap() {
   // Configuración para permitir el dominio de Cloudflared del frontend
   app.enableCors({
     origin: [
-      'https://landing-prayer-theaters-incidence.trycloudflare.com',
+      'https://version-partnerships-complimentary-flashers.trycloudflare.com',
       'http://localhost:5173',
       'http://localhost:3000',
     ],

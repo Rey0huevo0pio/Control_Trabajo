@@ -763,7 +763,10 @@ export const SpreadsheetPreviewPanel = ({
           >
             {spreadsheets.map((sheet) => {
               const isActive = sheet.id === selectedSpreadsheetId;
-              const isGoogleSheet = sheet.mimeType?.includes('google-apps.spreadsheet');
+              // Mejorar detección usando webViewLink además de mimeType
+              const webViewLink = sheet.webViewLink || '';
+              const isGoogleSheetLink = webViewLink.includes('docs.google.com/spreadsheets');
+              const isGoogleSheet = sheet.mimeType?.includes('google-apps.spreadsheet') || isGoogleSheetLink;
 
               return (
                 <Card
