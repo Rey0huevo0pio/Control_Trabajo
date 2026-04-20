@@ -16,16 +16,20 @@
  *
  * ============================================================================
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { instalacionApi } from '../lib/instalacion.api';
+import { userService } from '../../services/userService';
 
-export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
+export const RegistroInstalacionForm = ({ instalacionId, onSuccess, onCancel }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
+  const [ingenieros, setIngenieros] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     nombre_instalacion: '',
     nombre_registrador: user?.nombre || '',
@@ -34,13 +38,62 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
     responsable: '',
     creado_por: user?.id || '',
     activa: true,
+    ingeniero_instalacion: '',
+    nombre_ingeniero: '',
   });
+
+  useEffect(() => {
+    const loadIngenieros = async () => {
+      try {
+        const usersData = await userService.getUsers();
+        setIngenieros(usersData || []);
+      } catch (err) {
+        console.error('Error al cargar ingenieros:', err);
+      }
+    };
+    loadIngenieros();
+  }, []);
+
+  useEffect(() => {
+    if (instalacionId) {
+      const loadInstalacion = async () => {
+        setLoadingData(true);
+        try {
+          const data = await instalacionApi.getById(instalacionId);
+          setFormData({
+            nombre_instalacion: data.nombre_instalacion || '',
+            nombre_registrador: data.nombre_registrador || user?.nombre || '',
+            ubicacion: { direccion: data.ubicacion?.direccion || '' },
+            descripcion: data.descripcion || '',
+            responsable: data.responsable || '',
+            creado_por: data.creado_por || user?.id || '',
+            activa: data.activa ?? true,
+            ingeniero_instalacion: data.ingeniero_instalacion || '',
+            nombre_ingeniero: data.nombre_ingeniero || '',
+          });
+          setIsEditMode(true);
+        } catch (err) {
+          setError('No se pudo cargar la instalación');
+        } finally {
+          setLoadingData(false);
+        }
+      };
+      loadInstalacion();
+    }
+  }, [instalacionId]);
 
   const handleChange = (field, value) => {
     if (field === 'ubicacion') {
       setFormData(prev => ({
         ...prev,
         ubicacion: { ...prev.ubicacion, direccion: value },
+      }));
+    } else if (field === 'ingeniero_instalacion') {
+      const ingeniero = ingenieros.find(i => i.id === value);
+      setFormData(prev => ({
+        ...prev,
+        ingeniero_instalacion: value,
+        nombre_ingeniero: ingeniero ? `${ingeniero.nombre} ${ingeniero.apellido}`.trim() : '',
       }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
@@ -70,7 +123,11 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
-      await instalacionApi.create(formData);
+      if (isEditMode && instalacionId) {
+        await instalacionApi.update(instalacionId, formData);
+      } else {
+        await instalacionApi.create(formData);
+      }
       if (onSuccess) onSuccess();
       else navigate('/instalaciones');
     } catch (err) {
@@ -117,10 +174,10 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
             </svg>
           </div>
           <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: 'white', letterSpacing: '-0.5' }}>
-            Registrar Instalación
+            {isEditMode ? 'Editar Instalación' : 'Registrar Instalación'}
           </h2>
           <p style={{ margin: '8px 0 0', fontSize: 15, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-            Complete los datos de la nueva instalación
+            {isEditMode ? 'Actualice los datos de la instalación' : 'Complete los datos de la nueva instalación'}
           </p>
         </div>
 
@@ -251,7 +308,7 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
           </div>
 
           {/* Responsable */}
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 24 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#545454', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Responsable *
             </label>
@@ -272,6 +329,41 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', fontWeight: 500 }}
               />
             </div>
+          </div>
+
+          {/* Ingeniero de Instalación */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#545454', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Ingeniero de Instalación
+            </label>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14,
+              borderWidth: 2, borderColor: '#E0E0E0', borderRadius: 14,
+              padding: 16, backgroundColor: '#FAFAFA',
+              transition: 'all 0.2s ease',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <select
+                value={formData.ingeniero_instalacion}
+                onChange={(e) => handleChange('ingeniero_instalacion', e.target.value)}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', fontWeight: 500, color: '#333', cursor: 'pointer' }}
+              >
+                <option value="">Seleccionar ingeniero...</option>
+                {ingenieros.map((ing) => (
+                  <option key={ing.id} value={ing.id}>
+                    {ing.nombre} {ing.apellido}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {formData.nombre_ingeniero && (
+              <p style={{ marginTop: 8, fontSize: 13, color: '#34C759', fontWeight: 500 }}>
+                Ingeniero asignado: {formData.nombre_ingeniero}
+              </p>
+            )}
           </div>
 
           {/* Botones */}
@@ -315,7 +407,7 @@ export const RegistroInstalacionForm = ({ onSuccess, onCancel }) => {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Registrar Instalación
+                  {isEditMode ? 'Guardar Cambios' : 'Registrar Instalación'}
                 </>
               )}
             </button>

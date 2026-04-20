@@ -53,6 +53,12 @@ export const DetalleInstalacionScreen = () => {
     }
   };
 
+  const handleEditarInstalacion = () => {
+    if (instalacion) {
+      navigate(`/instalaciones/${instalacionId}/editar`);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -102,17 +108,33 @@ export const DetalleInstalacionScreen = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F2F2F7' }}>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 32px' }}>
-        {/* Botón regresar */}
-        <button
-          onClick={() => navigate('/instalaciones')}
-          style={{
-            backgroundColor: 'white', border: '1px solid #D1D1D6', borderRadius: 12,
-            padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-            gap: 8, marginBottom: 20, fontSize: 14, fontWeight: 600, color: '#3C3C43',
-          }}
-        >
-          ← Instalaciones
-        </button>
+        {/* Botones de navegación */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <button
+            onClick={() => navigate('/instalaciones')}
+            style={{
+              backgroundColor: 'white', border: '1px solid #D1D1D6', borderRadius: 12,
+              padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              gap: 8, fontSize: 14, fontWeight: 600, color: '#3C3C43',
+            }}
+          >
+            ← Instalaciones
+          </button>
+          <button
+            onClick={handleEditarInstalacion}
+            style={{
+              backgroundColor: '#007AFF', border: 'none', borderRadius: 12,
+              padding: '8px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              gap: 8, fontSize: 14, fontWeight: 600, color: 'white',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Editar Instalación
+          </button>
+        </div>
 
         {/* Foto de portada */}
         <div style={{ height: 200, backgroundColor: '#E5E5EA', borderRadius: 20, overflow: 'hidden', marginBottom: 24 }}>

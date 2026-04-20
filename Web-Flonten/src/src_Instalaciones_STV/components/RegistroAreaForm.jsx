@@ -16,10 +16,11 @@
  *
  * ============================================================================
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { instalacionApi } from '../lib/instalacion.api';
+import { userService } from '../../services/userService';
 
 export const RegistroAreaForm = () => {
   const navigate = useNavigate();
@@ -27,18 +28,41 @@ export const RegistroAreaForm = () => {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ingenieros, setIngenieros] = useState([]);
   const [formData, setFormData] = useState({
     nombre_area: '',
     descripcion: '',
     id_instalacion: instalacionId,
     creado_por: user?.id || '',
+    ingeniero_area: '',
+    nombre_ingeniero: '',
   });
 
-  // Mock instalación nombre (luego vendrá de la API)
+  useEffect(() => {
+    const loadIngenieros = async () => {
+      try {
+        const usersData = await userService.getUsers();
+        setIngenieros(usersData || []);
+      } catch (err) {
+        console.error('Error al cargar ingenieros:', err);
+      }
+    };
+    loadIngenieros();
+  }, []);
+
   const instalacionNombre = 'Instalación #' + (instalacionId?.slice(-4) || '???');
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'ingeniero_area') {
+      const ingeniero = ingenieros.find(i => i.id === value);
+      setFormData(prev => ({
+        ...prev,
+        ingeniero_area: value,
+        nombre_ingeniero: ingeniero ? `${ingeniero.nombre} ${ingeniero.apellido}`.trim() : '',
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -190,6 +214,41 @@ export const RegistroAreaForm = () => {
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', resize: 'vertical', minHeight: 100, fontWeight: 500 }}
               />
             </div>
+          </div>
+
+          {/* Ingeniero de Área */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#545454', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Ingeniero de Área
+            </label>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 14,
+              borderWidth: 2, borderColor: '#E0E0E0', borderRadius: 14,
+              padding: 16, backgroundColor: '#FAFAFA',
+              transition: 'all 0.2s ease',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <select
+                value={formData.ingeniero_area}
+                onChange={(e) => handleChange('ingeniero_area', e.target.value)}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, background: 'transparent', fontWeight: 500, color: '#333', cursor: 'pointer' }}
+              >
+                <option value="">Seleccionar ingeniero...</option>
+                {ingenieros.map((ing) => (
+                  <option key={ing.id} value={ing.id}>
+                    {ing.nombre} {ing.apellido}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {formData.nombre_ingeniero && (
+              <p style={{ marginTop: 8, fontSize: 13, color: '#34C759', fontWeight: 500 }}>
+                Ingeniero asignado: {formData.nombre_ingeniero}
+              </p>
+            )}
           </div>
 
           {/* Info card */}

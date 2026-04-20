@@ -393,6 +393,14 @@ export const AppRouter = () => {
           }
         />
         <Route
+          path="/instalaciones/:instalacionId/editar"
+          element={
+            <ProtectedRoute>
+              <RegistroInstalacionScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/instalaciones/:instalacionId/area/nueva"
           element={
             <ProtectedRoute>
