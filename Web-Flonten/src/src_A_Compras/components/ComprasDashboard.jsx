@@ -522,8 +522,8 @@ export const ChartBuilderPanel = ({ previewSummary, chartCols = [], title, subti
   const [labelCol, setLabelCol] = useState('');
   const [valueCol, setValueCol] = useState('');
 
-  const headers = previewSummary?.table?.headers || [];
-  const rows = previewSummary?.table?.rows || [];
+  const headers = useMemo(() => previewSummary?.table?.headers || [], [previewSummary]);
+  const rows = useMemo(() => previewSummary?.table?.rows || [], [previewSummary]);
 
   // Auto-select first chartCols if not set
   const effectiveLabelCol = labelCol || chartCols[0] || headers[0] || '';
