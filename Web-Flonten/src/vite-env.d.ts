@@ -8,3 +8,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env?: ImportMetaEnv;
 }
+
+interface Window {
+  google?: {
+    accounts?: {
+      oauth2?: {
+        initTokenClient: (config: any) => any;
+        revoke: (token: string, callback: (response: any) => void) => void;
+      };
+    };
+  };
+}

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'plant-indicator-copies-victor.trycloudflare.com'
+      'landing-prayer-theaters-incidence.trycloudflare.com'
     ]
   },
   resolve: {

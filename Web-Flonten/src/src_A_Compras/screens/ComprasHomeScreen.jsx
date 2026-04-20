@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Text, Card, Stack, HStack, ScreenLayout, IconButton, Button } from '../../components/design-system';
-import { GoogleSheetsProvider } from '../hooks/GoogleSheetsProvider.jsx';
+import { GoogleSheetsProvider } from '../hooks/GoogleSheetsProvider';
 import { useGoogleSheets } from '../hooks/useGoogleSheets.js';
 import { useComprasAnalytics } from '../hooks/useComprasAnalytics.js';
 import { GoogleSheetsManager } from '../components/GoogleSheetsManager';

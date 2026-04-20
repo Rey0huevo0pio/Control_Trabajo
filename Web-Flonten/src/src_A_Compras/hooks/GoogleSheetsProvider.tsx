@@ -12,16 +12,16 @@ const CACHE_DURATION = 1000 * 60 * 15;
 
 const GoogleSheetsContext = createContext(null);
 
-export const GoogleSheetsProvider = ({ children }) => {
+export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
   const hasInitializedRef = useRef(false);
-  const [accessToken, setAccessToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [accessToken, setAccessToken] = useState<any>(() => localStorage.getItem(TOKEN_KEY));
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [spreadsheets, setSpreadsheets] = useState([]);
+  const [spreadsheets, setSpreadsheets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
+  const [error, setError] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<any>(null);
   const [areasAsignadas, setAreasAsignadas] = useState(['solicitudes', 'ordenes', 'presupuesto']);
-  const [nombre, setNombre] = useState(null);
+  const [nombre, setNombre] = useState<any>(null);
 
   const syncConnectionToBackend = useCallback(async (token, fallbackAreas = areasAsignadas) => {
     if (!token) return false;
@@ -75,7 +75,7 @@ export const GoogleSheetsProvider = ({ children }) => {
 
     if (!forceRefresh) {
       try {
-        const cached = await spreadsheetsDB.getSpreadsheets();
+        const cached = await (spreadsheetsDB.getSpreadsheets() as Promise<any[]>);
         const cacheTime = await spreadsheetsDB.getCacheTimestamp();
 
         if (cached.length > 0 && cacheTime) {
@@ -97,10 +97,10 @@ export const GoogleSheetsProvider = ({ children }) => {
     );
 
     try {
-      const files = await Promise.race([
+      const files = await (Promise.race([
         googleSheetsApi.listSpreadsheets(token),
         timeoutPromise,
-      ]);
+      ]) as Promise<any>);
       console.log('Archivos obtenidos de API:', files);
       setSpreadsheets(files || []);
 
@@ -117,7 +117,7 @@ export const GoogleSheetsProvider = ({ children }) => {
         setAccessToken(null);
         setError('Sesion expirada. Inicia sesion nuevamente.');
       } else {
-        const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
+        const cached = await (spreadsheetsDB.getSpreadsheets() as Promise<any[]>) .catch(() => []);
         if (cached.length > 0) {
           console.log('Usando cache despues de error:', cached.length, 'archivos');
           setSpreadsheets(cached);
@@ -352,7 +352,7 @@ export const GoogleSheetsProvider = ({ children }) => {
           await syncConnectionToBackend(savedToken);
         }
 
-        const cached = await spreadsheetsDB.getSpreadsheets().catch(() => []);
+        const cached = await (spreadsheetsDB.getSpreadsheets() as Promise<any[]>) .catch(() => []);
         if (cached.length > 0) {
           console.log('Cargando desde IndexedDB al inicio:', cached.length, 'archivos');
           setSpreadsheets(cached);

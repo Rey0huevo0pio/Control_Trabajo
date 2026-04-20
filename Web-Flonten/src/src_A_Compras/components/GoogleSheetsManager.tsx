@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, Card, Button, Stack, HStack, IconButton, Input } from '../../components/design-system';
+import { Text, Card, Button, Stack, HStack, IconButton, Input } from '../../components/design-system/index.js';
 import { useGoogleSheets } from '../hooks/useGoogleSheets.js';
 
 const AVAILABLE_AREAS = [

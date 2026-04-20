@@ -6,7 +6,12 @@ import api from '../../services/api';
 
 interface GoogleConnectionData {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken?: string | null;
+  tokenExpiry?: string | null;
+  email?: string;
+  nombre?: string;
+  scope?: string;
+  areasAsignadas?: string[];
   expiresAt?: number;
 }
 
