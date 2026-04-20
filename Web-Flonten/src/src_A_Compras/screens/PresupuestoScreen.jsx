@@ -227,6 +227,7 @@ const PresupuestoContent = () => {
     moduleSheets, loadSpreadsheets,
     showSheetsManager, setShowSheetsManager,
     selectedSpreadsheet, setSelectedSpreadsheet,
+    setSelectedSheetName, sheetNames, activeSheetName,
     previewLoading, previewError,
     editorSaveData, setEditorSaveData,
     activeTab, setActiveTab,
@@ -288,9 +289,11 @@ const PresupuestoContent = () => {
 
           <SpreadsheetPreviewPanel
             spreadsheets={moduleSheets} selectedSpreadsheetId={selectedSpreadsheet?.id}
-            onSelectSpreadsheet={setSelectedSpreadsheet} previewSummary={analytics.previewSummary}
+            onSelectSpreadsheet={(sheet) => { setSelectedSpreadsheet(sheet); setSelectedSheetName(null); }}
+            previewSummary={analytics.previewSummary}
             previewLoading={previewLoading} previewError={previewError}
             onRefresh={() => loadSpreadsheets(true)} onOpenManager={() => setShowSheetsManager(true)}
+            sheetNames={sheetNames} activeSheetName={activeSheetName} onSelectSheet={setSelectedSheetName}
           />
 
           <ExcelEditorPanel previewSummary={analytics.previewSummary} onSave={setEditorSaveData} />

@@ -106,7 +106,7 @@ export const googleSheetsApi = {
     return true;
   },
 
-  getExcelContent: async (accessToken: string, fileId: string): Promise<{ headers: string[]; rows: any[] }> => {
+  getExcelContent: async (accessToken: string, fileId: string, sheetName?: string): Promise<{ headers: string[]; rows: any[]; sheetNames: string[] }> => {
     const response = await api.get(
       `${GOOGLE_DRIVE_API}/files/${fileId}`,
       {
@@ -124,12 +124,13 @@ export const googleSheetsApi = {
 
     const XLSX = await import('xlsx');
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const sheetNames = workbook.SheetNames;
+    const targetSheet = (sheetName && sheetNames.includes(sheetName)) ? sheetName : sheetNames[0];
+    const worksheet = workbook.Sheets[targetSheet];
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
 
     if (!jsonData.length) {
-      return { headers: [], rows: [] };
+      return { headers: [], rows: [], sheetNames };
     }
 
     const headers = jsonData[0].map((h, i) => String(h) || `Columna_${i + 1}`);
@@ -141,7 +142,7 @@ export const googleSheetsApi = {
       return obj;
     });
 
-    return { headers, rows };
+    return { headers, rows, sheetNames };
   },
 
   downloadSpreadsheet: async (accessToken: string, spreadsheetId: string, title: string, mimeType?: string): Promise<boolean> => {

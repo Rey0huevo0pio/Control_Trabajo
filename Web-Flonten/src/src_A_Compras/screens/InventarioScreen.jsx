@@ -202,10 +202,11 @@ const TABS = cfg.options.map((o) => ({ id: o.title, icon: o.icon, label: o.title
 const InventarioContent = () => {
   const navigate = useNavigate();
   const {
-    moduleSheets, loading, loadSpreadsheets,
+    moduleSheets, loadSpreadsheets,
     showSheetsManager, setShowSheetsManager,
     selectedSpreadsheet, setSelectedSpreadsheet,
-    previewData, previewLoading, previewError,
+    setSelectedSheetName, sheetNames, activeSheetName,
+    previewLoading, previewError,
     editorSaveData, setEditorSaveData,
     activeTab, setActiveTab,
     analytics,
@@ -264,9 +265,11 @@ const InventarioContent = () => {
 
           <SpreadsheetPreviewPanel
             spreadsheets={moduleSheets} selectedSpreadsheetId={selectedSpreadsheet?.id}
-            onSelectSpreadsheet={setSelectedSpreadsheet} previewSummary={analytics.previewSummary}
+            onSelectSpreadsheet={(sheet) => { setSelectedSpreadsheet(sheet); setSelectedSheetName(null); }}
+            previewSummary={analytics.previewSummary}
             previewLoading={previewLoading} previewError={previewError}
             onRefresh={() => loadSpreadsheets(true)} onOpenManager={() => setShowSheetsManager(true)}
+            sheetNames={sheetNames} activeSheetName={activeSheetName} onSelectSheet={setSelectedSheetName}
           />
 
           <ExcelEditorPanel previewSummary={analytics.previewSummary} onSave={setEditorSaveData} />

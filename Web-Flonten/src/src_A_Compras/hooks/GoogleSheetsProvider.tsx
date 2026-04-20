@@ -278,19 +278,15 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
     return googleSheetsApi.getValues(accessToken, spreadsheetId, range);
   }, [accessToken]);
 
-  const getSpreadsheetPreview = useCallback(async (spreadsheet) => {
+  const getSpreadsheetPreview = useCallback(async (spreadsheet, selectedSheetName?: string) => {
     if (!spreadsheet?.id) {
       throw new Error('Archivo no valido');
     }
 
-    // Mejorar detección: usar webViewLink además de mimeType
-    // Si el enlace es de docs.google.com/spreadsheets, es Google Sheets aunque el mimeType diga otra cosa
-    // Si el enlace es de drive.google.com/file, es un archivo original (Excel, etc.)
     const webViewLink = spreadsheet.webViewLink || '';
     const isGoogleSheetLink = webViewLink.includes('docs.google.com/spreadsheets');
     const isDriveFileLink = webViewLink.includes('drive.google.com/file');
     
-    // Determinar tipo de archivo con múltiples señales
     const isGoogleSheet = spreadsheet.mimeType?.includes('google-apps.spreadsheet') || isGoogleSheetLink;
     const isExcel = spreadsheet.mimeType?.includes('officedocument.spreadsheet') || 
                  spreadsheet.mimeType?.includes('vnd.ms-excel') ||
@@ -300,9 +296,14 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
 
     if (isGoogleSheet) {
       const details = await googleSheetsApi.getSpreadsheet(accessToken, spreadsheet.id);
-      const firstSheetTitle = details?.sheets?.[0]?.properties?.title;
+      const allSheets = details?.sheets || [];
+      const sheetNames = allSheets.map((s) => s.properties.title);
 
-      if (!firstSheetTitle) {
+      const targetSheet = (selectedSheetName && sheetNames.includes(selectedSheetName))
+        ? selectedSheetName
+        : sheetNames[0];
+
+      if (!targetSheet) {
         return {
           spreadsheet: details,
           range: null,
@@ -311,17 +312,19 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
           rowCount: 0,
           columnCount: 0,
           categoryDistribution: [],
+          sheetNames,
+          activeSheetName: null,
           isExcel: false,
         };
       }
 
-      const range = `'${firstSheetTitle}'!A1:Z200`;
+      const range = `'${targetSheet}'!A1:Z1000`;
       const valuesResponse = await googleSheetsApi.getValues(accessToken, spreadsheet.id, range);
       const rawValues = valuesResponse?.values || [];
       const headers = rawValues[0] || [];
       const dataRows = rawValues.slice(1);
 
-      const tableRows = dataRows.slice(0, 200).map(row => {
+      const tableRows = dataRows.map(row => {
         const obj: any = {};
         headers.forEach((h, i) => {
           obj[h] = row[i] ?? '';
@@ -329,7 +332,7 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
         return obj;
       });
 
-      const categoryCol = headers.find(h => /categoria|area|tipo|grupo/i.test(h));
+      const categoryCol = headers.find(h => /categoria|area|tipo|grupo|estatus|estado/i.test(h));
       const categoryDistribution = categoryCol
         ? tableRows.reduce((acc, row) => {
             const cat = String(row[categoryCol] || 'Sin categoría');
@@ -342,31 +345,32 @@ export const GoogleSheetsProvider = ({ children }: { children?: any }) => {
         spreadsheet: details,
         range,
         values: rawValues,
-        table: {
-          headers,
-          rows: tableRows,
-        },
+        table: { headers, rows: tableRows },
         rowCount: dataRows.length,
         columnCount: headers.length,
         categoryDistribution: Object.entries(categoryDistribution).map(([label, value]) => ({ label, value })),
+        sheetNames,
+        activeSheetName: targetSheet,
         isExcel: false,
       };
     }
 
     if (isExcel) {
       try {
-        const excelData = await googleSheetsApi.getExcelContent(accessToken, spreadsheet.id);
+        const excelData = await googleSheetsApi.getExcelContent(accessToken, spreadsheet.id, selectedSheetName);
         return {
           spreadsheet: { properties: { title: spreadsheet.name } },
           range: null,
           values: [],
           table: {
             headers: excelData.headers,
-            rows: excelData.rows.slice(0, 200),
+            rows: excelData.rows,
           },
           rowCount: excelData.rows.length,
           columnCount: excelData.headers.length,
           categoryDistribution: [],
+          sheetNames: excelData.sheetNames,
+          activeSheetName: selectedSheetName || excelData.sheetNames[0] || null,
           isExcel: true,
         };
       } catch (err: any) {

@@ -718,6 +718,9 @@ export const SpreadsheetPreviewPanel = ({
   previewError,
   onRefresh,
   onOpenManager,
+  sheetNames = [],
+  activeSheetName,
+  onSelectSheet,
 }) => (
   <Card
     variant="outlined"
@@ -815,6 +818,32 @@ export const SpreadsheetPreviewPanel = ({
             <EmptyState text={previewError} />
           ) : previewSummary?.table?.headers?.length ? (
             <Stack gap="16px">
+              {/* Selector de hojas */}
+              {sheetNames.length > 1 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {sheetNames.map((name) => (
+                    <button
+                      key={name}
+                      onClick={() => onSelectSheet?.(name)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 999,
+                        border: `1px solid ${activeSheetName === name ? '#2563EB' : '#E2E8F0'}`,
+                        backgroundColor: activeSheetName === name ? '#EFF6FF' : '#F8FAFC',
+                        color: activeSheetName === name ? '#1D4ED8' : '#475569',
+                        fontWeight: activeSheetName === name ? 700 : 400,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <span style={{ fontSize: 14 }}>📄</span> {name}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div
                 style={{
                   display: 'grid',

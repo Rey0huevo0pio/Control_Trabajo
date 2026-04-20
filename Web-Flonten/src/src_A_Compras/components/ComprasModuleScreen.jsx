@@ -36,6 +36,7 @@ const ModuleContent = ({ moduleConfig }) => {
 
   const [showSheetsManager, setShowSheetsManager] = React.useState(false);
   const [selectedSpreadsheet, setSelectedSpreadsheet] = React.useState(null);
+  const [selectedSheetName, setSelectedSheetName] = React.useState(null);
   const [previewData, setPreviewData] = React.useState(null);
   const [previewLoading, setPreviewLoading] = React.useState(false);
   const [previewError, setPreviewError] = React.useState(null);
@@ -81,6 +82,7 @@ const ModuleContent = ({ moduleConfig }) => {
 
       return excelSheet || moduleSheets[0];
     });
+    setSelectedSheetName(null);
   }, [moduleSheets]);
 
   React.useEffect(() => {
@@ -93,7 +95,7 @@ const ModuleContent = ({ moduleConfig }) => {
       setPreviewError(null);
 
       try {
-        const result = await getSpreadsheetPreview(selectedSpreadsheet);
+        const result = await getSpreadsheetPreview(selectedSpreadsheet, selectedSheetName);
         if (!cancelled) {
           setPreviewData(result);
         }
@@ -114,7 +116,7 @@ const ModuleContent = ({ moduleConfig }) => {
     return () => {
       cancelled = true;
     };
-  }, [getSpreadsheetPreview, isSignedIn, selectedSpreadsheet]);
+  }, [getSpreadsheetPreview, isSignedIn, selectedSpreadsheet, selectedSheetName]);
 
   const kpiItems = [
     {
@@ -285,12 +287,15 @@ const ModuleContent = ({ moduleConfig }) => {
           <SpreadsheetPreviewPanel
             spreadsheets={moduleSheets}
             selectedSpreadsheetId={selectedSpreadsheet?.id}
-            onSelectSpreadsheet={setSelectedSpreadsheet}
+            onSelectSpreadsheet={(sheet) => { setSelectedSpreadsheet(sheet); setSelectedSheetName(null); }}
             previewSummary={analytics.previewSummary}
             previewLoading={previewLoading}
             previewError={previewError}
             onRefresh={() => loadSpreadsheets(true)}
             onOpenManager={() => setShowSheetsManager(true)}
+            sheetNames={previewData?.sheetNames || []}
+            activeSheetName={previewData?.activeSheetName || selectedSheetName}
+            onSelectSheet={setSelectedSheetName}
           />
 
           <ExcelEditorPanel
