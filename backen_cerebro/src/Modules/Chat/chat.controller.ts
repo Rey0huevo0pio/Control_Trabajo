@@ -1,162 +1,89 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  ParseUUIDPipe,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import {
-  CreateChatSTVDto,
-  UpdateChatSTVDto,
   CreateChatGrupoDto,
   UpdateChatGrupoDto,
-  CreateChatPrivadoDto,
   MensajeGrupoDto,
+  CreateChatPrivadoDto,
   MensajePrivadoDto,
 } from './dto/chat.dto';
+import { JwtAuthGuard } from '../../Guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  // ==================== CHAT GENERAL (STV) ====================
-
-  @Post()
-  async createMensaje(@Body() createDto: CreateChatSTVDto) {
-    return this.chatService.createMensaje(createDto);
-  }
-
-  @Get()
-  async findAllMensajes() {
-    return this.chatService.findAllMensajes();
-  }
-
-  @Get('usuario/:usuarioId')
-  async findMensajesByUsuario(
-    @Param('usuarioId', ParseUUIDPipe) usuarioId: string,
-  ) {
-    return this.chatService.findMensajesByUsuario(usuarioId);
-  }
-
-  @Get('grupo/:grupoId')
-  async findMensajesByGrupo(@Param('grupoId', ParseUUIDPipe) grupoId: string) {
-    return this.chatService.findMensajesByGrupo(grupoId);
-  }
-
-  @Put(':id')
-  async updateMensaje(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDto: UpdateChatSTVDto,
-  ) {
-    return this.chatService.updateMensaje(id, updateDto);
-  }
-
-  @Delete(':id')
-  async deleteMensaje(@Param('id', ParseUUIDPipe) id: string) {
-    await this.chatService.deleteMensaje(id);
-    return { message: 'Mensaje eliminado correctamente' };
-  }
-
-  // ==================== CHAT GRUPAL ====================
+  // ==================== GRUPOS ====================
 
   @Post('grupo')
-  async createChatGrupo(@Body() createDto: CreateChatGrupoDto) {
-    return this.chatService.createChatGrupo(createDto);
+  createGrupo(@Body() dto: CreateChatGrupoDto) {
+    return this.chatService.createGrupo(dto);
   }
 
   @Get('grupo')
-  async findAllGrupos() {
+  findAllGrupos() {
     return this.chatService.findAllGrupos();
   }
 
   @Get('grupo/:id')
-  async findOneGrupo(@Param('id', ParseUUIDPipe) id: string) {
+  findOneGrupo(@Param('id') id: string) {
     return this.chatService.findOneGrupo(id);
   }
 
-  @Get('usuario/:usuarioId/grupos')
-  async findGruposByUsuario(
-    @Param('usuarioId', ParseUUIDPipe) usuarioId: string,
-  ) {
+  @Get('grupo/usuario/:usuarioId')
+  findGruposByUsuario(@Param('usuarioId') usuarioId: string) {
     return this.chatService.findGruposByUsuario(usuarioId);
   }
 
   @Put('grupo/:id')
-  async updateGrupo(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDto: UpdateChatGrupoDto,
-  ) {
-    return this.chatService.updateGrupo(id, updateDto);
+  updateGrupo(@Param('id') id: string, @Body() dto: UpdateChatGrupoDto) {
+    return this.chatService.updateGrupo(id, dto);
   }
 
   @Delete('grupo/:id')
-  async deleteGrupo(@Param('id', ParseUUIDPipe) id: string) {
+  async deleteGrupo(@Param('id') id: string) {
     await this.chatService.deleteGrupo(id);
-    return { message: 'Grupo eliminado correctamente' };
+    return { message: 'Grupo eliminado' };
   }
+
+  // ==================== MENSAJES GRUPO ====================
 
   @Post('grupo/:id/mensaje')
-  async addMensajeGrupo(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() mensajeDto: MensajeGrupoDto,
-  ) {
-    return this.chatService.addMensajeGrupo(id, mensajeDto);
+  addMensajeGrupo(@Param('id') id: string, @Body() dto: MensajeGrupoDto) {
+    return this.chatService.addMensajeGrupo(id, dto);
   }
 
-  // ==================== CHAT PRIVADO ====================
+  @Get('grupo/:id/mensajes')
+  getMensajesGrupo(@Param('id') id: string) {
+    return this.chatService.getMensajesGrupo(id);
+  }
+
+  // ==================== PRIVADO ====================
 
   @Post('privado')
-  async createChatPrivado(@Body() createDto: CreateChatPrivadoDto) {
-    return this.chatService.createChatPrivado(createDto);
+  createChatPrivado(@Body() dto: CreateChatPrivadoDto) {
+    return this.chatService.createChatPrivado(dto);
   }
 
-  @Get('privado')
-  async findAllChatsPrivados() {
-    return this.chatService.findAllChatsPrivados();
+  @Post('privado/mensaje')
+  addMensajePrivado(@Body() dto: MensajePrivadoDto) {
+    return this.chatService.addMensajePrivado(dto);
   }
 
-  @Get('privado/usuarios/:usuarioAId/:usuarioBId')
-  async findChatPrivadoEntreUsuarios(
-    @Param('usuarioAId', ParseUUIDPipe) usuarioAId: string,
-    @Param('usuarioBId', ParseUUIDPipe) usuarioBId: string,
+  @Get('privado/:emisorId/:receptorId')
+  getMensajesPrivados(
+    @Param('emisorId') emisorId: string,
+    @Param('receptorId') receptorId: string,
   ) {
-    return this.chatService.findChatPrivadoEntreUsuarios(
-      usuarioAId,
-      usuarioBId,
-    );
+    return this.chatService.getMensajesPrivados(emisorId, receptorId);
   }
 
-  @Get('privado/usuario/:usuarioId')
-  async findChatsPrivadosByUsuario(
-    @Param('usuarioId', ParseUUIDPipe) usuarioId: string,
+  @Post('privado/:emisorId/:receptorId/leidos')
+  markLeidos(
+    @Param('emisorId') emisorId: string,
+    @Param('receptorId') receptorId: string,
   ) {
-    return this.chatService.findChatsPrivadosByUsuario(usuarioId);
-  }
-
-  @Post('privado/:id/mensaje')
-  async addMensajePrivado(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() mensajeDto: MensajePrivadoDto,
-  ) {
-    return this.chatService.addMensajePrivado(id, mensajeDto);
-  }
-
-  @Post('privado/:id/leidos')
-  async markMensajesLeidos(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { usuarioId: string },
-  ) {
-    return this.chatService.markMensajesLeidos(id, body.usuarioId);
-  }
-
-  @Delete('privado/:id')
-  async deleteChatPrivado(@Param('id', ParseUUIDPipe) id: string) {
-    await this.chatService.deleteChatPrivado(id);
-    return { message: 'Chat privado eliminado correctamente' };
+    return this.chatService.markLeidos(emisorId, receptorId);
   }
 }

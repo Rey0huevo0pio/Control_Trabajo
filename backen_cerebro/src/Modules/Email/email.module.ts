@@ -6,7 +6,6 @@ import {
   EmailConfig,
   EmailConfigSchema,
 } from '../../Models/Usuarios/email-config.schema';
-// Importar servicios de Components_Service
 import {
   EmailCryptoService,
   EmailConnectionService,
@@ -17,6 +16,7 @@ import {
   EmailFetcherService,
   EmailSenderService,
 } from './Components_Service';
+import { EmailGateway } from './Gateway/email.gateway';
 
 @Module({
   imports: [
@@ -27,7 +27,7 @@ import {
   controllers: [EmailController],
   providers: [
     EmailService,
-    // Servicios de Components_Service
+    EmailGateway,
     EmailCryptoService,
     EmailConnectionService,
     EmailConfigService,
@@ -37,6 +37,6 @@ import {
     EmailFetcherService,
     EmailSenderService,
   ],
-  exports: [EmailService],
+  exports: [EmailService, EmailGateway],
 })
 export class EmailModule {}

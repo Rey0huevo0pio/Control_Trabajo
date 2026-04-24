@@ -1,26 +1,19 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
-import {
-  ChatSTV,
-  ChatSTVSchema,
-  ChatGrupo,
-  ChatGrupoSchema,
-  ChatPrivado,
-  ChatPrivadoSchema,
-} from '../../Models/T_Chat_STV';
+import { ChatGrupo } from '../../Models/T_Chat_PG/chat-grupo.entity';
+import { MensajeGrupo } from '../../Models/T_Chat_PG/mensaje-grupo.entity';
+import { MensajePrivado } from '../../Models/T_Chat_PG/mensaje-privado.entity';
+import { RedisModule } from '../Redis/redis.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: ChatSTV.name, schema: ChatSTVSchema },
-      { name: ChatGrupo.name, schema: ChatGrupoSchema },
-      { name: ChatPrivado.name, schema: ChatPrivadoSchema },
-    ]),
+    TypeOrmModule.forFeature([ChatGrupo, MensajeGrupo, MensajePrivado]),
+    RedisModule,
   ],
   controllers: [ChatController],
   providers: [ChatService],
-  exports: [ChatService, MongooseModule],
+  exports: [ChatService],
 })
 export class ChatModule {}

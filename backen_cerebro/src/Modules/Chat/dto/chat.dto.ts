@@ -114,6 +114,10 @@ export class MensajeGrupoDto {
   @IsString()
   id_usuario: string;
 
+  @IsOptional()
+  @IsString()
+  numero_control?: string;
+
   @IsString()
   mensaje: string;
 

@@ -37,43 +37,56 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// ==========================================================================
-// IMPORTS DE MÓDULOS
-// ==========================================================================
-// Cada módulo representa una funcionalidad independiente de la aplicación
-// Ver documentación detallada en: .qwen/BACKEND_INDEX.md → Sección "MÓDULOS"
+import { AuthModule } from './Modules/Auth/auth.module';
+import { UsersModule } from './Modules/Users/users.module';
+import { InstalacionesModule } from './Modules/Instalaciones/instalaciones.module';
+import { UsuariosModule } from './Modules/Usuarios/usuarios.module';
+import { TicketITModule } from './Modules/TicketIT/ticket-it.module';
+import { ChatModule } from './Modules/Chat/chat.module';
+import { UploadsModule } from './Modules/Uploads/uploads.module';
+import { EmailModule } from './Modules/Email/email.module';
+import { A_ComprasModule } from './Modules/A_Compras/a_compras.module';
+import { RedisModule } from './Modules/Redis/redis.module';
 
-import { AuthModule } from './Modules/Auth/auth.module'; // 🔐 Autenticación JWT
-import { UsersModule } from './Modules/Users/users.module'; // 👤 CRUD de usuarios
-import { InstalacionesModule } from './Modules/Instalaciones/instalaciones.module'; // 🏢 Instalaciones
-import { UsuariosModule } from './Modules/Usuarios/usuarios.module'; // 👥 Módulo secundario
-import { TicketITModule } from './Modules/TicketIT/ticket-it.module'; // 🎫 Tickets IT
-import { ChatModule } from './Modules/Chat/chat.module'; // 💬 Chat empresarial
-import { UploadsModule } from './Modules/Uploads/uploads.module'; // 📁 Subida de archivos
-import { EmailModule } from './Modules/Email/email.module'; // 📧 Envío de emails
-import { A_ComprasModule } from './Modules/A_Compras/a_compras.module'; // 🛒 Módulo de Compras
+// Entidades PostgreSQL
+import { ChatGrupo } from './Models/T_Chat_PG/chat-grupo.entity';
+import { MensajeGrupo } from './Models/T_Chat_PG/mensaje-grupo.entity';
+import { MensajePrivado } from './Models/T_Chat_PG/mensaje-privado.entity';
 
 @Module({
   imports: [
-    // Configuración de variables de entorno
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    // Conexión a MongoDB
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+
+    // MongoDB — sigue usándose para Email, Usuarios, etc.
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri:
-          configService.get('MONGODB_URI') ||
-          'mongodb://127.0.0.1:27017/STV_Global',
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get('MONGODB_URI') || 'mongodb://127.0.0.1:27017/STV_Global',
       }),
       inject: [ConfigService],
     }),
-    // Módulos de la aplicación
+
+    // PostgreSQL — para Chat
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('PG_HOST', '127.0.0.1'),
+        port: configService.get<number>('PG_PORT', 5432),
+        username: configService.get('PG_USER', 'postgres'),
+        password: configService.get('PG_PASSWORD', 's0Tavento-2026*'),
+        database: configService.get('PG_DATABASE', 'stv_global'),
+        entities: [ChatGrupo, MensajeGrupo, MensajePrivado],
+        synchronize: true, // solo desarrollo
+      }),
+      inject: [ConfigService],
+    }),
+
+    RedisModule,
     AuthModule,
     UsersModule,
     InstalacionesModule,
