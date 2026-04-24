@@ -1,0 +1,416 @@
+/**
+ * ============================================================================
+ * 📧 EMAIL MESSAGES SERVICE - Servicio de correos (Web)
+ * ============================================================================
+ *
+ * ADAPTADO DE: C_Ticket_Apk_STV/src_Chat_STV/services/emailMessages.service.ts
+ *
+ * MEJORAS:
+ * - IndexedDB para almacenamiento eficiente (como WhatsApp/Telegram)
+ * - Solo descarga correos nuevos (sync incremental)
+ * - Almacena contenido completo incluyendo imágenes y adjuntos
+ * - Cache en memoria para acceso rápido
+ *
+ * ============================================================================
+ */
+import api, { getAuthToken } from './api';
+
+const EMAIL_MESSAGES_ENDPOINT = '/email/messages';
+
+const DB_NAME = 'EmailMessagesDB';
+const DB_VERSION = 2;
+const STORE_EMAILS = 'emails';
+const STORE_METADATA = 'metadata';
+const STORE_ATTACHMENTS = 'attachments';
+
+let db: IDBDatabase | null = null;
+
+interface EmailMessage {
+  uid: number;
+  folder: string;
+  from: string;
+  to: string;
+  subject: string;
+  date: string;
+  text?: string;
+  html?: string;
+  attachments?: Attachment[];
+  cachedAt?: string;
+}
+
+interface Attachment {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  data?: string;
+}
+
+interface EmailMetadata {
+  folder: string;
+  lastSync?: string;
+  lastUID?: number;
+  totalEmails?: number;
+  syncedAt?: string;
+}
+
+interface GetMessagesResponse {
+  emails: EmailMessage[];
+  total: number;
+  fromCache?: boolean;
+  message?: string;
+}
+
+const openDatabase = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      resolve(db);
+      return;
+    }
+
+    console.log('[EmailMessages] Abriendo IndexedDB...');
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => {
+      console.error('[EmailMessages] Error abriendo IndexedDB:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      db = request.result;
+      console.log('[EmailMessages] IndexedDB abierta correctamente');
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      console.log('[EmailMessages] Creando/migrando IndexedDB...');
+      const database = (event.target as IDBOpenDBRequest).result;
+      if (!database) return;
+
+      if (!database.objectStoreNames.contains(STORE_EMAILS)) {
+        const emailStore = database.createObjectStore(STORE_EMAILS, { keyPath: 'uid' });
+        emailStore.createIndex('folder', 'folder', { unique: false });
+        emailStore.createIndex('date', 'date', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains(STORE_METADATA)) {
+        database.createObjectStore(STORE_METADATA, { keyPath: 'folder' });
+      }
+
+      if (!database.objectStoreNames.contains(STORE_ATTACHMENTS)) {
+        const attStore = database.createObjectStore(STORE_ATTACHMENTS, { keyPath: 'id' });
+        attStore.createIndex('emailUid', 'emailUid', { unique: false });
+      }
+    };
+  });
+};
+
+const getAllEmailsFromDB = (folder: string): Promise<EmailMessage[]> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
+    const transaction = database.transaction([STORE_EMAILS], 'readonly');
+    const store = transaction.objectStore(STORE_EMAILS);
+    const index = store.index('folder');
+    const request = index.getAll(IDBKeyRange.only(folder));
+
+    request.onsuccess = () => {
+      const emails = request.result || [];
+      resolve(emails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    };
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const saveEmailsToDB = (emails: EmailMessage[], folder: string): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
+    const transaction = database.transaction([STORE_EMAILS], 'readwrite');
+    const store = transaction.objectStore(STORE_EMAILS);
+
+    emails.forEach(email => {
+      store.put({ ...email, folder, cachedAt: new Date().toISOString() });
+    });
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
+const getMetadata = (folder: string): Promise<EmailMetadata | null> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
+    const transaction = database.transaction([STORE_METADATA], 'readonly');
+    const store = transaction.objectStore(STORE_METADATA);
+    const request = store.get(folder);
+
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const saveMetadata = (folder: string, metadata: Omit<EmailMetadata, 'folder'>): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
+    const transaction = database.transaction([STORE_METADATA], 'readwrite');
+    const store = transaction.objectStore(STORE_METADATA);
+    store.put({ folder, ...metadata, syncedAt: new Date().toISOString() });
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
+const clearAllData = (): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    const database = await openDatabase();
+    const transaction = database.transaction([STORE_EMAILS, STORE_METADATA, STORE_ATTACHMENTS], 'readwrite');
+    transaction.objectStore(STORE_EMAILS).clear();
+    transaction.objectStore(STORE_METADATA).clear();
+    transaction.objectStore(STORE_ATTACHMENTS).clear();
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
+class EmailMessagesService {
+  async getMessages(folder: string = 'INBOX', page: number = 1): Promise<GetMessagesResponse> {
+    const token = getAuthToken();
+    const cachedEmails = await getAllEmailsFromDB(folder);
+
+    if (cachedEmails.length > 0) {
+      console.log('[EmailMessages] Usando caché IndexedDB:', cachedEmails.length, 'correos');
+      if (token) {
+        this.syncIncremental(folder, token, cachedEmails);
+      }
+      return {
+        emails: cachedEmails.slice(0, 500),
+        total: cachedEmails.length,
+        fromCache: true,
+        message: 'Cargado desde caché local',
+      };
+    }
+
+    if (!token) {
+      return {
+        emails: [],
+        total: 0,
+        fromCache: true,
+        message: 'Sin sesión y sin caché local',
+      };
+    }
+
+    return this.fullDownload(folder, token, page);
+  }
+
+  async fullDownload(folder: string, token: string, page: number = 1): Promise<GetMessagesResponse> {
+    try {
+      console.log('[EmailMessages] Descargando correos...');
+
+      const response = await api.get(EMAIL_MESSAGES_ENDPOINT, {
+        params: { folder, page, limit: 500 },
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 90000,
+      });
+
+      console.log('[EmailMessages] Response:', response.status, response.data);
+
+      let emails: EmailMessage[] = [];
+      if (response.data) {
+        if (response.data.success && response.data.data) {
+          emails = response.data.data.emails || response.data.data;
+        } else if (response.data.emails) {
+          emails = response.data.emails;
+        } else if (Array.isArray(response.data.data)) {
+          emails = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          emails = response.data;
+        }
+      }
+
+      if (!Array.isArray(emails)) {
+        emails = [];
+      }
+
+      emails = emails.map(e => ({ ...e, folder }));
+      console.log('[EmailMessages] Correos descargados:', emails.length);
+      
+      if (emails.length > 0) {
+        const firstEmail = emails[0];
+        console.log('[EmailMessages] 🔍 Primer correo análisis:', {
+          uid: firstEmail.uid,
+          subject: firstEmail.subject?.substring(0, 50),
+          htmlLength: firstEmail.html?.length || 0,
+          textLength: firstEmail.text?.length || 0,
+          hasHtml: !!firstEmail.html,
+          htmlPreview: firstEmail.html?.substring(0, 200) || 'SIN HTML',
+        });
+      }
+
+      if (emails.length > 0) {
+        await saveEmailsToDB(emails, folder);
+        await saveMetadata(folder, {
+          lastSync: new Date().toISOString(),
+          lastUID: emails.length > 0 ? Math.max(...emails.map(e => e.uid)) : 0,
+          totalEmails: emails.length,
+        });
+      }
+
+      return {
+        emails,
+        total: emails.length,
+        message: response.data.message || 'Correos cargados desde servidor',
+      };
+    } catch (error: any) {
+      console.error('[EmailMessages] Error en fullDownload:', error.message || error.code);
+      const cached = await getAllEmailsFromDB(folder);
+      if (cached.length > 0) {
+        return { emails: cached, total: cached.length, fromCache: true, message: 'Error de conexión, mostrando caché local' };
+      }
+      let errorMsg = 'Error al cargar correos';
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMsg = 'El servidor está tardando demasiado. Intenta más tarde.';
+      } else if (error.response?.status === 404) {
+        errorMsg = 'IMAP no configurado';
+      } else if (error.response?.status === 401) {
+        errorMsg = 'Sesión expirada';
+      }
+      return { emails: [], total: 0, fromCache: false, message: errorMsg };
+    }
+  }
+
+  async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<void> {
+    try {
+      const uidsResponse = await api.get(`${EMAIL_MESSAGES_ENDPOINT}/uids`, {
+        params: { folder },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const serverUIDs: number[] = uidsResponse.data.data?.uids || [];
+      if (serverUIDs.length === 0) return;
+
+      const cachedUIDs = new Set(cachedEmails.map(e => e.uid));
+      const newUIDs = serverUIDs.filter(uid => !cachedUIDs.has(uid));
+
+      if (newUIDs.length === 0) return;
+
+      console.log('[EmailMessages] Correos nuevos:', newUIDs.length);
+
+      const downloadResponse = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
+        { folder, uids: newUIDs },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const newEmails: EmailMessage[] = downloadResponse.data.data?.emails || [];
+      if (newEmails.length > 0) {
+        await saveEmailsToDB(newEmails, folder);
+        await saveMetadata(folder, {
+          lastSync: new Date().toISOString(),
+          lastUID: newUIDs.length > 0 ? Math.max(...newUIDs) : 0,
+          totalEmails: cachedEmails.length + newEmails.length,
+        });
+      }
+    } catch (error) {
+      console.log('[EmailMessages] Error en sync incremental:', error);
+    }
+  }
+
+  async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
+    try {
+      const cached = await this.getFullEmailFromDB(uid);
+      
+      if (cached && cached.html && cached.html.length > 100) {
+        console.log('[EmailMessages] Usando caché para UID:', uid);
+        return cached;
+      }
+
+      const token = getAuthToken();
+      if (!token) return cached || null;
+
+      const response = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
+        { folder, uids: [uid] },
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
+      );
+
+      const emails: EmailMessage[] = response.data.data?.emails || [];
+      if (emails.length > 0) {
+        const fullEmail = emails[0];
+        fullEmail.folder = folder;
+        await this.saveFullEmail(fullEmail, folder);
+        return fullEmail;
+      }
+      return cached || null;
+    } catch (error: any) {
+      console.error('[EmailMessages] Error getFullMessage:', error.message);
+      const cached = await this.getFullEmailFromDB(uid);
+      return cached || null;
+    }
+  }
+
+  async getFullEmailFromDB(uid: number): Promise<EmailMessage | null> {
+    const database = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction([STORE_EMAILS], 'readonly');
+      const store = transaction.objectStore(STORE_EMAILS);
+      const request = store.get(uid);
+
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveFullEmail(email: EmailMessage, folder: string): Promise<void> {
+    const database = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction([STORE_EMAILS], 'readwrite');
+      const store = transaction.objectStore(STORE_EMAILS);
+      store.put({ ...email, folder, cachedAt: new Date().toISOString() });
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
+  async sendEmail(data: any): Promise<any> {
+    try {
+      const token = getAuthToken();
+      if (!token) return { success: false, error: 'No hay sesión' };
+
+      const response = await api.post('/email/send', data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('[EmailMessages] Error sendEmail:', error);
+      return { success: false, error: error.response?.data?.message || 'Error al enviar correo' };
+    }
+  }
+
+  async getFolders(): Promise<string[]> {
+    try {
+      const token = getAuthToken();
+      if (!token) return [];
+
+      const response = await api.get(`${EMAIL_MESSAGES_ENDPOINT}/folders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data.data || response.data || [];
+    } catch (error) {
+      console.error('[EmailMessages] Error getFolders:', error);
+      return [];
+    }
+  }
+
+  async forceSync(folder: string = 'INBOX'): Promise<GetMessagesResponse> {
+    await clearAllData();
+    return this.getMessages(folder, 1);
+  }
+
+  clearCache(): Promise<void> {
+    return clearAllData();
+  }
+}
+
+export const emailMessagesService = new EmailMessagesService();
+export default emailMessagesService;
