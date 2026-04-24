@@ -1,18 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { GoogleSheetsService } from './google-sheets.service';
 import { GoogleSheetsController } from '../../Controllers/A_Compras/google-sheets.controller';
-import {
-  GoogleConnection,
-  GoogleConnectionSchema,
-} from '../../Models/T_A_Compras/google-connection.schema';
+import { GoogleConnection } from '../../Models/PG/google-connection.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: GoogleConnection.name, schema: GoogleConnectionSchema },
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([GoogleConnection])],
   controllers: [GoogleSheetsController],
   providers: [GoogleSheetsService],
   exports: [GoogleSheetsService],

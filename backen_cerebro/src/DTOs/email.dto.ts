@@ -12,7 +12,7 @@ import { Transform } from 'class-transformer';
 import {
   EmailStatus,
   SecurityType,
-} from '../Models/Usuarios/email-config.schema';
+} from '../Models/PG/email-config.entity';
 
 // ==========================================
 // DTO PARA CREAR CONFIGURACIÓN DE CORREO

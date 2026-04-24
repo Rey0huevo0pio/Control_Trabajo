@@ -1,22 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketITController } from './ticket-it.controller';
 import { TicketITService } from './ticket-it.service';
-import { TicketIT, TicketITSchema } from '../../Models/T_ticket_IT_STV';
-import {
-  EstadoTicketHistorial,
-  EstadoTicketHistorialSchema,
-} from '../../Models/T_ticket_IT_STV';
+import { TicketIT } from '../../Models/PG/ticket-it.entity';
+import { EstadoTicketHistorial } from '../../Models/PG/estado-ticket-historial.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: TicketIT.name, schema: TicketITSchema },
-      { name: EstadoTicketHistorial.name, schema: EstadoTicketHistorialSchema },
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([TicketIT, EstadoTicketHistorial])],
   controllers: [TicketITController],
   providers: [TicketITService],
-  exports: [TicketITService, MongooseModule],
+  exports: [TicketITService],
 })
 export class TicketITModule {}

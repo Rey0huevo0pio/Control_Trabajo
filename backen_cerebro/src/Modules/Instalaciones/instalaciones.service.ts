@@ -1,148 +1,106 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Instalacion, AreaInstalacion } from '../../Models/T_Instalaciones';
-import {
-  CreateInstalacionDto,
-  UpdateInstalacionDto,
-  CreateAreaInstalacionDto,
-  UpdateAreaInstalacionDto,
-} from './dto/instalacion.dto';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Instalacion } from '../../Models/PG/instalacion.entity';
+import { AreaInstalacion } from '../../Models/PG/area-instalacion.entity';
+import { CreateInstalacionDto, UpdateInstalacionDto, CreateAreaInstalacionDto, UpdateAreaInstalacionDto } from './dto/instalacion.dto';
 
 @Injectable()
 export class InstalacionesService {
   constructor(
-    @InjectModel(Instalacion.name) private instalacionModel: Model<Instalacion>,
-    @InjectModel(AreaInstalacion.name)
-    private areaModel: Model<AreaInstalacion>,
+    @InjectRepository(Instalacion) private instalacionRepo: Repository<Instalacion>,
+    @InjectRepository(AreaInstalacion) private areaRepo: Repository<AreaInstalacion>,
   ) {}
 
-  // ==================== INSTALACIONES ====================
-
-  async createInstalacion(
-    createDto: CreateInstalacionDto,
-  ): Promise<Instalacion> {
+  async createInstalacion(dto: CreateInstalacionDto): Promise<Instalacion> {
     try {
-      const instalacion = new this.instalacionModel({
-        ...createDto,
-        creado_por: new Types.ObjectId(createDto.creado_por),
-        personal_asignado: createDto.personal_asignado?.map(
-          (id) => new Types.ObjectId(id),
-        ),
+      const inst = this.instalacionRepo.create({
+        nombre_instalacion: dto.nombre_instalacion,
+        nombre_registrador: dto.nombre_registrador,
+        descripcion: dto.descripcion,
+        foto: dto.foto,
+        responsable: dto.responsable,
+        personal_asignado: (dto.personal_asignado as string[]) ?? [],
+        activa: dto.activa ?? true,
+        creado_por: dto.creado_por,
+        direccion: dto.ubicacion?.direccion ?? '',
+        lat: dto.ubicacion?.coordenadas?.lat,
+        lng: dto.ubicacion?.coordenadas?.lng,
       });
-      return await instalacion.save();
-    } catch (error: any) {
-      throw new BadRequestException(
-        `Error al crear instalación: ${error.message}`,
-      );
+      return this.instalacionRepo.save(inst);
+    } catch (e: any) {
+      throw new BadRequestException(`Error al crear instalación: ${e.message}`);
     }
   }
 
   async findAllInstalaciones(): Promise<Instalacion[]> {
-    return await this.instalacionModel
-      .find()
-      .populate('creado_por personal_asignado');
+    return this.instalacionRepo.find({ relations: ['areas'], order: { createdAt: 'DESC' } });
   }
 
   async findOneInstalacion(id: string): Promise<Instalacion> {
-    const instalacion = await this.instalacionModel
-      .findById(id)
-      .populate('creado_por personal_asignado');
-    if (!instalacion) {
-      throw new NotFoundException(`Instalación con ID ${id} no encontrada`);
-    }
-    return instalacion;
+    const inst = await this.instalacionRepo.findOne({ where: { id }, relations: ['areas'] });
+    if (!inst) throw new NotFoundException(`Instalación ${id} no encontrada`);
+    return inst;
   }
 
-  async updateInstalacion(
-    id: string,
-    updateDto: UpdateInstalacionDto,
-  ): Promise<Instalacion> {
-    const instalacion = await this.instalacionModel.findByIdAndUpdate(
-      id,
-      updateDto,
-      { new: true, runValidators: true },
-    );
-    if (!instalacion) {
-      throw new NotFoundException(`Instalación con ID ${id} no encontrada`);
-    }
-    return instalacion;
+  async updateInstalacion(id: string, dto: UpdateInstalacionDto): Promise<Instalacion> {
+    const update: Partial<Instalacion> = {
+      nombre_instalacion: dto.nombre_instalacion,
+      nombre_registrador: dto.nombre_registrador,
+      descripcion: dto.descripcion,
+      foto: dto.foto,
+      responsable: dto.responsable,
+      personal_asignado: (dto.personal_asignado as string[]),
+      activa: dto.activa,
+      direccion: dto.ubicacion?.direccion,
+      lat: dto.ubicacion?.coordenadas?.lat,
+      lng: dto.ubicacion?.coordenadas?.lng,
+    };
+    // quitar undefined
+    Object.keys(update).forEach((k) => update[k] === undefined && delete update[k]);
+    await this.instalacionRepo.update(id, update);
+    return this.findOneInstalacion(id);
   }
 
   async deleteInstalacion(id: string): Promise<void> {
-    const result = await this.instalacionModel.findByIdAndDelete(id);
-    if (!result) {
-      throw new NotFoundException(`Instalación con ID ${id} no encontrada`);
-    }
+    const r = await this.instalacionRepo.delete(id);
+    if (!r.affected) throw new NotFoundException(`Instalación ${id} no encontrada`);
   }
 
   async findActivas(): Promise<Instalacion[]> {
-    return await this.instalacionModel
-      .find({ activa: true })
-      .populate('creado_por personal_asignado');
+    return this.instalacionRepo.find({ where: { activa: true }, relations: ['areas'] });
   }
 
-  // ==================== ÁREAS DE INSTALACIÓN ====================
-
-  async createAreaInstalacion(
-    createDto: CreateAreaInstalacionDto,
-  ): Promise<AreaInstalacion> {
+  async createAreaInstalacion(dto: CreateAreaInstalacionDto): Promise<AreaInstalacion> {
     try {
-      const area = new this.areaModel({
-        ...createDto,
-        id_instalacion: new Types.ObjectId(createDto.id_instalacion),
-        creado_por: new Types.ObjectId(createDto.creado_por),
-      });
-      return await area.save();
-    } catch (error: any) {
-      throw new BadRequestException(`Error al crear área: ${error.message}`);
+      const area = this.areaRepo.create(dto);
+      return this.areaRepo.save(area);
+    } catch (e: any) {
+      throw new BadRequestException(`Error al crear área: ${e.message}`);
     }
   }
 
   async findAllAreas(): Promise<AreaInstalacion[]> {
-    return await this.areaModel.find().populate('creado_por id_instalacion');
+    return this.areaRepo.find({ relations: ['instalacion'] });
   }
 
   async findOneArea(id: string): Promise<AreaInstalacion> {
-    const area = await this.areaModel
-      .findById(id)
-      .populate('creado_por id_instalacion');
-    if (!area) {
-      throw new NotFoundException(`Área con ID ${id} no encontrada`);
-    }
+    const area = await this.areaRepo.findOne({ where: { id }, relations: ['instalacion'] });
+    if (!area) throw new NotFoundException(`Área ${id} no encontrada`);
     return area;
   }
 
-  async updateArea(
-    id: string,
-    updateDto: UpdateAreaInstalacionDto,
-  ): Promise<AreaInstalacion> {
-    const area = await this.areaModel.findByIdAndUpdate(id, updateDto, {
-      new: true,
-      runValidators: true,
-    });
-    if (!area) {
-      throw new NotFoundException(`Área con ID ${id} no encontrada`);
-    }
-    return area;
+  async updateArea(id: string, dto: UpdateAreaInstalacionDto): Promise<AreaInstalacion> {
+    await this.areaRepo.update(id, dto);
+    return this.findOneArea(id);
   }
 
   async deleteArea(id: string): Promise<void> {
-    const result = await this.areaModel.findByIdAndDelete(id);
-    if (!result) {
-      throw new NotFoundException(`Área con ID ${id} no encontrada`);
-    }
+    const r = await this.areaRepo.delete(id);
+    if (!r.affected) throw new NotFoundException(`Área ${id} no encontrada`);
   }
 
-  async findAreasByInstalacion(
-    instalacionId: string,
-  ): Promise<AreaInstalacion[]> {
-    return await this.areaModel.find({
-      id_instalacion: new Types.ObjectId(instalacionId),
-    });
+  async findAreasByInstalacion(instalacionId: string): Promise<AreaInstalacion[]> {
+    return this.areaRepo.find({ where: { id_instalacion: instalacionId } });
   }
 }

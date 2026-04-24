@@ -9,12 +9,13 @@ import {
   Max,
   IsArray,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import {
   TipoTicket,
   CategoriaTicket,
   PrioridadTicket,
-  EstadoTicketTipoEnum,
-} from '../../../Models/T_ticket_IT_STV/index';
+  EstadoTicketEnum,
+} from '../../../Models/PG/ticket-it.entity';
 
 export class ContactoUsuarioDto {
   @IsString()
@@ -26,8 +27,9 @@ export class ContactoUsuarioDto {
 }
 
 export class CreateTicketITDto {
+  @IsOptional()
   @IsString()
-  numero_ticket: string;
+  numero_ticket?: string;
 
   @IsString()
   usuario_solicitante: string;
@@ -38,9 +40,11 @@ export class CreateTicketITDto {
   @IsString()
   id_area: string;
 
+  @IsOptional()
   @IsObject()
   @ValidateNested()
-  contacto_usuario: ContactoUsuarioDto;
+  @Type(() => ContactoUsuarioDto)
+  contacto_usuario?: ContactoUsuarioDto;
 
   @IsEnum(TipoTicket)
   tipo: TipoTicket;
@@ -61,8 +65,8 @@ export class CreateTicketITDto {
   prioridad?: PrioridadTicket;
 
   @IsOptional()
-  @IsEnum(EstadoTicketTipoEnum)
-  estado?: EstadoTicketTipoEnum;
+  @IsEnum(EstadoTicketEnum)
+  estado?: EstadoTicketEnum;
 
   @IsOptional()
   @IsString()
@@ -74,8 +78,8 @@ export class CreateTicketITDto {
 
 export class UpdateTicketITDto {
   @IsOptional()
-  @IsEnum(EstadoTicketTipoEnum)
-  estado?: EstadoTicketTipoEnum;
+  @IsEnum(EstadoTicketEnum)
+  estado?: EstadoTicketEnum;
 
   @IsOptional()
   @IsEnum(PrioridadTicket)

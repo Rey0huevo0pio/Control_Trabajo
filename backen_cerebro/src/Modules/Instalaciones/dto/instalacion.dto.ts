@@ -10,8 +10,6 @@ import {
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Types } from 'mongoose';
-
 export class CoordenadasDto {
   @IsNumber()
   @Min(-90)
@@ -60,7 +58,7 @@ export class CreateInstalacionDto {
 
   @IsOptional()
   @IsArray()
-  personal_asignado?: Types.ObjectId[];
+  personal_asignado?: string[];
 
   @IsOptional()
   @IsBoolean()
@@ -99,7 +97,7 @@ export class UpdateInstalacionDto {
 
   @IsOptional()
   @IsArray()
-  personal_asignado?: Types.ObjectId[];
+  personal_asignado?: string[];
 
   @IsOptional()
   @IsBoolean()
