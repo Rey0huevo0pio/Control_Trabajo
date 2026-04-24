@@ -84,6 +84,7 @@ async function bootstrap() {
       'https://enlarge-structured-graduate-coins.trycloudflare.com',
       'http://localhost:5173',
       'http://localhost:3000',
+      'http://localhost:3001',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
