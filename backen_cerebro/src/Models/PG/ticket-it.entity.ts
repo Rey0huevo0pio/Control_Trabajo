@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum TipoTicket {
   INCIDENTE = 'incidente',
@@ -64,10 +70,18 @@ export class TicketIT {
   @Column()
   nivel_afectacion: number;
 
-  @Column({ type: 'enum', enum: PrioridadTicket, default: PrioridadTicket.MEDIA })
+  @Column({
+    type: 'enum',
+    enum: PrioridadTicket,
+    default: PrioridadTicket.MEDIA,
+  })
   prioridad: PrioridadTicket;
 
-  @Column({ type: 'enum', enum: EstadoTicketEnum, default: EstadoTicketEnum.ABIERTO })
+  @Column({
+    type: 'enum',
+    enum: EstadoTicketEnum,
+    default: EstadoTicketEnum.ABIERTO,
+  })
   estado: EstadoTicketEnum;
 
   @Column({ nullable: true })
