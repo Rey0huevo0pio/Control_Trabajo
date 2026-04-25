@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   ParseUUIDPipe,
-  Query,
 } from '@nestjs/common';
 import { TicketITService } from './ticket-it.service';
 import {

@@ -3,7 +3,7 @@ import { UploadsController } from './uploads.controller';
 import { UploadsService } from './uploads.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 
 @Module({
   imports: [

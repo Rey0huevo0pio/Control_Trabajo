@@ -23,7 +23,7 @@ import {
 import { JwtAuthGuard } from '../../Guards/jwt-auth.guard';
 import { RolesGuard } from '../../Guards/roles.guard';
 import { Roles } from '../../Guards/decorators';
-import { RolUsuario } from '../../Models/Usuarios/usuario.schema';
+import { RolUsuario } from '../../Models/PG/usuario.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,36 +41,12 @@ export class UsersController {
   }
 
   // ==========================================
-  // OBTENER TODOS LOS USUARIOS (con filtros)
+  // OBTENER TODOS LOS USUARIOS (CON BÚSQUEDA)
   // ==========================================
   @Get()
   @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
-  findAll(@Query() searchDto: SearchUsuariosDto, @Req() req: any) {
-    console.log('\n📥 [UsersController] GET /api/users');
-    console.log(
-      '🔑 Authorization header:',
-      req.headers['authorization'] ? '✅ PRESENTE' : '❌ AUSENTE',
-    );
-    console.log('🔍 Filtros:', searchDto);
-    return this.usersService.findAll(searchDto);
-  }
-
-  // ==========================================
-  // CONTAR USUARIOS
-  // ==========================================
-  @Get('stats/count')
-  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
-  countUsers() {
-    return this.usersService.countUsers();
-  }
-
-  // ==========================================
-  // OBTENER USUARIOS POR ROL
-  // ==========================================
-  @Get('by-role/:rol')
-  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
-  findByRol(@Param('rol') rol: RolUsuario) {
-    return this.usersService.findByRol(rol);
+  findAll(@Query() searchUsuariosDto?: SearchUsuariosDto) {
+    return this.usersService.findAll(searchUsuariosDto);
   }
 
   // ==========================================
@@ -83,69 +59,12 @@ export class UsersController {
   }
 
   // ==========================================
-  // ACTUALIZAR USUARIO COMPLETO
+  // ACTUALIZAR USUARIO
   // ==========================================
   @Patch(':id')
   @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
   update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     return this.usersService.update(id, updateUsuarioDto);
-  }
-
-  // ==========================================
-  // ACTUALIZAR PERFIL (datos básicos)
-  // ==========================================
-  @Patch(':id/profile')
-  @HttpCode(HttpStatus.OK)
-  @Roles(
-    RolUsuario.IT,
-    RolUsuario.RH,
-    RolUsuario.ADMIN,
-    RolUsuario.SUPERVISOR,
-    RolUsuario.VIGILANTE,
-  )
-  updateProfile(
-    @Param('id') id: string,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ) {
-    return this.usersService.updateProfile(id, updateProfileDto);
-  }
-
-  // ==========================================
-  // CAMBIAR PASSWORD
-  // ==========================================
-  @Post(':id/change-password')
-  @HttpCode(HttpStatus.OK)
-  @Roles(
-    RolUsuario.IT,
-    RolUsuario.RH,
-    RolUsuario.ADMIN,
-    RolUsuario.SUPERVISOR,
-    RolUsuario.VIGILANTE,
-  )
-  changePassword(
-    @Param('id') id: string,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    return this.usersService.changePassword(id, changePasswordDto);
-  }
-
-  // ==========================================
-  // ACTIVAR/DESACTIVAR USUARIO
-  // ==========================================
-  @Patch(':id/toggle-active')
-  @HttpCode(HttpStatus.OK)
-  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
-  toggleActive(@Param('id') id: string) {
-    return this.usersService.toggleActive(id);
-  }
-
-  // ==========================================
-  // ACTUALIZAR ÚLTIMO ACCESO
-  // ==========================================
-  @Post(':id/last-access')
-  @HttpCode(HttpStatus.OK)
-  updateLastAccess(@Param('id') id: string) {
-    return this.usersService.updateLastAccess(id);
   }
 
   // ==========================================
@@ -156,5 +75,68 @@ export class UsersController {
   @Roles(RolUsuario.IT, RolUsuario.ADMIN)
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  // ==========================================
+  // CAMBIAR CONTRASEÑA
+  // ==========================================
+  @Patch(':id/password')
+  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
+  changePassword(
+    @Param('id') id: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(id, changePasswordDto);
+  }
+
+  // ==========================================
+  // ACTUALIZAR PERFIL PROPIO
+  // ==========================================
+  @Patch('profile')
+  @Roles(
+    RolUsuario.IT,
+    RolUsuario.RH,
+    RolUsuario.ADMIN,
+    RolUsuario.SUPERVISOR,
+    RolUsuario.VIGILANTE,
+  )
+  updateProfile(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  // ==========================================
+  // ACTUALIZAR ÚLTIMO ACCESO
+  // ==========================================
+  @Patch(':id/last-access')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  updateLastAccess(@Param('id') id: string) {
+    return this.usersService.updateLastAccess(id);
+  }
+
+  // ==========================================
+  // CONTAR USUARIOS
+  // ==========================================
+  @Get('count')
+  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
+  countUsers() {
+    return this.usersService.countUsers();
+  }
+
+  // ==========================================
+  // BUSCAR POR ROL
+  // ==========================================
+  @Get('role/:rol')
+  @Roles(RolUsuario.IT, RolUsuario.RH, RolUsuario.ADMIN)
+  findByRol(@Param('rol') rol: RolUsuario) {
+    return this.usersService.findByRol(rol);
+  }
+
+  // ==========================================
+  // TOGGLE ESTADO ACTIVO
+  // ==========================================
+  @Patch(':id/toggle-active')
+  @Roles(RolUsuario.IT, RolUsuario.ADMIN)
+  toggleActive(@Param('id') id: string) {
+    return this.usersService.toggleActive(id);
   }
 }

@@ -1,9 +1,24 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Usuario, RolUsuario, PERMISOS_POR_ROL } from '../../Models/PG/usuario.entity';
-import { CreateUsuarioDto, UpdateUsuarioDto, SearchUsuariosDto, ChangePasswordDto, UpdateProfileDto } from '../../DTOs/usuario.dto';
+import {
+  Usuario,
+  RolUsuario,
+  PERMISOS_POR_ROL,
+} from '../../Models/PG/usuario.entity';
+import {
+  CreateUsuarioDto,
+  UpdateUsuarioDto,
+  SearchUsuariosDto,
+  ChangePasswordDto,
+  UpdateProfileDto,
+} from '../../DTOs/usuario.dto';
 
 @Injectable()
 export class UsersService {
@@ -11,13 +26,16 @@ export class UsersService {
     @InjectRepository(Usuario) private usuarioRepo: Repository<Usuario>,
   ) {}
 
-  async create(dto: CreateUsuarioDto) {
+  async create(dto: CreateUsuarioDto): Promise<Omit<Usuario, 'password'>> {
     const exists = await this.usuarioRepo.findOne({
       where: { Control_Usuario: dto.Control_Usuario.toUpperCase() },
     });
-    if (exists) throw new ConflictException(`Control_Usuario '${dto.Control_Usuario}' ya en uso`);
+    if (exists)
+      throw new ConflictException(
+        `Control_Usuario '${dto.Control_Usuario}' ya en uso`,
+      );
 
-    const rol = (dto.rol as RolUsuario) || RolUsuario.VIGILANTE;
+    const rol = dto.rol || RolUsuario.VIGILANTE;
     const usuario = this.usuarioRepo.create({
       ...dto,
       Control_Usuario: dto.Control_Usuario.toUpperCase(),
@@ -32,14 +50,19 @@ export class UsersService {
     return this.sanitize(usuario);
   }
 
-  async findAll(searchDto?: SearchUsuariosDto) {
+  async findAll(
+    searchDto?: SearchUsuariosDto,
+  ): Promise<Omit<Usuario, 'password'>[]> {
     const where: any[] = [];
 
     if (searchDto?.search) {
       const s = ILike(`%${searchDto.search}%`);
       where.push(
-        { nombre: s }, { apellido: s },
-        { Control_Usuario: s }, { email: s }, { departamento: s },
+        { nombre: s },
+        { apellido: s },
+        { Control_Usuario: s },
+        { email: s },
+        { departamento: s },
       );
     }
 
@@ -51,44 +74,66 @@ export class UsersService {
     return usuarios
       .filter((u) => {
         if (searchDto?.rol && u.rol !== searchDto.rol) return false;
-        if (searchDto?.activo !== undefined && u.activo !== searchDto.activo) return false;
+        if (searchDto?.activo !== undefined && u.activo !== searchDto.activo)
+          return false;
         return true;
       })
-      .map(this.sanitize);
+      .map((u) => this.sanitize(u));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Omit<Usuario, 'password'>> {
     const u = await this.usuarioRepo.findOne({ where: { id } });
     if (!u) throw new NotFoundException(`Usuario ${id} no encontrado`);
     return this.sanitize(u);
   }
 
-  async findByControl_Usuario(Control_Usuario: string): Promise<Usuario | null> {
-    return this.usuarioRepo.findOne({ where: { Control_Usuario: Control_Usuario.toUpperCase() } });
+  async findByControl_Usuario(
+    Control_Usuario: string,
+  ): Promise<Usuario | null> {
+    return this.usuarioRepo.findOne({
+      where: { Control_Usuario: Control_Usuario.toUpperCase() },
+    });
   }
 
   async findByEmail(email: string): Promise<Usuario | null> {
     return this.usuarioRepo.findOne({ where: { email } });
   }
 
-  async update(id: string, dto: UpdateUsuarioDto) {
+  async update(
+    id: string,
+    dto: UpdateUsuarioDto,
+  ): Promise<Omit<Usuario, 'password'>> {
     const usuario = await this.usuarioRepo.findOne({ where: { id } });
     if (!usuario) throw new NotFoundException(`Usuario ${id} no encontrado`);
 
-    if (dto.Control_Usuario && dto.Control_Usuario !== usuario.Control_Usuario) {
-      const exists = await this.usuarioRepo.findOne({ where: { Control_Usuario: dto.Control_Usuario.toUpperCase() } });
-      if (exists) throw new ConflictException(`Control_Usuario '${dto.Control_Usuario}' ya en uso`);
+    if (
+      dto.Control_Usuario &&
+      dto.Control_Usuario !== usuario.Control_Usuario
+    ) {
+      const exists = await this.usuarioRepo.findOne({
+        where: { Control_Usuario: dto.Control_Usuario.toUpperCase() },
+      });
+      if (exists)
+        throw new ConflictException(
+          `Control_Usuario '${dto.Control_Usuario}' ya en uso`,
+        );
       dto.Control_Usuario = dto.Control_Usuario.toUpperCase();
     }
 
     if (dto.password) dto.password = await bcrypt.hash(dto.password, 10);
-    if (dto.rol) (dto as any).permisos = PERMISOS_POR_ROL[dto.rol as RolUsuario] || [];
+    if (dto.rol) {
+      (dto as UpdateUsuarioDto & { permisos: string[] }).permisos =
+        (PERMISOS_POR_ROL[dto.rol] || []) as string[];
+    }
 
     await this.usuarioRepo.update(id, dto);
     return this.sanitize(await this.usuarioRepo.findOne({ where: { id } }));
   }
 
-  async updateProfile(id: string, dto: UpdateProfileDto) {
+  async updateProfile(
+    id: string,
+    dto: UpdateProfileDto,
+  ): Promise<Omit<Usuario, 'password'>> {
     const usuario = await this.usuarioRepo.findOne({ where: { id } });
     if (!usuario) throw new NotFoundException(`Usuario ${id} no encontrado`);
 
@@ -117,10 +162,11 @@ export class UsersService {
 
   async remove(id: string) {
     const result = await this.usuarioRepo.delete(id);
-    if (!result.affected) throw new NotFoundException(`Usuario ${id} no encontrado`);
+    if (!result.affected)
+      throw new NotFoundException(`Usuario ${id} no encontrado`);
   }
 
-  async toggleActive(id: string) {
+  async toggleActive(id: string): Promise<Omit<Usuario, 'password'>> {
     const usuario = await this.usuarioRepo.findOne({ where: { id } });
     if (!usuario) throw new NotFoundException(`Usuario ${id} no encontrado`);
     await this.usuarioRepo.update(id, { activo: !usuario.activo });
@@ -128,21 +174,31 @@ export class UsersService {
   }
 
   async updateLastAccess(id: string) {
-    await this.usuarioRepo.update(id, { ultimoAcceso: new Date(), primerLogin: false });
+    await this.usuarioRepo.update(id, {
+      ultimoAcceso: new Date(),
+      primerLogin: false,
+    });
   }
 
   async countUsers(): Promise<number> {
     return this.usuarioRepo.count();
   }
 
-  async findByRol(rol: RolUsuario) {
-    const usuarios = await this.usuarioRepo.find({ where: { rol, activo: true }, order: { nombre: 'ASC' } });
-    return usuarios.map(this.sanitize);
+  async findByRol(rol: RolUsuario): Promise<Omit<Usuario, 'password'>[]> {
+    const usuarios = await this.usuarioRepo.find({
+      where: { rol, activo: true },
+      order: { nombre: 'ASC' },
+    });
+    return usuarios.map((u) => this.sanitize(u));
   }
 
-  private sanitize(u: Usuario) {
+  private sanitize(u: Usuario): Omit<Usuario, 'password'> | null {
     if (!u) return null;
-    const { password, ...rest } = u as any;
-    return { ...rest, permisos: PERMISOS_POR_ROL[u.rol] || [] };
+    const rest = { ...u } as Record<string, unknown>;
+    delete rest.password;
+    return {
+      ...(rest as Omit<Usuario, 'password'>),
+      permisos: (PERMISOS_POR_ROL[u.rol] || []) as string[],
+    };
   }
 }

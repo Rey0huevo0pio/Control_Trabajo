@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  Query,
 } from '@nestjs/common';
 import { InstalacionesService } from './instalaciones.service';
 import {

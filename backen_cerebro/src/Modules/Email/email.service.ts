@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import * as crypto from 'crypto';
-import {
-  EmailConfig,
-  EmailConfigDocument,
-  EmailStatus,
-} from '../../Models/Usuarios/email-config.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { scryptSync, createDecipheriv } from 'crypto';
+import { EmailConfig, EmailStatus } from '../../Models/PG/email-config.entity';
 import {
   CreateEmailConfigDto,
   UpdateEmailConfigDto,
@@ -39,8 +35,8 @@ export interface EmailMessage {
 @Injectable()
 export class EmailService {
   constructor(
-    @InjectModel(EmailConfig.name)
-    private emailConfigModel: Model<EmailConfigDocument>,
+    @InjectRepository(EmailConfig)
+    private emailConfigRepo: Repository<EmailConfig>,
     private configService: EmailConfigService,
     private fetcherService: EmailFetcherService,
     private senderService: EmailSenderService,
@@ -52,9 +48,9 @@ export class EmailService {
   // ==========================================
   async createConfig(
     usuarioId: string,
-    createDto: CreateEmailConfigDto,
+    dto: CreateEmailConfigDto,
   ): Promise<any> {
-    return this.configService.createConfig(usuarioId, createDto);
+    return this.configService.createConfig(usuarioId, dto);
   }
 
   async getAllConfigs(): Promise<any[]> {
@@ -102,11 +98,9 @@ export class EmailService {
     console.log('\n📧 [EmailService] getEmails - userId:', usuarioId);
     console.log('📧 [EmailService] getEmails - params:', getEmailsDto);
 
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-      })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId },
+    });
 
     console.log(
       '📩 [EmailService] Config encontrada:',
@@ -185,12 +179,7 @@ export class EmailService {
       );
 
       // Actualizar última sincronización
-      void this.emailConfigModel
-        .findOneAndUpdate(
-          { usuario: new Types.ObjectId(usuarioId) },
-          { lastSync: new Date() },
-        )
-        .exec();
+      await this.emailConfigRepo.update(config.id, { lastSync: new Date() });
 
       return {
         success: true,
@@ -215,9 +204,9 @@ export class EmailService {
   // OBTENER SOLO UIDs DE UNA CARPETA (CON CACHÉ)
   // ==========================================
   async getMessageUIDs(usuarioId: string, folder: string): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId },
+    });
 
     if (!config || config.status !== EmailStatus.ACTIVE) {
       return { success: true, data: { uids: [], total: 0 } };
@@ -261,9 +250,9 @@ export class EmailService {
       return { success: true, data: { emails: [], total: 0 } };
     }
 
-    const config = await this.emailConfigModel
-      .findOne({ usuario: new Types.ObjectId(usuarioId) })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId },
+    });
 
     if (!config || config.status !== EmailStatus.ACTIVE) {
       return { success: true, data: { emails: [], total: 0 } };
@@ -326,14 +315,14 @@ export class EmailService {
   // ==========================================
   private decryptPassword(encrypted: string): string {
     const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(
+    const key = scryptSync(
       process.env.EMAIL_ENCRYPTION_KEY || 'default_encryption_key_32',
       'salt',
       32,
     );
     const [ivHex, encryptedHex] = encrypted.split(':');
     const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    const decipher = createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;

@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { RolUsuario } from '../Models/Usuarios/usuario.schema';
+import { RolUsuario } from '../Models/PG/usuario.entity';
 
 export const ROLES_KEY = 'roles';
 export const PERMISSIONS_KEY = 'permissions';

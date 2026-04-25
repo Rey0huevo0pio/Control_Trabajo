@@ -225,7 +225,7 @@ export class EmailAttachmentService {
     const extension = fileName.substring(fileName.lastIndexOf('.'));
 
     // Buscar por extensión
-    for (const [mime, info] of Object.entries(this.MIME_TYPES)) {
+    for (const info of Object.values(this.MIME_TYPES)) {
       if (info.extension === extension) {
         return info;
       }

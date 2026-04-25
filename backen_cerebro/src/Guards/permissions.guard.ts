@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PERMISOS_POR_ROL } from '../Models/Usuarios/usuario.schema';
+import { PERMISOS_POR_ROL } from '../Models/PG/usuario.entity';
 
 export const PERMISSIONS_KEY = 'permissions';
 
@@ -39,10 +39,9 @@ export class PermissionsGuard implements CanActivate {
 
     if (!hasAllPermissions) {
       throw new ForbiddenException(
-        `No tiene los permisos requeridos. Permisos faltantes: ${requiredPermissions.filter((p) => !userPermissions.includes(p)).join(', ')}`,
+        'No tiene los permisos requeridos para esta acción',
       );
     }
-
     return true;
   }
 }

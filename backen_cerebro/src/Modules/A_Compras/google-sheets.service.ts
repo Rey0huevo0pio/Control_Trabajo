@@ -1,16 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import {
-  GoogleConnection,
-  GoogleConnectionDocument,
-} from '../../Models/T_A_Compras/google-connection.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GoogleConnection } from '../../Models/PG/google-connection.entity';
 
 @Injectable()
 export class GoogleSheetsService {
   constructor(
-    @InjectModel(GoogleConnection.name)
-    private googleConnectionModel: Model<GoogleConnectionDocument>,
+    @InjectRepository(GoogleConnection)
+    private googleConnectionRepo: Repository<GoogleConnection>,
   ) {}
 
   async saveConnection(
@@ -23,8 +20,8 @@ export class GoogleSheetsService {
     scope?: string,
     areasAsignadas?: string[],
   ) {
-    const existingConnection = await this.googleConnectionModel.findOne({
-      usuarioId,
+    const existingConnection = await this.googleConnectionRepo.findOne({
+      where: { usuarioId },
     });
 
     if (existingConnection) {
@@ -37,10 +34,10 @@ export class GoogleSheetsService {
       if (areasAsignadas) existingConnection.areasAsignadas = areasAsignadas;
       existingConnection.activo = true;
       existingConnection.ultimoAcceso = new Date();
-      return existingConnection.save();
+      return this.googleConnectionRepo.save(existingConnection);
     }
 
-    const newConnection = new this.googleConnectionModel({
+    const newConnection = this.googleConnectionRepo.create({
       usuarioId,
       email,
       accessToken,
@@ -53,13 +50,12 @@ export class GoogleSheetsService {
       ultimoAcceso: new Date(),
     });
 
-    return newConnection.save();
+    return this.googleConnectionRepo.save(newConnection);
   }
 
   async getConnection(usuarioId: string) {
-    const connection = await this.googleConnectionModel.findOne({
-      usuarioId,
-      activo: true,
+    const connection = await this.googleConnectionRepo.findOne({
+      where: { usuarioId, activo: true },
     });
     if (!connection) {
       throw new NotFoundException('No hay conexión de Google configurada');
@@ -68,9 +64,8 @@ export class GoogleSheetsService {
   }
 
   async isConnected(usuarioId: string): Promise<boolean> {
-    const connection = await this.googleConnectionModel.findOne({
-      usuarioId,
-      activo: true,
+    const connection = await this.googleConnectionRepo.findOne({
+      where: { usuarioId, activo: true },
     });
     return !!connection;
   }
@@ -86,29 +81,30 @@ export class GoogleSheetsService {
     if (refreshToken) connection.refreshToken = refreshToken;
     if (tokenExpiry) connection.tokenExpiry = tokenExpiry;
     connection.ultimoAcceso = new Date();
-    return connection.save();
+    return this.googleConnectionRepo.save(connection);
   }
 
   async updateAreas(usuarioId: string, areasAsignadas: string[]) {
     const connection = await this.getConnection(usuarioId);
     connection.areasAsignadas = areasAsignadas;
     connection.ultimoAcceso = new Date();
-    return connection.save();
+    return this.googleConnectionRepo.save(connection);
   }
 
   async deleteConnection(usuarioId: string) {
-    const connection = await this.googleConnectionModel.findOne({ usuarioId });
+    const connection = await this.googleConnectionRepo.findOne({
+      where: { usuarioId },
+    });
     if (!connection) {
       throw new NotFoundException('No hay conexión de Google para eliminar');
     }
     connection.activo = false;
-    return connection.save();
+    return this.googleConnectionRepo.save(connection);
   }
 
   async getConnectionStatus(usuarioId: string) {
-    const connection = await this.googleConnectionModel.findOne({
-      usuarioId,
-      activo: true,
+    const connection = await this.googleConnectionRepo.findOne({
+      where: { usuarioId, activo: true },
     });
     if (!connection) {
       return { connected: false };

@@ -3,13 +3,12 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   EmailConfig,
-  EmailConfigDocument,
   EmailStatus,
-} from '../../../Models/Usuarios/email-config.schema';
+} from '../../../Models/PG/email-config.entity';
 import { SendEmailDto } from '../../../DTOs/email.dto';
 import { EmailConnectionService } from './email-connection.service';
 import { EmailCryptoService } from './email-crypto.service';
@@ -17,8 +16,8 @@ import { EmailCryptoService } from './email-crypto.service';
 @Injectable()
 export class EmailSenderService {
   constructor(
-    @InjectModel(EmailConfig.name)
-    private emailConfigModel: Model<EmailConfigDocument>,
+    @InjectRepository(EmailConfig)
+    private emailConfigRepo: Repository<EmailConfig>,
     private connectionService: EmailConnectionService,
     private cryptoService: EmailCryptoService,
   ) {}
@@ -27,12 +26,9 @@ export class EmailSenderService {
   // ENVIAR CORREO (SMTP)
   // ==========================================
   async sendEmail(usuarioId: string, sendDto: SendEmailDto): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
-      })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId, status: EmailStatus.ACTIVE },
+    });
 
     if (!config) {
       throw new NotFoundException(
@@ -51,7 +47,6 @@ export class EmailSenderService {
       smtpSecure: config.smtpSecure,
     });
 
-    // Construir opciones de correo
     const mailOptions: any = {
       from: `${config.displayName} <${config.email}>`,
       to: sendDto.to,
@@ -62,9 +57,8 @@ export class EmailSenderService {
       bcc: sendDto.bcc,
     };
 
-    // Agregar adjuntos si existen
     if (sendDto.attachments && sendDto.attachments.length > 0) {
-      mailOptions.attachments = sendDto.attachments.map((url) => ({
+      mailOptions.attachments = sendDto.attachments.map((url: any) => ({
         filename: url.split('/').pop() || 'archivo',
         path: url,
       }));
@@ -87,21 +81,15 @@ export class EmailSenderService {
     }
   }
 
-  // ==========================================
-  // ENVIAR CORREO CON ADJUNTOS LOCALES
-  // ==========================================
   async sendEmailWithAttachments(
     usuarioId: string,
     sendDto: SendEmailDto & {
       attachmentsData?: Array<{ filename: string; content: Buffer }>;
     },
   ): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
-      })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId, status: EmailStatus.ACTIVE },
+    });
 
     if (!config) {
       throw new NotFoundException(
@@ -130,9 +118,8 @@ export class EmailSenderService {
       bcc: sendDto.bcc,
     };
 
-    // Agregar adjuntos desde datos locales
     if (sendDto.attachmentsData && sendDto.attachmentsData.length > 0) {
-      mailOptions.attachments = sendDto.attachmentsData.map((att) => ({
+      mailOptions.attachments = sendDto.attachmentsData.map((att: any) => ({
         filename: att.filename,
         content: att.content,
       }));
@@ -155,21 +142,15 @@ export class EmailSenderService {
     }
   }
 
-  // ==========================================
-  // REENVIAR CORREO
-  // ==========================================
   async forwardEmail(
     usuarioId: string,
     originalEmail: any,
     forwardTo: string,
     comment?: string,
   ): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
-      })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId, status: EmailStatus.ACTIVE },
+    });
 
     if (!config) {
       throw new NotFoundException(
@@ -188,7 +169,6 @@ export class EmailSenderService {
       smtpSecure: config.smtpSecure,
     });
 
-    // Construir mensaje de reenvío
     let htmlContent = '';
 
     if (comment) {
@@ -231,21 +211,15 @@ export class EmailSenderService {
     }
   }
 
-  // ==========================================
-  // RESPONDER CORREO
-  // ==========================================
   async replyToEmail(
     usuarioId: string,
     originalEmail: any,
     replyMessage: string,
     isHtml: boolean = true,
   ): Promise<any> {
-    const config = await this.emailConfigModel
-      .findOne({
-        usuario: new Types.ObjectId(usuarioId),
-        status: EmailStatus.ACTIVE,
-      })
-      .exec();
+    const config = await this.emailConfigRepo.findOne({
+      where: { usuario_id: usuarioId, status: EmailStatus.ACTIVE },
+    });
 
     if (!config) {
       throw new NotFoundException(
@@ -264,7 +238,6 @@ export class EmailSenderService {
       smtpSecure: config.smtpSecure,
     });
 
-    // Construir mensaje de respuesta
     let htmlContent = '';
 
     if (isHtml) {

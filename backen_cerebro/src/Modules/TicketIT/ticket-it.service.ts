@@ -1,15 +1,28 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TicketIT, EstadoTicketEnum, PrioridadTicket } from '../../Models/PG/ticket-it.entity';
+import {
+  TicketIT,
+  EstadoTicketEnum,
+  PrioridadTicket,
+} from '../../Models/PG/ticket-it.entity';
 import { EstadoTicketHistorial } from '../../Models/PG/estado-ticket-historial.entity';
-import { CreateTicketITDto, UpdateTicketITDto, CreateEstadoTicketDto } from './dto/ticket-it.dto';
+import {
+  CreateTicketITDto,
+  UpdateTicketITDto,
+  CreateEstadoTicketDto,
+} from './dto/ticket-it.dto';
 
 @Injectable()
 export class TicketITService {
   constructor(
     @InjectRepository(TicketIT) private ticketRepo: Repository<TicketIT>,
-    @InjectRepository(EstadoTicketHistorial) private historialRepo: Repository<EstadoTicketHistorial>,
+    @InjectRepository(EstadoTicketHistorial)
+    private historialRepo: Repository<EstadoTicketHistorial>,
   ) {}
 
   private calcularPrioridad(nivel: number): PrioridadTicket {
@@ -41,7 +54,8 @@ export class TicketITService {
         categoria: dto.categoria,
         descripcion: dto.descripcion,
         nivel_afectacion: dto.nivel_afectacion,
-        prioridad: dto.prioridad ?? this.calcularPrioridad(dto.nivel_afectacion),
+        prioridad:
+          dto.prioridad ?? this.calcularPrioridad(dto.nivel_afectacion),
         estado: dto.estado ?? EstadoTicketEnum.ABIERTO,
         asignado_a: dto.asignado_a,
         creado_por: dto.creado_por,
@@ -100,46 +114,93 @@ export class TicketITService {
   }
 
   async findTicketsByUsuario(usuarioId: string): Promise<TicketIT[]> {
-    return this.ticketRepo.find({ where: { usuario_solicitante: usuarioId }, order: { createdAt: 'DESC' } });
+    return this.ticketRepo.find({
+      where: { usuario_solicitante: usuarioId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findTicketsByAsignado(asignadoId: string): Promise<TicketIT[]> {
-    return this.ticketRepo.find({ where: { asignado_a: asignadoId }, order: { createdAt: 'DESC' } });
+    return this.ticketRepo.find({
+      where: { asignado_a: asignadoId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findTicketsByEstado(estado: string): Promise<TicketIT[]> {
-    return this.ticketRepo.find({ where: { estado: estado as EstadoTicketEnum }, order: { createdAt: 'DESC' } });
+    return this.ticketRepo.find({
+      where: { estado: estado as EstadoTicketEnum },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findTicketsByInstalacion(instalacionId: string): Promise<TicketIT[]> {
-    return this.ticketRepo.find({ where: { id_instalacion: instalacionId }, order: { createdAt: 'DESC' } });
+    return this.ticketRepo.find({
+      where: { id_instalacion: instalacionId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findTicketsByArea(areaId: string): Promise<TicketIT[]> {
-    return this.ticketRepo.find({ where: { id_area: areaId }, order: { createdAt: 'DESC' } });
+    return this.ticketRepo.find({
+      where: { id_area: areaId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getHistorialTicket(ticketId: string): Promise<EstadoTicketHistorial[]> {
-    return this.historialRepo.find({ where: { id_ticket: ticketId }, order: { fecha_cambio: 'ASC' } });
+    return this.historialRepo.find({
+      where: { id_ticket: ticketId },
+      order: { fecha_cambio: 'ASC' },
+    });
   }
 
-  async resolveTicket(ticketId: string, userId: string, descripcion: string, evidencia?: string[]): Promise<TicketIT> {
-    await this.ticketRepo.update(ticketId, { estado: EstadoTicketEnum.RESUELTO, fecha_cierre: new Date() });
+  async resolveTicket(
+    ticketId: string,
+    userId: string,
+    descripcion: string,
+    evidencia?: string[],
+  ): Promise<TicketIT> {
+    await this.ticketRepo.update(ticketId, {
+      estado: EstadoTicketEnum.RESUELTO,
+      fecha_cierre: new Date(),
+    });
     await this.historialRepo.save(
-      this.historialRepo.create({ id_ticket: ticketId, estado: 'resuelto', id_usuario: userId, descripcion, evidencia: evidencia ?? [] }),
+      this.historialRepo.create({
+        id_ticket: ticketId,
+        estado: 'resuelto',
+        id_usuario: userId,
+        descripcion,
+        evidencia: evidencia ?? [],
+      }),
     );
     return this.findOneTicket(ticketId);
   }
 
-  async cancelTicket(ticketId: string, userId: string, descripcion: string): Promise<TicketIT> {
-    await this.ticketRepo.update(ticketId, { estado: EstadoTicketEnum.CANCELADO, fecha_cierre: new Date() });
+  async cancelTicket(
+    ticketId: string,
+    userId: string,
+    descripcion: string,
+  ): Promise<TicketIT> {
+    await this.ticketRepo.update(ticketId, {
+      estado: EstadoTicketEnum.CANCELADO,
+      fecha_cierre: new Date(),
+    });
     await this.historialRepo.save(
-      this.historialRepo.create({ id_ticket: ticketId, estado: 'cancelado', id_usuario: userId, descripcion, evidencia: [] }),
+      this.historialRepo.create({
+        id_ticket: ticketId,
+        estado: 'cancelado',
+        id_usuario: userId,
+        descripcion,
+        evidencia: [],
+      }),
     );
     return this.findOneTicket(ticketId);
   }
 
-  async createEstadoTicket(dto: CreateEstadoTicketDto): Promise<EstadoTicketHistorial> {
+  async createEstadoTicket(
+    dto: CreateEstadoTicketDto,
+  ): Promise<EstadoTicketHistorial> {
     return this.historialRepo.save(this.historialRepo.create(dto));
   }
 }

@@ -3,7 +3,7 @@ import {
   EmailConnectionService,
   EmailConnectionConfig,
 } from './email-connection.service';
-import { EmailParserService, ParsedEmail } from './email-parser.service';
+import { EmailParserService } from './email-parser.service';
 import { EmailCacheService } from './email-cache.service';
 import { EmailAttachmentService } from './email-attachment.service';
 
@@ -44,7 +44,7 @@ export class EmailFetcherService {
     folder: string,
     usuarioId: string,
   ): Promise<number[]> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const imapConnection =
         this.connectionService.createImapConnection(config);
 
@@ -72,7 +72,7 @@ export class EmailFetcherService {
             }
 
             // Guardar en caché
-            this.cacheService.cacheUIDs(usuarioId, folder, results);
+            void this.cacheService.cacheUIDs(usuarioId, folder, results);
 
             console.log(
               `📧 [EmailFetcher] getMessageUIDs: ${results.length} UIDs en ${folder}`,
@@ -120,8 +120,6 @@ export class EmailFetcherService {
     return new Promise((resolve) => {
       const imapConnection =
         this.connectionService.createImapConnection(config);
-      const emails: EmailMessage[] = [];
-      let processedCount = 0;
 
       imapConnection.once('error', (err: any) => {
         console.log('❌ [EmailFetcher] IMAP error:', err.message);
@@ -167,7 +165,7 @@ export class EmailFetcherService {
 
                   // Si ya tenemos body, procesar
                   if (bodyReceived && chunks.length > 0) {
-                    processEmail();
+                    void processEmail();
                   }
                 });
 
@@ -182,7 +180,7 @@ export class EmailFetcherService {
 
                     // Si ya tenemos attributes, procesar
                     if (attrsReceived && chunks.length > 0) {
-                      processEmail();
+                      void processEmail();
                     }
                   });
                 });
@@ -214,7 +212,7 @@ export class EmailFetcherService {
                     );
                     bodyReceived = true;
                     if (chunks.length > 0) {
-                      processEmail();
+                      void processEmail();
                     } else {
                       resolveMsg(null);
                     }
@@ -309,7 +307,11 @@ export class EmailFetcherService {
             imapConnection.end();
 
             // Guardar en caché
-            this.cacheService.cacheMessages(usuarioId, folder, validEmails);
+            void this.cacheService.cacheMessages(
+              usuarioId,
+              folder,
+              validEmails,
+            );
 
             resolve(validEmails);
           });
@@ -443,6 +445,7 @@ export class EmailFetcherService {
                       textBuffer = buffer.substring(0, previewLength).trim();
                       // Eliminar caracteres de control
                       textBuffer = textBuffer
+                        // eslint-disable-next-line no-control-regex
                         .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
                         .trim();
                     }

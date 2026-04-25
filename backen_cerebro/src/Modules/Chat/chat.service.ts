@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatGrupo } from '../../Models/T_Chat_PG/chat-grupo.entity';
@@ -17,8 +21,10 @@ import {
 export class ChatService {
   constructor(
     @InjectRepository(ChatGrupo) private grupoRepo: Repository<ChatGrupo>,
-    @InjectRepository(MensajeGrupo) private mensajeGrupoRepo: Repository<MensajeGrupo>,
-    @InjectRepository(MensajePrivado) private mensajePrivadoRepo: Repository<MensajePrivado>,
+    @InjectRepository(MensajeGrupo)
+    private mensajeGrupoRepo: Repository<MensajeGrupo>,
+    @InjectRepository(MensajePrivado)
+    private mensajePrivadoRepo: Repository<MensajePrivado>,
     private redis: RedisPublisherService,
   ) {}
 
@@ -34,7 +40,10 @@ export class ChatService {
   }
 
   async findOneGrupo(id: string): Promise<ChatGrupo> {
-    const grupo = await this.grupoRepo.findOne({ where: { id }, relations: ['mensajes'] });
+    const grupo = await this.grupoRepo.findOne({
+      where: { id },
+      relations: ['mensajes'],
+    });
     if (!grupo) throw new NotFoundException(`Grupo ${id} no encontrado`);
     return grupo;
   }
@@ -53,12 +62,16 @@ export class ChatService {
 
   async deleteGrupo(id: string): Promise<void> {
     const result = await this.grupoRepo.delete(id);
-    if (!result.affected) throw new NotFoundException(`Grupo ${id} no encontrado`);
+    if (!result.affected)
+      throw new NotFoundException(`Grupo ${id} no encontrado`);
   }
 
   // ==================== MENSAJES GRUPO ====================
 
-  async addMensajeGrupo(grupoId: string, dto: MensajeGrupoDto): Promise<MensajeGrupo> {
+  async addMensajeGrupo(
+    grupoId: string,
+    dto: MensajeGrupoDto,
+  ): Promise<MensajeGrupo> {
     const grupo = await this.grupoRepo.findOne({ where: { id: grupoId } });
     if (!grupo) throw new NotFoundException(`Grupo ${grupoId} no encontrado`);
 
@@ -98,7 +111,8 @@ export class ChatService {
         { id_emisor: dto.usuario_b, id_receptor: dto.usuario_a },
       ],
     });
-    if (existe) throw new BadRequestException('Ya existe chat entre estos usuarios');
+    if (existe)
+      throw new BadRequestException('Ya existe chat entre estos usuarios');
     return { ok: true };
   }
 
@@ -122,7 +136,10 @@ export class ChatService {
     return saved;
   }
 
-  async getMensajesPrivados(emisorId: string, receptorId: string): Promise<MensajePrivado[]> {
+  async getMensajesPrivados(
+    emisorId: string,
+    receptorId: string,
+  ): Promise<MensajePrivado[]> {
     return this.mensajePrivadoRepo
       .createQueryBuilder('m')
       .where(
@@ -139,7 +156,10 @@ export class ChatService {
       .createQueryBuilder()
       .update()
       .set({ leido: true })
-      .where('id_emisor = :emisorId AND id_receptor = :receptorId', { emisorId, receptorId })
+      .where('id_emisor = :emisorId AND id_receptor = :receptorId', {
+        emisorId,
+        receptorId,
+      })
       .execute();
   }
 }

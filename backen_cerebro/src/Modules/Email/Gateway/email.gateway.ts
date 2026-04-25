@@ -13,7 +13,11 @@ import { Logger } from '@nestjs/common';
 @WebSocketGateway({
   namespace: '/email',
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+    ],
     credentials: true,
   },
 })
@@ -37,7 +41,7 @@ export class EmailGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { userId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    client.join(`inbox:${data.userId}`);
+    void client.join(`inbox:${data.userId}`);
     this.logger.log(`Usuario ${data.userId} unido a su inbox`);
     return { ok: true };
   }

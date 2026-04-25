@@ -21,12 +21,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get('JWT_SECRET') || 'sotavento_secret_key_2024',
+      secretOrKey:
+        configService.get('JWT_SECRET') || 'sotavento_secret_key_2024',
     });
   }
 
   async validate(payload: JwtPayload) {
-    const usuario = await this.usuarioRepo.findOne({ where: { id: payload.sub } });
+    const usuario = await this.usuarioRepo.findOne({
+      where: { id: payload.sub },
+    });
 
     if (!usuario) throw new UnauthorizedException('Usuario no encontrado');
     if (!usuario.activo) throw new UnauthorizedException('Usuario inactivo');

@@ -1,9 +1,17 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Usuario, RolUsuario, PERMISOS_POR_ROL } from '../../Models/PG/usuario.entity';
+import {
+  Usuario,
+  RolUsuario,
+  PERMISOS_POR_ROL,
+} from '../../Models/PG/usuario.entity';
 import { CreateUsuarioDto, LoginDto } from '../../DTOs/usuario.dto';
 
 @Injectable()
@@ -17,9 +25,10 @@ export class AuthService {
     const exists = await this.usuarioRepo.findOne({
       where: { Control_Usuario: dto.Control_Usuario.toUpperCase() },
     });
-    if (exists) throw new ConflictException('El Control_Usuario ya está registrado');
+    if (exists)
+      throw new ConflictException('El Control_Usuario ya está registrado');
 
-    const rol = (dto.rol as RolUsuario) || RolUsuario.VIGILANTE;
+    const rol = dto.rol || RolUsuario.VIGILANTE;
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const usuario = this.usuarioRepo.create({
@@ -37,7 +46,10 @@ export class AuthService {
     return {
       success: true,
       message: 'Usuario registrado correctamente',
-      data: { user: this.sanitize(usuario), token: this.generateToken(usuario) },
+      data: {
+        user: this.sanitize(usuario),
+        token: this.generateToken(usuario),
+      },
     };
   }
 
@@ -55,7 +67,10 @@ export class AuthService {
     return {
       success: true,
       message: 'Login exitoso',
-      data: { user: this.sanitize(usuario), token: this.generateToken(usuario) },
+      data: {
+        user: this.sanitize(usuario),
+        token: this.generateToken(usuario),
+      },
     };
   }
 
@@ -72,8 +87,12 @@ export class AuthService {
     });
   }
 
-  private sanitize(u: Usuario) {
-    const { password, ...rest } = u as any;
-    return { ...rest, permisos: PERMISOS_POR_ROL[u.rol] || [] };
+  private sanitize(u: Usuario): Omit<Usuario, 'password'> {
+    const rest = { ...u } as Record<string, unknown>;
+    delete rest.password;
+    return {
+      ...(rest as Omit<Usuario, 'password'>),
+      permisos: (PERMISOS_POR_ROL[u.rol] || []) as string[],
+    };
   }
 }
