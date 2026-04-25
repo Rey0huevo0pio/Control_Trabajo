@@ -204,13 +204,31 @@ export class EmailService {
   // OBTENER SOLO UIDs DE UNA CARPETA (CON CACHÉ)
   // ==========================================
   async getMessageUIDs(usuarioId: string, folder: string): Promise<any> {
+    console.log(
+      `📧 [EmailService] getMessageUIDs - userId: ${usuarioId}, folder: ${folder}`,
+    );
+
     const config = await this.emailConfigRepo.findOne({
       where: { usuario_id: usuarioId },
     });
 
-    if (!config || config.status !== EmailStatus.ACTIVE) {
+    if (!config) {
+      console.log(
+        '❌ [EmailService] No hay configuración de correo para este usuario',
+      );
       return { success: true, data: { uids: [], total: 0 } };
     }
+
+    if (config.status !== EmailStatus.ACTIVE) {
+      console.log(
+        `⚠️ [EmailService] Config no está activa. Status: ${config.status}`,
+      );
+      return { success: true, data: { uids: [], total: 0 } };
+    }
+
+    console.log(
+      `📧 [EmailService] Config activa. Email: ${config.email}, IMAP: ${config.imapHost}`,
+    );
 
     try {
       const uids = await this.fetcherService.getMessageUIDs(
@@ -228,6 +246,9 @@ export class EmailService {
         usuarioId,
       );
 
+      console.log(
+        `✅ [EmailService] getMessageUIDs: ${uids.length} UIDs obtenidos`,
+      );
       return {
         success: true,
         data: { uids, total: uids.length },

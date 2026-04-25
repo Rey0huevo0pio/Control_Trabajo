@@ -1,4 +1,6 @@
-/**
+const fs = require('fs');
+
+const content = `/**
  * ============================================================================
  * 📬 EMAIL INBOX VIEW - Bandeja de entrada profesional (Web)
  * ============================================================================
@@ -100,7 +102,7 @@ export function EmailInboxView() {
     if (!subject) return 'Sin asunto';
     if (!subject.startsWith('=?')) return subject;
     try {
-      return subject.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (match, charset, encoding, text) => {
+      return subject.replace(/=\\?([^?]+)\\?([BQ])\\?([^?]*)\\?=/gi, (match, charset, encoding, text) => {
         if (encoding.toUpperCase() === 'B') {
           return atob(text.replace(/-/g, '+').replace(/_/g, '/'));
         } else if (encoding.toUpperCase() === 'Q') {
@@ -116,9 +118,9 @@ export function EmailInboxView() {
   const cleanEmailText = (text) => {
     if (!text) return '';
     let cleaned = text
-      .replace(/--_.*$/gm, '')
-      .replace(/Content-.*$/gm, '')
-      .replace(/^\s*$/gm, '')
+      .replace(/--_[^\\n]+/g, '')
+      .replace(/Content-[^\\n]+/g, '')
+      .replace(/^\\s*$/gm, '')
       .trim();
     if (cleaned.length > 120) {
       cleaned = cleaned.substring(0, 120) + '...';
@@ -134,7 +136,7 @@ export function EmailInboxView() {
       const textFromHtml = email.html
         .replace(/<[^>]*>/g, ' ')
         .replace(/&nbsp;/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/\\s+/g, ' ')
         .trim();
       return textFromHtml.substring(0, 120);
     }
@@ -209,7 +211,6 @@ export function EmailInboxView() {
           <p style={{ color: '#8E8E93', fontSize: 15, margin: 0 }}>Cargando correos...</p>
           <style>{'@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }'}</style>
         </div>
-      </div>
     );
   }
 
@@ -440,3 +441,15 @@ export function EmailInboxView() {
 }
 
 export default EmailInboxView;
+`;
+
+fs.writeFileSync(
+  'c:/Users/agenc/Documents/Control_Trabajo/stv-web/src/src_Chat_STV/screens/Componets_Correos/views/EmailInboxView.jsx',
+  content,
+  'utf8'
+);
+console.log('File written successfully');
+`;
+
+fs.writeFileSync('c:/Users/agenc/Documents/Control_Trabajo/fix_inbox.js', script, 'utf8');
+console.log('Script written');

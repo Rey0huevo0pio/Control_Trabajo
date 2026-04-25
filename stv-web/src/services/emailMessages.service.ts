@@ -61,6 +61,12 @@ interface GetMessagesResponse {
   message?: string;
 }
 
+interface SyncIncrementalResult {
+  hasNewEmails: boolean;
+  newCount: number;
+  emails: EmailMessage[];
+}
+
 const openDatabase = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     if (db) {
@@ -278,40 +284,104 @@ class EmailMessagesService {
     }
   }
 
-  async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<void> {
+  /**
+   * Sincronización incremental - retorna los correos nuevos detectados
+   */
+  async syncIncremental(folder: string, token: string, cachedEmails: EmailMessage[]): Promise<SyncIncrementalResult> {
     try {
+      console.log('[EmailMessages] Iniciando sync incremental...');
+
       const uidsResponse = await api.get(`${EMAIL_MESSAGES_ENDPOINT}/uids`, {
         params: { folder },
         headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000,
       });
 
-      const serverUIDs: number[] = uidsResponse.data.data?.uids || [];
-      if (serverUIDs.length === 0) return;
+      console.log('[EmailMessages] UIDs del servidor:', uidsResponse.data);
+
+      const serverUIDs: number[] = uidsResponse.data?.data?.uids || [];
+      if (serverUIDs.length === 0) {
+        console.log('[EmailMessages] Servidor retornó 0 UIDs');
+        return { hasNewEmails: false, newCount: 0, emails: [] };
+      }
 
       const cachedUIDs = new Set(cachedEmails.map(e => e.uid));
       const newUIDs = serverUIDs.filter(uid => !cachedUIDs.has(uid));
 
-      if (newUIDs.length === 0) return;
+      console.log(`[EmailMessages] UIDs en servidor: ${serverUIDs.length}, en caché: ${cachedUIDs.size}, nuevos: ${newUIDs.length}`);
 
-      console.log('[EmailMessages] Correos nuevos:', newUIDs.length);
+      if (newUIDs.length === 0) {
+        console.log('[EmailMessages] No hay correos nuevos');
+        return { hasNewEmails: false, newCount: 0, emails: [] };
+      }
+
+      console.log('[EmailMessages] Descargando', newUIDs.length, 'correos nuevos...');
 
       const downloadResponse = await api.post(`${EMAIL_MESSAGES_ENDPOINT}/by-uids`,
         { folder, uids: newUIDs },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
       );
 
-      const newEmails: EmailMessage[] = downloadResponse.data.data?.emails || [];
+      const newEmails: EmailMessage[] = downloadResponse.data?.data?.emails || [];
+      console.log('[EmailMessages] Correos nuevos descargados:', newEmails.length);
+
       if (newEmails.length > 0) {
         await saveEmailsToDB(newEmails, folder);
+        const allEmails = await getAllEmailsFromDB(folder);
         await saveMetadata(folder, {
           lastSync: new Date().toISOString(),
           lastUID: newUIDs.length > 0 ? Math.max(...newUIDs) : 0,
-          totalEmails: cachedEmails.length + newEmails.length,
+          totalEmails: allEmails.length,
         });
       }
-    } catch (error) {
-      console.log('[EmailMessages] Error en sync incremental:', error);
+
+      return {
+        hasNewEmails: newEmails.length > 0,
+        newCount: newEmails.length,
+        emails: newEmails,
+      };
+    } catch (error: any) {
+      console.error('[EmailMessages] Error en sync incremental:', error.message || error.code, error.response?.data);
+      return { hasNewEmails: false, newCount: 0, emails: [] };
     }
+  }
+
+  /**
+   * Sincroniza y retorna todos los correos actualizados (cache + nuevos)
+   */
+  async syncAndGetAll(folder: string = 'INBOX'): Promise<GetMessagesResponse> {
+    const token = getAuthToken();
+    if (!token) {
+      const cached = await getAllEmailsFromDB(folder);
+      return {
+        emails: cached,
+        total: cached.length,
+        fromCache: true,
+        message: 'Sin sesión - mostrando caché local',
+      };
+    }
+
+    const cachedEmails = await getAllEmailsFromDB(folder);
+    const syncResult = await this.syncIncremental(folder, token, cachedEmails);
+
+    if (syncResult.hasNewEmails) {
+      const allEmails = await getAllEmailsFromDB(folder);
+      return {
+        emails: allEmails,
+        total: allEmails.length,
+        fromCache: false,
+        message: `${syncResult.newCount} correos nuevos sincronizados`,
+      };
+    }
+
+    return {
+      emails: cachedEmails,
+      total: cachedEmails.length,
+      fromCache: true,
+      message: cachedEmails.length > 0
+        ? 'Sin correos nuevos'
+        : 'No hay correos en la bandeja',
+    };
   }
 
   async getFullMessage(uid: number, folder: string = 'INBOX'): Promise<EmailMessage | null> {
@@ -331,7 +401,7 @@ class EmailMessagesService {
         { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
       );
 
-      const emails: EmailMessage[] = response.data.data?.emails || [];
+      const emails: EmailMessage[] = response.data?.data?.emails || [];
       if (emails.length > 0) {
         const fullEmail = emails[0];
         fullEmail.folder = folder;
