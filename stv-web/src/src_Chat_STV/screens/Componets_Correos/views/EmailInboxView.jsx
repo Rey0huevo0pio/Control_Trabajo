@@ -317,6 +317,7 @@ export function EmailInboxView() {
             </button>
           )}
         </div>
+      </div>
 
       {filteredEmails.length === 0 ? (
         <div style={{ padding: 60, textAlign: 'center' }}>
@@ -421,15 +422,16 @@ export function EmailInboxView() {
                     </span>
                   </div>
 
-                {isUnread && (
-                  <div style={{
-                    width: 10, height: 10, borderRadius: 5,
-                    backgroundColor: '#007AFF',
-                    flexShrink: 0,
-                    alignSelf: 'center',
-                    marginTop: 12,
-                  }} />
-                )}
+                  {isUnread && (
+                    <div style={{
+                      width: 10, height: 10, borderRadius: 5,
+                      backgroundColor: '#007AFF',
+                      flexShrink: 0,
+                      alignSelf: 'center',
+                      marginTop: 12,
+                    }} />
+                  )}
+                </div>
               </div>
             );
           })}
