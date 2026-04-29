@@ -81,7 +81,7 @@ async function bootstrap() {
   // Configuración para permitir el dominio de Cloudflared del frontend
   app.enableCors({
     origin: [
-      'https://enlarge-structured-graduate-coins.trycloudflare.com',
+      'https://pressing-shaped-alleged-plastics.trycloudflare.com',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:3001',
