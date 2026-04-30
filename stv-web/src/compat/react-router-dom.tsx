@@ -8,7 +8,6 @@ import React, {
   isValidElement,
   useContext,
   useEffect,
-  useMemo,
 } from "react";
 
 type Params = Record<string, string>;
@@ -79,44 +78,38 @@ export function BrowserRouter({
   return <>{children}</>;
 }
 
-export function Route(_props: RouteProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function Route(_: RouteProps) {
   return null;
 }
 
 export function Routes({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/";
 
-  const match = useMemo(() => {
-    let wildcardElement: React.ReactNode = null;
+  let element: React.ReactNode = null;
+  let params: Params = {};
 
-    for (const child of Children.toArray(children)) {
-      if (!isValidElement<RouteProps>(child)) continue;
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement<RouteProps>(child)) continue;
 
-      const { path = "*", element } = child.props;
+    const { path = "*", element: childElement } = child.props;
 
-      if (path === "*") {
-        wildcardElement = element ?? null;
-        continue;
-      }
-
-      const params = matchPath(path, pathname);
-      if (params !== null) {
-        return {
-          element: element ?? null,
-          params,
-        };
-      }
+    if (path === "*") {
+      element = childElement ?? null;
+      continue;
     }
 
-    return {
-      element: wildcardElement,
-      params: {},
-    };
-  }, [children, pathname]);
+    const matchedParams = matchPath(path, pathname);
+    if (matchedParams !== null) {
+      element = childElement ?? null;
+      params = matchedParams;
+      break;
+    }
+  }
 
   return (
-    <ParamsContext.Provider value={match.params}>
-      {match.element}
+    <ParamsContext.Provider value={params}>
+      {element}
     </ParamsContext.Provider>
   );
 }

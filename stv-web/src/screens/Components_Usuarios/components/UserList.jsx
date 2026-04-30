@@ -22,16 +22,12 @@ const roleLabels = {
   vigilante: 'Vigilante',
 };
 
-export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }) {
+export function UserList({ onUserSelect, onEdit, onCreate }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRol, setFilterRol] = useState('all');
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
 
   const loadUsers = async () => {
     try {
@@ -45,6 +41,26 @@ export function UserList({ onUserSelect, onEdit, onCreate, onRefresh }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    userService.getUsers()
+      .then(data => {
+        if (!cancelled) setUsers(data || []);
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('[UserList] Error:', err);
+          setError('Error al cargar usuarios');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchQuery || 

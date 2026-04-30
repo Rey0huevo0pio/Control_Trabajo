@@ -2,10 +2,17 @@
 import { useEffect, useCallback } from 'react';
 import emailSocketService from '../services/emailSocket.service';
 
+type SocketEventData = Record<string, unknown>;
+
+interface SocketErrorData {
+  error: string;
+  [key: string]: unknown;
+}
+
 interface UseEmailSocketOptions {
   userId: string;
-  onNewEmail?: (data: any) => void;
-  onEmailSent?: (data: any) => void;
+  onNewEmail?: (data: SocketEventData) => void;
+  onEmailSent?: (data: SocketEventData) => void;
   onEmailError?: (error: string) => void;
 }
 
@@ -15,9 +22,9 @@ export function useEmailSocket({
   onEmailSent,
   onEmailError,
 }: UseEmailSocketOptions) {
-  const handleNewEmail = useCallback((data: any) => onNewEmail?.(data), [onNewEmail]);
-  const handleEmailSent = useCallback((data: any) => onEmailSent?.(data), [onEmailSent]);
-  const handleEmailError = useCallback((data: any) => onEmailError?.(data.error), [onEmailError]);
+  const handleNewEmail = useCallback((data: SocketEventData) => onNewEmail?.(data), [onNewEmail]);
+  const handleEmailSent = useCallback((data: SocketEventData) => onEmailSent?.(data), [onEmailSent]);
+  const handleEmailError = useCallback((data: SocketErrorData) => onEmailError?.(data.error), [onEmailError]);
 
   useEffect(() => {
     if (!userId) return;

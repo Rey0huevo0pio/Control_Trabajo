@@ -3,13 +3,28 @@
  * 👤 USER FORM - Formulario de usuario (Web)
  * ============================================================================
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { userService } from '../../../services/userService';
 import { emailService } from '../../../services/emailService';
 import { EmailConfigModal } from './modulo_correo';
 
-export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
+// Función para inicializar datos del formulario
+function getInitialFormData(userData, isEditMode) {
+  if (isEditMode && userData) {
+    return {
+      Control_Usuario: userData.Control_Usuario || '',
+      password: '',
+      nombre: userData.nombre || '',
+      apellido: userData.apellido || '',
+      rol: userData.rol || 'vigilante',
+      telefono: userData.telefono || '',
+      email: userData.email || '',
+      departamento: userData.departamento || '',
+      puesto: userData.puesto || '',
+      activo: userData.activo !== false,
+    };
+  }
+  return {
     Control_Usuario: '',
     password: '',
     nombre: '',
@@ -20,21 +35,21 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
     departamento: '',
     puesto: '',
     activo: true,
-  });
+  };
+}
+
+export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
+  // Inicializar formData directamente con datos del usuario si existe
+  const [formData, setFormData] = useState(() => getInitialFormData(user, mode === 'edit'));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [configuredEmail, setConfiguredEmail] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
-  // Cargar correo configurado al abrir el formulario en modo edición
-  useEffect(() => {
-    if (mode === 'edit' && user?.id) {
-      loadConfiguredEmail();
-    }
-  }, [mode, user?.id]);
-
-  const loadConfiguredEmail = async () => {
+  // Cargar correo configurado - función interna que no necesita useCallback
+  const loadConfiguredEmail = useCallback(async () => {
+    if (!user?.id) return;
     try {
       setLoadingEmail(true);
       const config = await emailService.getEmailConfigByUserId(user.id);
@@ -42,29 +57,19 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
         setConfiguredEmail(config.email);
         setFormData((prev) => ({ ...prev, email: config.email }));
       }
-    } catch (err) {
+    } catch {
       console.log('No hay correo configurado o error al cargar');
     } finally {
       setLoadingEmail(false);
     }
-  };
+  }, [user]); // Dependencia completa del objeto user
 
-  useEffect(() => {
-    if (user && mode === 'edit') {
-      setFormData({
-        Control_Usuario: user.Control_Usuario || '',
-        password: '',
-        nombre: user.nombre || '',
-        apellido: user.apellido || '',
-        rol: user.rol || 'vigilante',
-        telefono: user.telefono || '',
-        email: user.email || '',
-        departamento: user.departamento || '',
-        puesto: user.puesto || '',
-        activo: user.activo !== false,
-      });
+  // Handler para cargar email cuando se necesita (llamado desde UI o al abrir modal)
+  const handleLoadEmail = () => {
+    if (mode === 'edit' && user?.id) {
+      loadConfiguredEmail();
     }
-  }, [user, mode]);
+  };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -184,7 +189,7 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
               <div style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #D1D1D6', fontSize: 14, color: '#8E8E93' }}>
                 Cargando configuración de correo...
               </div>
-            ) : configuredEmail ? (
+) : configuredEmail ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid #34C759', backgroundColor: '#F0FFF4' }}>
                 <span style={{ fontSize: 24 }}>✅</span>
                 <div style={{ flex: 1 }}>
@@ -193,7 +198,10 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setEmailModalVisible(true)}
+                  onClick={() => {
+                    handleLoadEmail();
+                    setEmailModalVisible(true);
+                  }}
                   style={{
                     padding: '8px 16px', borderRadius: 8, border: '1px solid #007AFF',
                     backgroundColor: 'white', color: '#007AFF', fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -205,7 +213,10 @@ export function UserForm({ mode = 'create', user = null, onSave, onCancel }) {
             ) : (
               <button
                 type="button"
-                onClick={() => setEmailModalVisible(true)}
+                onClick={() => {
+                  handleLoadEmail();
+                  setEmailModalVisible(true);
+                }}
                 style={{
                   width: '100%', padding: '14px 16px', borderRadius: 10, border: '1px dashed #007AFF',
                   backgroundColor: '#F0F8FF', color: '#007AFF', fontSize: 14, fontWeight: 600, cursor: 'pointer',

@@ -41,7 +41,14 @@
 "Web-Flonten/src/src_Usuarios_STV":true,
 "Web-Flonten/src/src_A_Compras":false,
 
-/*________________________________________*/
+/*______________Modulos de Next js_____________________*/
+"stv-web/src/src_Archivero_STV":true,
+"stv-web/src/src_Chat_STV":true,
+"stv-web/src/src_P_Ticket_IT":true,
+"stv-web/src/src_Instalaciones_STV":true,
+"stv-web/src/src_Usuarios_STV":true,
+"stv-web/src/src_A_Compras":true,
+"stv-web/src/assets":true,
 
 /*______________Backend src_/*____________*/
 
